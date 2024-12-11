@@ -74,12 +74,8 @@ public class WebSecurityConfig implements WebMvcConfigurer {
                 .formLogin(formLogin -> formLogin
                         .loginPage("/login")
                         .failureHandler((request, response, exception) -> {
-                            String username = request.getParameter("username");
-                            if (userRespository.findByBenutzername(username) == null) {
-                                response.sendRedirect("/login?error");
-                            } else {
-                                response.sendRedirect("/login?username=" + username + "&error");
-                            }
+                            request.getSession().setAttribute("error", "Benutzername oder Passwort ist falsch.");
+                            response.sendRedirect("/login?error");
                         })
                         .defaultSuccessUrl("/index", true) // Erfolgreiche Anmeldung führt zu "/index"
                         .permitAll() // Login-Seite ist für alle zugänglich
