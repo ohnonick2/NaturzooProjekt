@@ -1,21 +1,6 @@
 package net.ohnonick2.naturzooprojekt;
 
 
-import net.ohnonick2.naturzooprojekt.db.adresse.Adresse;
-import net.ohnonick2.naturzooprojekt.db.futter.*;
-import net.ohnonick2.naturzooprojekt.db.futter.FutterPlanFutterZeit;
-import net.ohnonick2.naturzooprojekt.db.lieferant.Lieferant;
-import net.ohnonick2.naturzooprojekt.db.ort.Ort;
-import net.ohnonick2.naturzooprojekt.db.permission.Permission;
-import net.ohnonick2.naturzooprojekt.db.permission.PermissionRolle;
-import net.ohnonick2.naturzooprojekt.db.permission.Rolle;
-import net.ohnonick2.naturzooprojekt.db.permission.RolleUser;
-import net.ohnonick2.naturzooprojekt.db.revier.Revier;
-import net.ohnonick2.naturzooprojekt.db.revier.RevierTier;
-import net.ohnonick2.naturzooprojekt.db.tier.Tier;
-import net.ohnonick2.naturzooprojekt.db.tier.TierArt;
-import net.ohnonick2.naturzooprojekt.db.user.Pfleger;
-import net.ohnonick2.naturzooprojekt.db.wochentag.Wochentag;
 import net.ohnonick2.naturzooprojekt.repository.*;
 import net.ohnonick2.naturzooprojekt.utils.TierGeschlecht;
 import org.springframework.beans.factory.annotation.Autowired;

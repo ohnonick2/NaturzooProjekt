@@ -78,8 +78,7 @@ public class FoodBackendSitesController {
             return ResponseEntity.badRequest().body("Invalid user ID format");
         }
     }
-
-
+    
     @PostMapping("/get/user/{value}")
     public ResponseEntity<String> getUser(@PathVariable String value) {
         if (value == null || value.isEmpty()) {
