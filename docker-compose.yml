@@ -10,7 +10,8 @@ services:
     ports:
       - "3306:3306"
     networks:
-      - app-network
+      app-network:
+        ipv4_address: 172.28.1.2
 
   # Spring Boot-Anwendung
   app:
@@ -18,7 +19,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/naturzoo?useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_URL=jdbc:mysql://172.28.1.2:3306/naturzoo?useSSL=false&allowPublicKeyRetrieval=true
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=password
       - SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
@@ -26,8 +27,13 @@ services:
     depends_on:
       - db
     networks:
-      - app-network
+      app-network:
+        ipv4_address: 172.28.1.3
 
 networks:
   app-network:
     driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.1.0/29
