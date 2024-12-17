@@ -1,4 +1,4 @@
-    @Bean
+ @Bean
     CommandLineRunner initDatabase() {
         return args -> {
 
@@ -11,7 +11,7 @@
             tierartrepository.save(tierArt);
 
             Tier tier = new Tier("Hans",   geburtsdatum  , null, TierGeschlecht.MAENNLICH, tierArt);
-
+            Tier eli = new Tier("ELI" , geburtsdatum , null , TierGeschlecht.MAENNLICH , tierArt);
             tierrespository.save(tier);
 
 
@@ -24,10 +24,11 @@
 
 
 
-            FutterPlan futterplan = new FutterPlan(new Date(), 100);
+            FutterPlan futterplan = new FutterPlan("Testttt");
             futterplanRepository.save(futterplan);
 
             FutterPlanTier futterPlanTier = new FutterPlanTier(futterplan, tier);
+            FutterPlanTier futterPlanTier1 = new FutterPlanTier(futterplan , eli);
 
             futterPlanTierRepositority.save(futterPlanTier);
 

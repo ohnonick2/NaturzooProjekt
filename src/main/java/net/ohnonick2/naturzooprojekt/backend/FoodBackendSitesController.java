@@ -2,6 +2,7 @@ package net.ohnonick2.naturzooprojekt.backend;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import jakarta.servlet.http.HttpServletRequest;
 import net.ohnonick2.naturzooprojekt.db.permission.Permission;
 import net.ohnonick2.naturzooprojekt.db.permission.PermissionRolle;
 import net.ohnonick2.naturzooprojekt.db.permission.Rolle;
@@ -134,4 +135,9 @@ public class FoodBackendSitesController {
         }
     }
 
+    @RequestMapping("/invalidate-session")
+    public String invalidateSession(HttpServletRequest request) {
+        request.getSession().invalidate();
+        return "redirect:/login?session=invalid";
+    }
 }

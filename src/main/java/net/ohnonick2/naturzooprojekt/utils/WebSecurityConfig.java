@@ -67,10 +67,10 @@ public class WebSecurityConfig implements WebMvcConfigurer {
     @Bean
     public SecurityFilterChain configure(HttpSecurity http) throws Exception {
         http.authenticationProvider(authenticationProvider())
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/login", "/logout", "/static/**")) // CSRF für spezifische Pfade deaktivieren
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/login", "/logout", "/static/**"))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/images/{filename}").permitAll() // Login- und Assert-URLs erlauben
-                        .anyRequest().authenticated() // Alle anderen Anforderungen erfordern Authentifizierung
+                        .requestMatchers("/login", "/images/{filename}" , "/" , "/api/food/getFutterplan").permitAll()
+                        .anyRequest().authenticated()
                 )
                 .formLogin(formLogin -> formLogin
                         .loginPage("/login")
@@ -78,17 +78,28 @@ public class WebSecurityConfig implements WebMvcConfigurer {
                             request.getSession().setAttribute("error", "Benutzername oder Passwort ist falsch.");
                             response.sendRedirect("/login?error");
                         })
-                        .defaultSuccessUrl("/index", true) // Erfolgreiche Anmeldung führt zu "/index"
-                        .permitAll() // Login-Seite ist für alle zugänglich
+                        .defaultSuccessUrl("/index", true)
+                        .permitAll()
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .clearAuthentication(true)
-                        .permitAll() // Logout-Seite ist für alle zugänglich
+                        .permitAll()
+                )
+                .sessionManagement(session -> session
+                        .invalidSessionUrl("/login?session=invalid") // URL für ungültige Sitzungen
+                        .sessionFixation().migrateSession()
+                        .sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.IF_REQUIRED) // Sitzung bei Bedarf erstellen
+                )
+                .sessionManagement(session -> session
+                        .maximumSessions(1) // Nur eine aktive Sitzung pro Benutzer
+                        .maxSessionsPreventsLogin(true) // Zusätzliche Anmeldungen verhindern
                 );
 
         return http.build();
     }
+
+
 
 
 

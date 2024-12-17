@@ -23,22 +23,29 @@ public class Index {
         if (request.getAttribute(WebAttributes.AUTHENTICATION_EXCEPTION) != null) {
             return "redirect:/login?error";
         }
-
-        System.out.println("SecurityContext: " + SecurityContextHolder.getContext().getAuthentication());
+        if (request.getParameter("session") != null && request.getParameter("session").equals("invalid")) {
+            return "redirect:/login?invalidession";
+        }
         if (SecurityContextHolder.getContext().getAuthentication() != null &&
                 SecurityContextHolder.getContext().getAuthentication().isAuthenticated()) {
             String username = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
             JsonObject jsonObject = JsonParser.parseString(username).getAsJsonObject();
             String benutzername = jsonObject.get("benutzername").getAsString();
             model.addAttribute("username", benutzername);
-
             Collection<? extends GrantedAuthority> authorities = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
             String authoritiesList = authorities.stream()
                     .map(GrantedAuthority::getAuthority)
                     .collect(Collectors.joining(", "));
             model.addAttribute("authorities", authoritiesList);
-            return "index";
+            return "auth/userindex";
         }
         return "redirect:/login";
     }
+
+    @GetMapping("/")
+    public String showFoodPlan() {
+        return "index";
+    }
+
+
 }

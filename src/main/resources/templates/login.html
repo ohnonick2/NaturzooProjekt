@@ -3,176 +3,230 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <title>Futter Management | Rheiner Zoo</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <div th:insert="~{vorlagen/icon :: icon}"></div>
+
     <style>
-        /* Allgemeine Stile */
         body {
+            background-color: #e6f7ff;
             font-family: 'Arial', sans-serif;
             background-image: url('/images/background.png');
             background-size: cover;
             background-position: center;
-            background-attachment: fixed;
-            margin: 0;
-            padding: 0;
+            background-repeat: no-repeat;
         }
 
-        /* Header */
-        header {
-            background-color: #2d6c5d; /* Die grüne Farbe aus dem Footer */
-            color: white;
-            text-align: center;
-            padding: 10px 0; /* Kompakte Höhe */
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Leichter Schatten */
-            position: relative;
-            z-index: 10;
+        .container {
+            max-width: 750px;
         }
 
-        header h1 {
-            font-size: 2rem; /* Größere Schrift für den Titel */
-            margin: 0;
-            font-weight: bold;
-        }
-
-        header p {
-            font-size: 1rem;
-            margin: 0;
-            font-style: italic;
-            opacity: 0.9; /* Leichte Transparenz für den Untertitel */
-        }
-
-
-        /* Login Card */
-        .login-card {
-            background-color: rgba(255, 255, 255, 0.95);
+        .card {
             border-radius: 12px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            padding: 50px;
-            width: 600px;
-            margin: auto;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            background-color: #ffffff;
+            padding: 25px;
         }
 
-        .login-card img {
-            width: 400px; /* Konstante Bildgröße */
-            height: auto;
-            margin-bottom: 30px;
-            border-radius: 15px; /* Leicht abgerundete Ecken */
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        /* Eingabefelder */
-        .form-control {
-            height: 60px;
+        .card-title {
+            font-weight: bold;
+            color: #3a3a3a;
             font-size: 1.3rem;
         }
 
-        .form-label {
+        .btn-primary {
+            background-color: #28a745;
+            border: none;
+            border-radius: 5px;
+            padding: 12px;
             font-size: 1.1rem;
-            font-weight: bold;
         }
 
-        .btn-login {
+        .bottom-left-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .bottom-left-button .btn {
             background-color: #28a745;
             color: white;
-            font-size: 1.3rem;
-            padding: 12px;
+            border-radius: 5px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            text-decoration: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
-        .btn-login:hover {
+        .bottom-left-button .btn:hover {
             background-color: #218838;
         }
 
-        /* Footer */
-        footer {
-            background-color: #2d6c5d;
-            color: #fff;
-            padding: 40px 0;
-            text-align: center;
-            margin-top: 40px;
+        .card-body {
+            padding: 35px;
         }
 
-        footer a {
-            color: #fff;
-            margin: 0 10px;
-            font-size: 1.5rem;
-            transition: color 0.3s;
+        .form-control {
+            font-size: 1rem;
+            padding: 10px;
         }
 
-        footer a:hover {
-            color: #b2d8b2;
-        }
-
-        footer p {
-            margin: 0;
+        .form-label {
             font-size: 1rem;
         }
 
-        footer .footer-links {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-bottom: 20px;
+        .invalid-feedback {
+            font-size: 0.85rem;
         }
 
-        footer .social-icons {
-            margin: 20px 0;
+        .row.g-3 {
+            margin-bottom: 15px;
         }
 
-        footer .social-icons a {
-            font-size: 1.8rem;
-            margin: 0 10px;
+        .text-center img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .text-center img:hover {
+            transform: scale(1.05);
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1050;
+        }
+
+        .image-rotator {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            overflow: hidden;
+        }
+
+        .image-rotator img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+
+        .image-rotator img.active {
+            opacity: 1;
         }
     </style>
 </head>
 
 <body>
-<!-- Header -->
-<header>
-    <h1>Willkommen im Rheiner Zoo</h1>
-    <p>Futter Management System</p>
-</header>
 
-<!-- Login Card -->
-<main class="d-flex align-items-center justify-content-center" style="min-height: 100vh;">
-    <div class="login-card text-center">
-        <!-- Bild mit konstanter Größe und leicht abgerundeten Ecken -->
-        <img src="http://localhost:8080/images/login1.png" alt="Zoo Logo">
-        <h4 class="mb-4">Login in Ihren Account</h4>
-        <form action="/login" method="POST">
-            <div class="mb-4 text-start">
-                <label for="username" class="form-label">Benutzername</label>
-                <input type="text" id="username" name="username" class="form-control" required>
+<div class="toast-container">
+    <div class="toast align-items-center text-bg-danger border-0" id="errorToast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">
+                Bitte überprüfen Sie Ihren Benutzernamen und Ihr Passwort.
             </div>
-            <div class="mb-4 text-start">
-                <label for="password" class="form-label">Passwort</label>
-                <input type="password" id="password" name="password" class="form-control" required>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+    <div class="toast align-items-center text-bg-success border-0" id="logoutToast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">
+                Sie haben sich erfolgreich abgemeldet.
             </div>
-            <button type="submit" class="btn btn-login w-100">Login</button>
-        </form>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+<main>
+    <div class="container py-5">
+        <section class="section register min-vh-100 d-flex flex-column align-items-center justify-content-center">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 col-md-10 col-sm-12 d-flex flex-column align-items-center justify-content-center">
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="text-center mb-4 image-rotator">
+                                <img src="/images/login1.png" alt="Bild 1" class="active" />
+                                <img src="/images/login2.png" alt="Bild 2" />
+                            </div>
+                            <div class="text-center">
+                                <h5 class="card-title pb-0 fs-4">Login in Ihren Account</h5>
+                                <p class="small">Geben Sie Ihren Benutzernamen und Ihr Passwort ein, um sich anzumelden.</p>
+                            </div>
+                            <form class="row g-3 needs-validation" th:action="@{/login}" method="post" novalidate>
+                                <div class="col-12">
+                                    <label for="yourUsername" class="form-label">Benutzername:</label>
+                                    <div class="input-group has-validation">
+                                        <input type="text" name="username" class="form-control" id="yourUsername" required>
+                                        <div class="invalid-feedback">Bitte geben Sie Ihren Benutzernamen ein.</div>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <label for="yourPassword" class="form-label">Passwort:</label>
+                                    <input type="password" name="password" class="form-control" id="yourPassword" required>
+                                    <div class="invalid-feedback">Bitte geben Sie Ihr Passwort ein.</div>
+                                </div>
+                                <div class="col-12">
+                                    <button class="btn btn-primary w-100" type="submit">Login</button>
+                                </div>
+                            </form>
+
+                            <div th:if="${param.error}" class="alert alert-danger mt-3" role="alert">
+                                Bitte überprüfen Sie Ihren Benutzernamen und Ihr Passwort.
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </div>
 </main>
 
-<!-- Footer -->
-<footer>
-    <div class="footer-links">
-        <a href="#">Impressum</a>
-        <a href="#">Datenschutz</a>
-        <a href="#">Newsletter</a>
-        <a href="#">Sitemap</a>
-    </div>
-    <div class="social-icons">
-        <a href="#"><i class="fab fa-youtube"></i></a>
-        <a href="#"><i class="fab fa-instagram"></i></a>
-        <a href="#"><i class="fab fa-facebook"></i></a>
-        <a href="#"><i class="fab fa-whatsapp"></i></a>
-        <a href="#"><i class="fas fa-phone"></i></a>
-    </div>
-    <p>Kontakt: <a href="mailto:info@naturzoo.de" style="color:#b2d8b2;">info@naturzoo.de</a></p>
-</footer>
+<div class="bottom-left-button">
+    <a href="/" class="btn">Zur Startseite</a>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const errorToastElement = document.getElementById('errorToast');
+        const logoutToastElement = document.getElementById('logoutToast');
+
+        const errorToast = new bootstrap.Toast(errorToastElement, { delay: 5000 }); // 5 Sekunden sichtbar
+        const logoutToast = new bootstrap.Toast(logoutToastElement, { delay: 5000 }); // 5 Sekunden sichtbar
+
+        // Anzeigen der Toasts basierend auf Bedingungen
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('error')) {
+            errorToast.show();
+        } else if (urlParams.has('logout')) {
+            logoutToast.show();
+        }
+
+        const images = document.querySelectorAll(".image-rotator img");
+        let currentIndex = 0;
+
+        setInterval(() => {
+            images[currentIndex].classList.remove("active");
+            currentIndex = (currentIndex + 1) % images.length;
+            images[currentIndex].classList.add("active");
+        }, 5000);
+    });
+</script>
+
 </body>
 
 </html>
