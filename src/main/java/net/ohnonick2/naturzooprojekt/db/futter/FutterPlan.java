@@ -1,10 +1,7 @@
 package net.ohnonick2.naturzooprojekt.db.futter;
 
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 import java.util.Date;
 
@@ -15,27 +12,26 @@ public class FutterPlan {
     @GeneratedValue(strategy = GenerationType.IDENTITY) // Strategie anpassen, z.B., SEQUENCE, TABLE
     private Long id;
 
-    private Date futterTag;
-    private int menge;
+    @Column(name = "name" , nullable = false , unique = true , length = 50)
+    private String name;
 
 
     public FutterPlan() {
     }
 
-    public FutterPlan(Date futterTag, int menge) {
-
-        this.menge = menge;
-        this.futterTag = futterTag;
-
-
-
-
+    public FutterPlan(String name) {
+        this.name = name;
     }
 
 
 
+    public void setName(String name) {
+        this.name = name;
+    }
 
-
+    public String getName() {
+        return name;
+    }
 
     public void setId(Long id) {
         this.id = id;

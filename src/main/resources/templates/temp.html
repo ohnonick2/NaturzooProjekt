@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Ort and Pfleger</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.min.js"></script> <!-- Include bcryptjs -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<div class="container mt-5">
+    <h1 class="mb-4">Add Ort</h1>
+    <form th:action="@{/api/ort/add}" method="POST">
+        <div class="mb-3">
+            <label for="plz" class="form-label">Postleitzahl</label>
+            <input type="text" class="form-control" id="plz" name="plz" required>
+        </div>
+        <div class="mb-3">
+            <label for="name" class="form-label">Ort Name</label>
+            <input type="text" class="form-control" id="name" name="name" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Add Ort</button>
+    </form>
+
+    <h1 class="my-5">Add Pfleger</h1>
+    <!-- Update form to use POST method -->
+    <form id="pflegerForm" method="POST">
+        <div class="mb-3">
+            <label for="benutzername" class="form-label">Benutzername</label>
+            <input type="text" class="form-control" id="benutzername" name="benutzername" required>
+        </div>
+        <div class="mb-3">
+            <label for="passwort" class="form-label">Passwort</label>
+            <input type="password" class="form-control" id="passwort" name="passwort" required>
+        </div>
+        <div class="mb-3">
+            <label for="vorname" class="form-label">Vorname</label>
+            <input type="text" class="form-control" id="vorname" name="vorname" required>
+        </div>
+        <div class="mb-3">
+            <label for="plzPfleger" class="form-label">Postleitzahl (Ort)</label>
+            <select class="form-select" id="plzPfleger" name="plz" required>
+                <option th:if="${#lists.isEmpty(orte)}" disabled selected>Keine Orte verfügbar</option>
+                <option th:each="ort : ${orte}" th:value="${ort.plz}" th:text="${ort.plz}"></option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Add Pfleger</button>
+    </form>
+</div>
+
+<script>
+    // Intercept form submission to hash password before sending
+    $(document).ready(function() {
+        $('#pflegerForm').on('submit', function(event) {
+            event.preventDefault();  // Prevent normal form submission
+
+            // Get form data
+            var benutzername = $('#benutzername').val();
+            var passwort = $('#passwort').val();
+            var vorname = $('#vorname').val();
+            var plz = $('#plzPfleger').val();
+
+            // Hash the password using bcrypt before sending to the server
+            bcrypt.hash(passwort, 10, function(err, hashedPassword) {
+                if (err) {
+                    alert("Error hashing password");
+                    return;
+                }
+
+                // Create JSON object to send
+                var pflegerData = {
+                    "benutzername": benutzername,
+                    "passwort": hashedPassword,  // Send the hashed password to the backend
+                    "vorname": vorname,
+                    "plz": plz
+                };
+
+                // Send AJAX request to backend
+                $.ajax({
+                    url: '/api/pfleger/add',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(pflegerData),
+                    success: function(response) {
+                        alert("Pfleger added successfully");
+                        $('#pflegerForm')[0].reset();  // Clear form after success
+                    },
+                    error: function(xhr, status, error) {
+                        alert("Error: " + xhr.responseText);
+                    }
+                });
+            });
+        });
+    });
+</script>
+
+</body>
+</html>
