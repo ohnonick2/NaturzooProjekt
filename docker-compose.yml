@@ -1,12 +1,12 @@
-version: '3.8'
-
 services:
   # MySQL-Datenbank
   db:
     image: mysql:8.0
     environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: naturzoo
+      MYSQL_ROOT_PASSWORD: password              # Root-Passwort
+      MYSQL_DATABASE: naturzoo                   # Standarddatenbank
+      MYSQL_USER: user                            # Neuer Benutzername
+      MYSQL_PASSWORD: userpassword               # Passwort für den neuen Benutzer
     ports:
       - "3306:3306"
     networks:
@@ -19,9 +19,9 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://172.28.1.2:3306/naturzoo?useSSL=false&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/naturzoo?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=user          # Benutzername des neuen Users
+      - SPRING_DATASOURCE_PASSWORD=userpassword  # Passwort des neuen Users
       - SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
     depends_on:
@@ -36,4 +36,4 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 172.28.1.0/29
+        - subnet: 172.28.1.0/30

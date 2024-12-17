@@ -1,28 +1,32 @@
-# Verwende ein Basis-Image mit Java
-FROM eclipse-temurin:17-jdk
+FROM amazoncorretto:17-alpine-jdk
+
+# Überprüfe die Java-Version
+RUN java -version
+
+# Installiere notwendige Pakete
+RUN apk add --no-cache \
+    bash \
+    curl \
+    git
 
 # Setze das Arbeitsverzeichnis
 WORKDIR /app
 
-# Kopiere nur die Gradle-Dateien, um Abhängigkeiten zu installieren
+# Kopiere nur die Dateien, die für den Build-Prozess erforderlich sind
 COPY gradlew gradlew
 COPY gradle gradle
 COPY build.gradle .
 COPY settings.gradle .
-
-# Installiere Gradle-Abhängigkeiten im Cache (schrittweise, um den Cache bei Änderungen nicht zu verlieren)
-RUN chmod +x gradlew && ./gradlew dependencies --no-daemon
-
-# Kopiere den Quellcode erst nach den Gradle-Abhängigkeiten (schnellerer Build, weil der Cache nicht invalidiert wird)
 COPY src src
 
-# Baue das Projekt (inkl. Boot JAR)
-RUN ./gradlew build --no-daemon
+# Baue das Projekt und erzeuge das JAR
+RUN ./gradlew clean build bootJar --no-daemon
+
 # Kopiere die endgültige JAR-Datei
-COPY build/libs/server.jar server.jar
+COPY build/libs/*.jar /server.jar
+
+# Überprüfe, ob die Datei da ist
+RUN ls -la /app/build/libs
 
 # Setze den ENTRYPOINT für die ausführbare JAR-Datei
-ENTRYPOINT ["java", "-jar", "server.jar"]
-
-# Exponiere den Port
-EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "/server.jar"]
