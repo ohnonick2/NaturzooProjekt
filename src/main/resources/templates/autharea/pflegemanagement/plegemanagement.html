@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:sec="http://www.w3.org/1999/xhtml">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pflegermanagement | Rheiner Zoo</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <div th:insert="~{vorlagen/icon :: icon}"></div>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-image: url('/images/background.png');
+      margin: 0;
+      padding: 20px;
+      background-color: #f4f6f9;
+    }
+    .main-content {
+      margin: 0 auto;
+      max-width: 1200px;
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      color: #1f4e3e;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    table thead th {
+      background-color: #1f4e3e;
+      color: white;
+      text-align: left;
+      padding: 10px;
+    }
+    table tbody td {
+      padding: 10px;
+      border: 1px solid #ddd;
+    }
+    .btn {
+      padding: 8px 12px;
+    }
+    .btn-action {
+      margin-right: 5px;
+    }
+    .btn-success {
+      background-color: #218838;
+      color: white;
+    }
+    .btn-primary {
+      background-color: #007bff;
+      color: white;
+    }
+    .btn-danger {
+      background-color: #dc3545;
+      color: white;
+    }
+    footer {
+      background-color: #343a40;
+      color: #fff;
+      padding: 20px 0;
+      text-align: center;
+    }
+    footer a {
+      color: #28a745;
+      margin: 0 10px;
+      font-size: 1.5rem;
+      text-decoration: none;
+    }
+    footer p {
+      margin-bottom: 0;
+    }
+    footer hr {
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .sidebar {
+      width: 250px;
+      height: 100vh;
+      background-color: #1f4e3e;
+      color: white;
+      position: fixed;
+      top: 0;
+      left: 0;
+      transition: all 0.3s ease;
+      z-index: 1000;
+      overflow: hidden;
+    }
+
+    .sidebar.collapsed {
+      width: 70px;
+    }
+
+    .menu-toggle {
+      text-align: center;
+      padding: 10px;
+      cursor: pointer;
+      background-color: #218838;
+      color: white;
+    }
+
+    .sidebar a {
+      color: white;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      padding: 10px 15px;
+      transition: all 0.3s ease;
+    }
+
+    .sidebar.collapsed a span {
+      display: none;
+    }
+
+    .sidebar a:hover {
+      background-color: #2c6e56;
+    }
+
+    .sidebar i {
+      margin-right: 10px;
+      font-size: 1.2rem;
+    }
+
+    .sidebar.collapsed i {
+      margin-right: 0;
+      text-align: center;
+      width: 100%;
+    }
+  </style>
+</head>
+
+<body>
+<div th:insert="~{vorlagen/sidebar :: sidebar}"></div>
+
+<div class="main-content">
+  <h1>Pflegermanagement</h1>
+  <p>Verwalten Sie die Benutzer für das Pflegermanagement im Rheiner Zoo.</p>
+
+  <!-- Add User Button -->
+  <div sec:authorize="hasAuthority('USER_MANAGEMENT_WRITE') or hasAuthority('*')">
+    <button class="btn btn-success mb-3" onclick="addUser()">
+      <i class="fas fa-user-plus"></i> Benutzer hinzufügen
+    </button>
+  </div>
+
+  <!-- User List Table -->
+  <table class="table table-striped">
+    <thead>
+    <tr>
+      <th>ID</th>
+      <th>Benutzername</th>
+      <th>Vorname</th>
+      <th>Nachname</th>
+      <th>Rollen</th>
+      <th>Aktionen</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="userWithRoles : ${usersWithRoles}">
+      <td th:text="${userWithRoles.pfleger.id}"></td>
+      <td th:text="${userWithRoles.pfleger.benutzername}"></td>
+      <td th:text="${userWithRoles.pfleger.vorname}"></td>
+      <td th:text="${userWithRoles.pfleger.nachname}"></td>
+      <td>
+        <ul>
+          <li th:each="role : ${userWithRoles.roles}" th:text="${role.name}"></li>
+        </ul>
+      </td>
+      <td>
+        <!-- Selbstbearbeitung verhindern -->
+        <div th:if="${userWithRoles.pfleger.id == loggedInUserId}">
+          Du kannst dich nicht selbst bearbeiten
+        </div>
+
+        <!-- Überprüfen, ob der Benutzer mit derselben Rolle ist -->
+        <div th:if="${userWithRoles.pfleger.id != loggedInUserId}">
+          <div sec:authorize="hasAuthority('USER_MANAGEMENT_WRITE') or hasAuthority('*')">
+            <!-- Benutzer mit derselben Rolle -->
+            <span th:if="${loggedInUserRoles == userWithRoles.roles}">
+          Du kannst Benutzer mit derselben Rolle nicht bearbeiten
+        </span>
+
+            <!-- Buttons für erlaubte Aktionen -->
+            <div th:unless="${loggedInUserRoles == userWithRoles.roles}">
+              <button class="btn btn-primary btn-action" th:onclick="'editUser(' + ${userWithRoles.pfleger.id} + ')'">
+                <i class="fas fa-edit"></i> Bearbeiten
+              </button>
+              <button class="btn btn-danger btn-action" th:onclick="'deleteUser(' + ${userWithRoles.pfleger.id} + ')'">
+                <i class="fas fa-trash"></i> Löschen
+              </button>
+            </div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+
+<footer th:replace="~{vorlagen/footer :: footer}"></footer>
+
+<script>
+  function addUser() {
+    alert('Benutzer hinzufügen Funktion ausgelöst');
+  }
+
+  function editUser(userId) {
+    // Weiterleitung zur Bearbeitungsseite
+    window.location.href = '/editUser/' + userId;
+  }
+
+
+  function deleteUser(userId) {
+    if (confirm('Möchten Sie den Benutzer mit ID ' + userId + ' wirklich löschen?')) {
+      // Senden Sie eine DELETE-Anfrage an den Server
+      fetch('/api/pfleger/delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id: userId })
+      })
+              .then(response => {
+                if (response.ok) {
+                  alert('Benutzer erfolgreich gelöscht!');
+                  // Aktualisieren Sie die Seite oder entfernen Sie die Zeile aus der Tabelle
+                  location.reload(); // Aktualisiert die gesamte Seite
+                } else {
+                  response.text().then(text => {
+                    alert('Fehler beim Löschen: ' + text);
+                  });
+                }
+              })
+              .catch(error => {
+                console.error('Fehler:', error);
+                alert('Es ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.');
+              });
+    }
+  }
+</script>
+</body>
+</html>

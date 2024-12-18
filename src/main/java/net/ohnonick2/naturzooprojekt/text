@@ -1,4 +1,4 @@
- @Bean
+@Bean
     CommandLineRunner initDatabase() {
         return args -> {
 
@@ -67,28 +67,46 @@
             Rolle rolle = new Rolle("Admin");
             Rolle rolle2 = new Rolle("Pfleger");
 
+            permissionRepository.saveAll(Arrays.asList(
+                    new Permission("FUTTERPLAN_MANAGEMENT_READ", "Zugriff auf das Anzeigen von Futterplänen"),
+                    new Permission("FUTTERPLAN_MANAGEMENT_WRITE", "Zugriff auf das Bearbeiten von Futterplänen"),
+                    new Permission("FUTTER_MANAGEMENT_READ", "Zugriff auf das Anzeigen von Futterverwaltung"),
+                    new Permission("FUTTER_MANAGEMENT_WRITE", "Zugriff auf das Bearbeiten von Futterverwaltung"),
+                    new Permission("USER_MANAGEMENT_READ", "Zugriff auf die Benutzerverwaltung (lesen)"),
+                    new Permission("USER_MANAGEMENT_WRITE", "Zugriff auf die Benutzerverwaltung (bearbeiten)"),
+                    new Permission("REVIER_READ", "Zugriff auf die Revierverwaltung (lesen)"),
+                    new Permission("REVIER_WRITE", "Zugriff auf die Revierverwaltung (bearbeiten)"),
+                    new Permission("TIER_READ", "Zugriff auf die Tierverwaltung (lesen)"),
+                    new Permission("TIER_WRITE", "Zugriff auf die Tierverwaltung (bearbeiten)"),
+                    new Permission("LIEFERANT_READ", "Zugriff auf Lieferanteninformationen (lesen)"),
+                    new Permission("LIEFERANT_WRITE", "Zugriff auf Lieferanteninformationen (bearbeiten)"),
+                    new Permission("ROLE_MANAGEMENT_READ", "Zugriff auf die Rollenverwaltung (lesen)"),
+                    new Permission("ROLE_MANAGEMENT_WRITE", "Zugriff auf die Rollenverwaltung (bearbeiten)"),
+                    new Permission("*", "Zugriff auf alles")
+            ));
 
-            Permission all = new Permission("*" , "Alle Rechte");
-            Permission permission = new Permission("READ" , "Lesen");
-            Permission permission2 = new Permission("WRITE" , "Schreiben");
-
-            PermissionRolle permissionRolle = new PermissionRolle(permission, rolle);
-            PermissionRolle permissionRolle2 = new PermissionRolle(permission2, rolle2);
-            PermissionRolle permissionRolle1 = new PermissionRolle(permission, superAdmin);
-            PermissionRolle permissionRolle3 = new PermissionRolle(all, superAdmin);
 
             rolleRepository.save(superAdmin);
             rolleRepository.save(rolle);
             rolleRepository.save(rolle2);
 
-            permissionRepository.save(all);
-            permissionRepository.save(permission);
-            permissionRepository.save(permission2);
+            Permission sternchen = permissionRepository.findPermissionByPermission("*");
+            Permission futterplanRead = permissionRepository.findPermissionByPermission("FUTTERPLAN_MANAGEMENT_READ");
+            Permission futterplanWrite = permissionRepository.findPermissionByPermission("FUTTERPLAN_MANAGEMENT_WRITE");
 
-            permissionRolleRepository.save(permissionRolle3);
+
+            PermissionRolle permissionRolle = new PermissionRolle(sternchen , superAdmin);
+            PermissionRolle permissionRolle1 = new PermissionRolle(futterplanRead , rolle);
+            PermissionRolle permissionRolle2 = new PermissionRolle(futterplanWrite , rolle);
+
             permissionRolleRepository.save(permissionRolle);
-            permissionRolleRepository.save(permissionRolle2);
             permissionRolleRepository.save(permissionRolle1);
+            permissionRolleRepository.save(permissionRolle2);
+
+
+
+
+
 
             RolleUser rolleUser = new RolleUser(rolle2 , pfleger);
 

@@ -27,7 +27,7 @@ public class Pfleger {
     private LocalDateTime lockedUntil; // Sperrdatum
 
     @JoinColumn(name = "ort")
-    @OneToOne
+    @ManyToOne
     private Ort ort;
 
     public Pfleger() {

@@ -17,7 +17,7 @@ public class temp {
     public String showAddPage(Model model) {
         // Lade alle Orte und füge sie dem Modell hinzu
         model.addAttribute("orte", ortrepository.findAll());
-        return "temp";
+        return "autharea/test";
     }
 
 }

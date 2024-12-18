@@ -1,6 +1,7 @@
 package net.ohnonick2.naturzooprojekt.utils;
 
 
+import jakarta.servlet.http.HttpServletResponse;
 import net.ohnonick2.naturzooprojekt.db.user.Pfleger;
 import net.ohnonick2.naturzooprojekt.repository.Pflegerrepository;
 import net.ohnonick2.naturzooprojekt.service.CustomUserDetailsService;
@@ -14,6 +15,8 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 
 
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,9 +32,12 @@ import java.util.Random;
 public class WebSecurityConfig implements WebMvcConfigurer {
 
 
+    @Bean
+    public SessionRegistry sessionRegistry() {
 
-    @Autowired
-    private Pflegerrepository userRespository;
+
+        return new SessionRegistryImpl();
+    }
 
 
     @Bean
@@ -67,9 +73,9 @@ public class WebSecurityConfig implements WebMvcConfigurer {
     @Bean
     public SecurityFilterChain configure(HttpSecurity http) throws Exception {
         http.authenticationProvider(authenticationProvider())
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/login", "/logout", "/static/**"))
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/login", "/logout", "/static/**" , "/api/public/**" ,"/api/**"))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/images/{filename}" , "/" , "/api/food/getFutterplan").permitAll()
+                        .requestMatchers("/login", "/images/{filename}" , "/" , "/api/food/getFutterplan" , "/").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(formLogin -> formLogin
@@ -78,7 +84,7 @@ public class WebSecurityConfig implements WebMvcConfigurer {
                             request.getSession().setAttribute("error", "Benutzername oder Passwort ist falsch.");
                             response.sendRedirect("/login?error");
                         })
-                        .defaultSuccessUrl("/index", true)
+                        .defaultSuccessUrl("/dashboard", true)
                         .permitAll()
                 )
                 .logout(logout -> logout
@@ -88,8 +94,15 @@ public class WebSecurityConfig implements WebMvcConfigurer {
                 )
                 .sessionManagement(session -> session
                         .invalidSessionUrl("/login?session=invalid") // URL für ungültige Sitzungen
-                        .sessionFixation().migrateSession()
+                        .sessionFixation().migrateSession() // Sitzungsfixierung verhindern
                         .sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.IF_REQUIRED) // Sitzung bei Bedarf erstellen
+                        .maximumSessions(1) // Nur eine aktive Sitzung pro Benutzer
+                        .expiredSessionStrategy(event -> { // Strategie bei Ablauf der Sitzung
+                            HttpServletResponse response = event.getResponse();
+                            response.sendRedirect("/login?session=expired"); // Weiterleitung bei abgelaufener Sitzung
+                        })
+                        .maxSessionsPreventsLogin(true) // Zusätzliche Anmeldungen verhindern
+                        .sessionRegistry(sessionRegistry()) // SessionRegistry für Verwaltung
                 )
                 .sessionManagement(session -> session
                         .maximumSessions(1) // Nur eine aktive Sitzung pro Benutzer
