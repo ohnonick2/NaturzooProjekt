@@ -127,4 +127,64 @@ public class PflegerManager {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/add")
+    public ResponseEntity<String> addPfleger(@RequestBody String body) {
+        System.out.println("ADD");
+
+        if (SecurityContextHolder.getContext().getAuthentication() == null) {
+            return ResponseEntity.badRequest().body("Nicht authentifiziert");
+        }
+
+        String username = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+        JsonObject userloggedIn = JsonParser.parseString(username).getAsJsonObject();
+        JsonObject targetUser = JsonParser.parseString(body).getAsJsonObject();
+
+
+        //check if user already exists
+        Pfleger pflegerCheck = pflegerrepository.findByBenutzername(targetUser.get("benutzername").getAsString());
+        if (pflegerCheck != null) {
+            return ResponseEntity.badRequest().body("Benutzername bereits vergeben");
+        }
+
+
+        Pfleger pfleger = new Pfleger();
+        pfleger.setBenutzername(targetUser.get("benutzername").getAsString());
+        pfleger.setVorname(targetUser.get("vorname").getAsString());
+        pfleger.setNachname(targetUser.get("nachname").getAsString());
+        pfleger.setEnabled(targetUser.get("enabled").getAsBoolean());
+        pfleger.setPassword(passwordEncoder.encode(targetUser.get("password").getAsString()));
+
+        System.out.println("rollen: " + targetUser.get("rollen").getAsString());
+
+        Rolle rolle = rolleRepository.findRolleByName(targetUser.get("rollen").getAsString());
+        if (rolle == null) {
+            return ResponseEntity.badRequest().body("Rolle nicht gefunden");
+        }
+
+
+
+
+
+
+        // Ort prüfen
+        if (!targetUser.has("ort")) {
+            return ResponseEntity.badRequest().body("Ort fehlt im Request");
+        }
+
+        Ort ort = ortrepository.findByPlz(targetUser.get("ort").getAsInt());
+        if (ort == null) {
+            return ResponseEntity.badRequest().body("Ort nicht gefunden");
+        }
+
+        pfleger.setOrt(ort);
+        pflegerrepository.save(pfleger);
+        RolleUser rolleUser = new RolleUser();
+        rolleUser.setUser(pfleger);
+        rolleUser.setRolle(rolle);
+        rolleUserRepository.save(rolleUser);
+
+        return ResponseEntity.ok("Pfleger erfolgreich hinzugefügt");
+    }
+
+
 }

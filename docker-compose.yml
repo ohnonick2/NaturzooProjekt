@@ -1,17 +1,29 @@
+version: '3.9'
+
 services:
   # MySQL-Datenbank
   db:
     image: mysql:8.0
     environment:
-      MYSQL_ROOT_PASSWORD: password              # Root-Passwort
-      MYSQL_DATABASE: naturzoo                   # Standarddatenbank
-      MYSQL_USER: user                            # Neuer Benutzername
-      MYSQL_PASSWORD: userpassword               # Passwort für den neuen Benutzer
+      MYSQL_ROOT_PASSWORD: password               # Root-Passwort
+      MYSQL_DATABASE: naturzoo                    # Standarddatenbank
     ports:
       - "3306:3306"
     networks:
       app-network:
         ipv4_address: 172.28.1.2
+
+  # phpMyAdmin zur Verwaltung der Datenbank
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+    ports:
+      - "8082:80"
+    networks:
+      app-network:
+        ipv4_address: 172.28.1.3
 
   # Spring Boot-Anwendung
   app:
@@ -19,16 +31,16 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/naturzoo?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=user          # Benutzername des neuen Users
-      - SPRING_DATASOURCE_PASSWORD=userpassword  # Passwort des neuen Users
-      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/naturzoo?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root            # Benutzername: root
+      SPRING_DATASOURCE_PASSWORD: password        # Passwort: password
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
     depends_on:
       - db
     networks:
       app-network:
-        ipv4_address: 172.28.1.3
+        ipv4_address: 172.28.1.4
 
 networks:
   app-network:
@@ -36,4 +48,4 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 172.28.1.0/30
+        - subnet: 172.28.1.0/29

@@ -1,4 +1,4 @@
-@Bean
+  @Bean
     CommandLineRunner initDatabase() {
         return args -> {
 
@@ -86,6 +86,7 @@
             ));
 
 
+
             rolleRepository.save(superAdmin);
             rolleRepository.save(rolle);
             rolleRepository.save(rolle2);
@@ -124,3 +125,5 @@
         };
 
     }
+
+

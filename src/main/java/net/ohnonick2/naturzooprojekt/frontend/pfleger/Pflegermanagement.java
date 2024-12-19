@@ -94,6 +94,30 @@ public class Pflegermanagement {
         return "autharea/pflegemanagement/editpflegermanagement";
     }
 
+    @GetMapping("/createUser")
+    public String createUser(Model model) {
+        List<Ort> orte = ortrepository.findAll(); // Alle Orte abrufen
+
+        String json = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+        JsonObject jsonObject = JsonParser.parseString(json).getAsJsonObject();
+        model.addAttribute("loggedInUserId", jsonObject.get("id").getAsLong());
+        List<Rolle> rollen = rolleRepository.findAll(); // Rollen abrufen
+
+        //wenn rolle SuperAdmin ist, dann rollen entfernen und ,wenn role vom eingeloggten user == die selbe rolle ist, dann auch entfernen
+        rollen = rollen.stream().filter(rolle -> !rolle.getName().equals("SuperAdmin")).collect(Collectors.toList());
+
+        System.out.println("Rollen: " + rollen);
+        model.addAttribute("roles", rollen);
+
+
+
+
+
+        model.addAttribute("orte", orte); // Orte in das Model einfügen
+
+        return "autharea/pflegemanagement/addpflegermanament";
+    }
+
 
     public static class UserWithRoles {
         private final Pfleger pfleger;

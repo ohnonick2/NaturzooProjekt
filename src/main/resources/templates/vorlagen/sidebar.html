@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Vorlage Sidebar</title>
 </head>
-
+<th:block th:fragment="sidebar">
 <style>
   /* Sidebar */
   .sidebar {
@@ -63,7 +63,7 @@
 
 <body>
 <!-- Sidebar -->
-<th:block th:fragment="sidebar">
+
   <div class="sidebar" id="sidebar">
     <div class="menu-toggle" onclick="toggleSidebar()">
       <i class="fas fa-bars fa-2x"></i>

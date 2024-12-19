@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pfleger hinzufügen | Rheiner Zoo</title>
+    <div th:replace="~{vorlagen/icon :: icon}"></div>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('/images/background.png');
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f6f9;
+        }
+        .main-content {
+            margin: 0 auto;
+            max-width: 600px;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #1f4e3e;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .autocomplete-suggestions {
+            border: 1px solid #ddd;
+            max-height: 150px;
+            overflow-y: auto;
+            position: absolute;
+            background: white;
+            z-index: 1000;
+            width: 100%;
+        }
+        .autocomplete-suggestion {
+            padding: 10px;
+            cursor: pointer;
+        }
+        .autocomplete-suggestion:hover {
+            background: #f0f0f0;
+        }
+    </style>
+</head>
+
+<body>
+<div class="main-content">
+    <h1>Pfleger hinzufügen</h1>
+    <form id="addPflegerForm">
+        <!-- Hidden Inputs -->
+        <input type="hidden" id="requesterId" th:value="${loggedInUserId}" />
+        <input type="hidden" id="currentUserRole" th:value="${currentUserRole}" />
+
+        <!-- Benutzername -->
+        <div class="mb-3">
+            <label for="benutzername" class="form-label">Benutzername</label>
+            <input type="text" class="form-control" id="benutzername" required />
+        </div>
+
+        <!-- Vorname -->
+        <div class="mb-3">
+            <label for="vorname" class="form-label">Vorname</label>
+            <input type="text" class="form-control" id="vorname" required />
+        </div>
+
+        <!-- Nachname -->
+        <div class="mb-3">
+            <label for="nachname" class="form-label">Nachname</label>
+            <input type="text" class="form-control" id="nachname" required />
+        </div>
+
+        <!-- Aktiviert -->
+        <div class="mb-3">
+            <label for="enabled" class="form-label">Aktiviert</label>
+            <select class="form-control" id="enabled" required>
+                <option value="true">Ja</option>
+                <option value="false">Nein</option>
+            </select>
+        </div>
+
+        <!-- Rolle -->
+        <div class="mb-3">
+            <label for="role" class="form-label">Rolle</label>
+            <select class="form-control" id="role" name="role" required>
+                <option value="" disabled selected>Bitte wählen</option> <!-- Platzhalter -->
+                <option th:each="role : ${roles}"
+                        th:value="${role.name}"
+                        th:text="${role.name}">
+                </option>
+            </select>
+        </div>
+
+
+        <!-- Ort -->
+        <div class="mb-3 autocomplete-container">
+            <label for="ort" class="form-label">Ort (PLZ oder Name suchen)</label>
+            <input type="text" class="form-control" id="ort" placeholder="Ort suchen..." autocomplete="off"  required />
+            <input type="hidden" id="ortPlz" /> <!-- Versteckte Eingabe für PLZ -->
+            <div id="autocomplete-suggestions" class="autocomplete-suggestions"></div>
+            <ul id="orte-list" style="display: none;">
+                <li th:each="ort : ${orte}" th:data-id="${ort.plz}" th:data-plz="${ort.plz}" th:data-name="${ort.ortname}">
+                    <span th:text="${ort.ortname} + ' (' + ${ort.plz} + ')'"></span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Passwort -->
+        <div class="mb-3">
+            <label for="password" class="form-label">Passwort</label>
+            <input type="password" class="form-control" id="password" placeholder="Passwort eingeben" required />
+        </div>
+
+        <!-- Passwort bestätigen -->
+        <div class="mb-3">
+            <label for="confirmPassword" class="form-label">Passwort bestätigen</label>
+            <input type="password" class="form-control" id="confirmPassword" placeholder="Passwort erneut eingeben" required />
+        </div>
+
+        <!-- Buttons -->
+        <div class="d-flex justify-content-between">
+            <button type="button" class="btn btn-secondary" onclick="goBack()">Abbrechen</button>
+            <button type="submit" class="btn btn-primary">Hinzufügen</button>
+        </div>
+    </form>
+</div>
+
+<footer>
+    <p>&copy; 2024 Rheiner Zoo</p>
+</footer>
+
+<script>
+    document.getElementById('addPflegerForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const selectedRole = document.getElementById('role').value;
+        const currentUserRole = document.getElementById('currentUserRole').value;
+
+        if (password !== confirmPassword) {
+            alert('Die Passwörter stimmen nicht überein.');
+            return;
+        }
+
+        if (selectedRole === 'SUPERADMIN') {
+            alert('Superadmin kann nicht hinzugefügt werden.');
+            return;
+        }
+
+        if (currentUserRole === selectedRole) {
+            alert('Sie können keine Benutzer mit derselben Rolle hinzufügen.');
+            return;
+        }
+
+        const payload = {
+            benutzername: document.getElementById('benutzername').value,
+            vorname: document.getElementById('vorname').value,
+            nachname: document.getElementById('nachname').value,
+            enabled: document.getElementById('enabled').value === 'true',
+            rollen: selectedRole,
+            ort: document.getElementById('ortPlz').value,
+            password: password,
+            requesterId: document.getElementById('requesterId').value
+        };
+
+        fetch('/api/pfleger/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = "/usermanagement"; // Korrekt weiterleiten
+                } else {
+                    return response.text().then(alert); // Fehler anzeigen, falls nicht erfolgreich
+                }
+            })
+            .catch(error => alert('Fehler beim Hinzufügen des Pflegers: ' + error));
+    });
+
+    function selectOrt(plz, name) {
+        document.getElementById('ort').value = name + ' (' + plz + ')';
+        document.getElementById('ortPlz').value = plz;
+        document.getElementById('autocomplete-suggestions').innerHTML = '';
+    }
+
+    document.getElementById('ort').addEventListener('input', function () {
+        const query = this.value.toLowerCase();
+        const suggestionsBox = document.getElementById('autocomplete-suggestions');
+        const ortList = document.querySelectorAll('#orte-list li');
+
+        suggestionsBox.innerHTML = '';
+
+        if (query.length > 2) {
+            ortList.forEach(ort => {
+                const ortName = ort.getAttribute('data-name').toLowerCase();
+                const ortPlz = ort.getAttribute('data-plz');
+
+                if (ortName.includes(query) || ortPlz.includes(query)) {
+                    const suggestion = document.createElement('div');
+                    suggestion.className = 'autocomplete-suggestion';
+                    suggestion.textContent = `${ort.getAttribute('data-name')} (${ortPlz})`;
+                    suggestion.onclick = () => selectOrt(ortPlz, ort.getAttribute('data-name'));
+                    suggestionsBox.appendChild(suggestion);
+                }
+            });
+        }
+    });
+
+    function goBack() {
+        window.history.back();
+    }
+</script>
+</body>
+</html>
