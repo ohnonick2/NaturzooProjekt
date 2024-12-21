@@ -156,6 +156,8 @@
       <th>Benutzername</th>
       <th>Vorname</th>
       <th>Nachname</th>
+      <th>Geburtsdatum</th>
+      <th>Ort</th>
       <th>Rollen</th>
       <th>Aktionen</th>
     </tr>
@@ -166,6 +168,8 @@
       <td th:text="${userWithRoles.pfleger.benutzername}"></td>
       <td th:text="${userWithRoles.pfleger.vorname}"></td>
       <td th:text="${userWithRoles.pfleger.nachname}"></td>
+      <td th:text="${userWithRoles.pfleger.geburtsdatum != null ? #temporals.format(userWithRoles.pfleger.geburtsdatum, 'dd.MM.yyyy') : 'Kein Datum'}"></td>
+      <td th:text="${userWithRoles.pfleger.getOrt().ortname}"></td>
       <td>
         <ul>
           <li th:each="role : ${userWithRoles.roles}" th:text="${role.name}"></li>
@@ -180,13 +184,15 @@
         <!-- Überprüfen, ob der Benutzer mit derselben Rolle ist -->
         <div th:if="${userWithRoles.pfleger.id != loggedInUserId}">
           <div sec:authorize="hasAuthority('USER_MANAGEMENT_WRITE') or hasAuthority('*')">
-            <!-- Benutzer mit derselben Rolle -->
-            <span th:if="${loggedInUserRoles == userWithRoles.roles}">
-          Du kannst Benutzer mit derselben Rolle nicht bearbeiten
-        </span>
+            <div th:if="${loggedInUserRoles == userWithRoles.isSuperadmin()}">
+              Du kannst den Superadmin nicht bearbeiten
+            </div>
+
 
             <!-- Buttons für erlaubte Aktionen -->
-            <div th:unless="${loggedInUserRoles == userWithRoles.roles}">
+            <div th:if="${!userWithRoles.isSuperadmin()
+            and userWithRoles.pfleger.id != loggedInUserId
+            and !#lists.contains(loggedInUserRoles, userWithRoles.roles)}">
               <button class="btn btn-primary btn-action" th:onclick="'editUser(' + ${userWithRoles.pfleger.id} + ')'">
                 <i class="fas fa-edit"></i> Bearbeiten
               </button>
@@ -206,7 +212,8 @@
 
 <script>
   function addUser() {
-    window.location.href = '/createUser';
+
+    window.location.href = '/addPfleger';
   }
 
   function editUser(userId) {

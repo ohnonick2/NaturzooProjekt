@@ -82,6 +82,11 @@ public class CustomUserDetails implements UserDetails {
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("benutzername", user.getBenutzername());
         jsonObject.addProperty("id", user.getId());
+        jsonObject.addProperty(
+                "hasBirthday",
+                user.getGeburtsdatum() != null && user.getGeburtsdatum().getDayOfMonth() == LocalDateTime.now().getDayOfMonth() &&
+                        user.getGeburtsdatum().getMonth() == LocalDateTime.now().getMonth()
+        );
         return jsonObject.toString();
     }
 

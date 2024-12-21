@@ -10,28 +10,33 @@ import java.time.LocalDate;
 public class Tier {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO , generator = "tier_seq")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+
     private String name;
     private LocalDate geburtsdatum;
-    @Column(name = "Todsdatum" , nullable = true)
+
+    @Column(name = "Todsdatum", nullable = true)
     private LocalDate sterbedatum;
+
+    @Column(name = "AbgabeDatum", nullable = true)
+    private LocalDate abgabeDatum;
+
     private TierGeschlecht geschlecht;
 
     @OneToOne
     private TierArt tierArt;
 
-
     public Tier() {
     }
 
-
-    public Tier(String name, LocalDate geburtsdatum, @Nullable LocalDate sterbedatum, TierGeschlecht geschlecht, TierArt tierArt) {
+    public Tier(String name, LocalDate geburtsdatum, @Nullable LocalDate sterbedatum, @Nullable LocalDate abgabeDatum, TierGeschlecht geschlecht, TierArt tierArt) {
         this.name = name;
         this.geburtsdatum = geburtsdatum;
         this.sterbedatum = sterbedatum;
         this.geschlecht = geschlecht;
         this.tierArt = tierArt;
+        this.abgabeDatum = abgabeDatum;
     }
 
     public long getId() {
@@ -66,6 +71,14 @@ public class Tier {
         this.sterbedatum = sterbedatum;
     }
 
+    public LocalDate getAbgabeDatum() {
+        return abgabeDatum;
+    }
+
+    public void setAbgabeDatum(LocalDate abgabeDatum) {
+        this.abgabeDatum = abgabeDatum;
+    }
+
     public TierGeschlecht getGeschlecht() {
         return geschlecht;
     }
@@ -82,3 +95,4 @@ public class Tier {
         this.tierArt = tierArt;
     }
 }
+

@@ -90,6 +90,13 @@
             </select>
         </div>
 
+        <div class="mb-3">
+            <label for="geburtstag" class="form-label">Geburtstag</label>
+            <input type="date" class="form-control" id="geburtstag" required />
+        </div>
+
+
+
         <!-- Rolle -->
         <div class="mb-3">
             <label for="role" class="form-label">Rolle</label>
@@ -116,6 +123,8 @@
             </ul>
         </div>
 
+
+
         <!-- Passwort -->
         <div class="mb-3">
             <label for="password" class="form-label">Passwort</label>
@@ -136,9 +145,7 @@
     </form>
 </div>
 
-<footer>
-    <p>&copy; 2024 Rheiner Zoo</p>
-</footer>
+<footer th:replace="~{vorlagen/footer :: footer}"></footer>
 
 <script>
     document.getElementById('addPflegerForm').addEventListener('submit', function (e) {
@@ -148,6 +155,7 @@
         const confirmPassword = document.getElementById('confirmPassword').value;
         const selectedRole = document.getElementById('role').value;
         const currentUserRole = document.getElementById('currentUserRole').value;
+        const geburtstag = document.getElementById('geburtstag').value;
 
         if (password !== confirmPassword) {
             alert('Die Passwörter stimmen nicht überein.');
@@ -164,6 +172,12 @@
             return;
         }
 
+        if (geburtstag === '') {
+            alert('Geburtstag darf nicht leer sein.');
+            return;
+        }
+
+
         const payload = {
             benutzername: document.getElementById('benutzername').value,
             vorname: document.getElementById('vorname').value,
@@ -172,7 +186,8 @@
             rollen: selectedRole,
             ort: document.getElementById('ortPlz').value,
             password: password,
-            requesterId: document.getElementById('requesterId').value
+            requesterId: document.getElementById('requesterId').value,
+            geburtstag: document.getElementById('geburtstag').value
         };
 
         fetch('/api/pfleger/add', {

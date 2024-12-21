@@ -47,6 +47,7 @@
     }
 
 
+
   </style>
 </head>
 
@@ -62,10 +63,25 @@
   </div>
 
   <!-- Dashboard -->
+
+  <div th:if="${hasBirthday}" class="card birthday-card" style="background: linear-gradient(135deg, #1f4e3e, #6fa56f); border-radius: 20px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); color: white; text-align: center; padding: 20px;">
+    <h1 style="font-family: 'Brush Script MT', cursive; font-size: 32px; margin-bottom: 10px; text-shadow: 2px 2px rgba(0, 0, 0, 0.2);">
+      🎉 Happy Birthday, <span th:text="${username}"></span>! 🎉
+    </h1>
+    <p style="font-size: 18px; font-weight: 500; margin: 0;">
+      Wir wünschen Ihnen alles Gute zum Geburtstag und einen wundervollen Tag voller Freude! 🎂
+    </p>
+  </div>
+
+
+
   <div class="card p-4">
-    <h4>Willkommen,<span th:text="${username}"></span></h4>
+    <h4>Willkommen, <span th:text="${username}"></span></h4>
     <p>Hier können Sie verschiedene Bereiche des Rheiner Zoos verwalten.</p>
   </div>
+
+
+
 
   <!-- Futterpläne -->
   <div id="futterplaene" class="card p-4">

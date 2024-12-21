@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Zugriff verweigert</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <div th:insert="~{vorlagen/icon :: icon}"></div>
+  <style>
+    /* Grundlayout */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f8ff; /* Hellblauer Hintergrund wie in der Fehlerseite */
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: #333;
+    }
+
+    .container {
+      text-align: center;
+      background: #ffffff; /* Weißer Hintergrund für den Kontrast */
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+      width: 90%;
+      max-width: 400px;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    h1 {
+      font-size: 2.5em;
+      color: #d9534f; /* Auffälliges Rot für Fehler */
+      margin-bottom: 15px;
+    }
+
+    p {
+      font-size: 1.2em;
+      line-height: 1.6;
+      color: #555;
+      margin: 15px 0 25px;
+    }
+
+    a {
+      display: inline-block;
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-size: 1em;
+      color: #ffffff;
+      background-color: #28a745; /* Grüner Button */
+      text-decoration: none;
+      border-radius: 5px;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    a:hover {
+      background-color: #218838; /* Dunklerer Grün-Ton beim Hover */
+      transform: scale(1.05);
+    }
+
+    .gif-container {
+      margin: 20px 0;
+    }
+
+    .gif-container img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Animationen */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 2em; /* Kleinere Schriftgröße für Tablets */
+      }
+
+      p {
+        font-size: 1em; /* Reduzierte Schriftgröße für Texte */
+      }
+
+      a {
+        padding: 8px 16px; /* Kleinere Buttons */
+        font-size: 0.9em;
+      }
+
+      .container {
+        padding: 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 1.8em; /* Noch kleinere Schriftgröße für Smartphones */
+      }
+
+      p {
+        font-size: 0.9em;
+        line-height: 1.4;
+      }
+
+      a {
+        padding: 8px 12px;
+        font-size: 0.8em; /* Kompakte Buttons */
+      }
+
+      .container {
+        width: 95%; /* Größere Breite für schmalere Bildschirme */
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Zugriff verweigert</h1>
+  <p>Sie haben keine Berechtigung, auf diese Seite zuzugreifen. Bitte wenden Sie sich an den Administrator, falls Sie Zugriff benötigen.</p>
+
+  <!-- GIF eines lustigen Tieres -->
+  <div class="gif-container">
+    <img src="https://cdn.dribbble.com/users/285475/screenshots/2083086/dribbble_1.gif" alt="Zugriff verweigert GIF">
+  </div>
+
+  <a th:href="${#authentication?.isAuthenticated()} ? ~{/dashboard} : ~{/}"
+     title="Zur Startseite">
+    Zurück zur Startseite
+  </a>
+</div>
+</body>
+</html>

@@ -2,11 +2,10 @@ package net.ohnonick2.naturzooprojekt.db.user;
 
 import jakarta.persistence.*;
 import net.ohnonick2.naturzooprojekt.db.ort.Ort;
-import net.ohnonick2.naturzooprojekt.db.permission.Rolle;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Random;
-import java.util.UUID;
 
 @Entity
 public class Pfleger {
@@ -25,6 +24,7 @@ public class Pfleger {
 
     private int failedLoginAttempts;
     private LocalDateTime lockedUntil; // Sperrdatum
+    private LocalDate geburtsdatum;
 
     @JoinColumn(name = "ort")
     @ManyToOne
@@ -33,10 +33,11 @@ public class Pfleger {
     public Pfleger() {
     }
 
-    public Pfleger(String vorname, String nachname, String password, Ort ort) {
+    public Pfleger(String vorname, String nachname, String password, LocalDate geburtsdatum , Ort ort) {
         this.vorname = vorname;
         this.nachname = nachname;
         this.password = password;
+        this.geburtsdatum = geburtsdatum;
         this.ort = ort;
         this.enabled= true;
         String initials = (vorname.substring(0, 1) + nachname.substring(0, 1)).toLowerCase();
@@ -126,5 +127,11 @@ public class Pfleger {
         this.lockedUntil = lockedUntil;
     }
 
+    public void setGeburtsdatum(LocalDate geburtsdatum) {
+        this.geburtsdatum = geburtsdatum;
+    }
 
+    public LocalDate getGeburtsdatum() {
+        return geburtsdatum;
+    }
 }

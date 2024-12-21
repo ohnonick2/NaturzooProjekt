@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <div th:insert="~{vorlagen/icon :: icon}"></div>
+  <title>Error | Rheiner Zoo</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f8ff; /* Hellblauer Hintergrund */
+      color: #333;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    .error-container {
+      max-width: 600px;
+      width: 100%;
+      padding: 20px;
+      background: #fff;
+      border: 1px solid #dcdcdc;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+      text-align: center;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    h1 {
+      font-size: 2.5em;
+      color: #d9534f; /* Auffälliges Rot für Fehler */
+      margin-bottom: 10px;
+    }
+    p {
+      font-size: 1.2em;
+      line-height: 1.6;
+      color: #555;
+    }
+    a {
+      display: inline-block;
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-size: 1em;
+      color: #fff;
+      background-color: #28a745;
+      text-decoration: none;
+      border-radius: 5px;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+    a:hover {
+      background-color: #218838;
+      transform: scale(1.05);
+    }
+    .gif-container {
+      margin: 20px auto;
+    }
+    .gif-container img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="error-container">
+  <h1>Es ist ein Problem aufgetreten</h1>
+  <p>Bitte versuchen Sie es später erneut.</p>
+
+  <!-- GIF eines Tieres -->
+  <div class="gif-container">
+    <img src="https://cdn.dribbble.com/users/285475/screenshots/2083086/dribbble_1.gif" alt="Ein Tier hat sich verlaufen">
+  </div>
+
+  <a href="/">Zurück zur Startseite</a>
+</div>
+</body>
+</html>

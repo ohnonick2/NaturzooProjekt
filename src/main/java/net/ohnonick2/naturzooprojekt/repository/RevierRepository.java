@@ -5,5 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface RevierRepository extends JpaRepository<Revier, Long> {
 
+    Revier findRevierByName(String name);
 
 }

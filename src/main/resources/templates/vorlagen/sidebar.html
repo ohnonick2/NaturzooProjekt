@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:sec="http://www.w3.org/1999/xhtml">
+<html lang="en" xmlns:sec="http://www.w3.org/1999/xhtml" xmlns="http://www.w3.org/1999/html">
 <head>
   <meta charset="UTF-8">
   <title>Vorlage Sidebar</title>
@@ -63,7 +63,6 @@
 
 <body>
 <!-- Sidebar -->
-
   <div class="sidebar" id="sidebar">
     <div class="menu-toggle" onclick="toggleSidebar()">
       <i class="fas fa-bars fa-2x"></i>
@@ -75,7 +74,7 @@
     <a sec:authorize="hasAuthority('FUTTER_MANAGEMENT_READ') or hasAuthority('*')" href="/futter">
       <i class="fas fa-utensils"></i> <span>Futterverwaltung</span>
     </a>
-    <a sec:authorize="hasAuthority('USER_MANAGEMENT_READ') or hasAuthority('*')" href="/usermanagement">
+    <a sec:authorize="hasAuthority('USER_MANAGEMENT_READ') or hasAuthority('*') or hasAuthority('USER_MANAGEMENT_WRITE')" href="/usermanagement">
       <i class="fas fa-users"></i> <span>Pflegerverwaltung</span>
     </a>
     <a sec:authorize="hasAuthority('REVIER_READ') or hasAuthority('*')" href="/reviere">
@@ -93,7 +92,11 @@
     <a href="/settings"><i class="fas fa-cog"></i> <span>Einstellungen</span></a>
     <a id="logoutButton" href="/logout"><i class="fas fa-sign-out-alt"></i> <span id="logoutText">Logout</span></a>
   </div>
+
+</body>
+
 </th:block>
+
 
 <script>
   const LOGOUT_TIMEOUT = 1200; // 20 minutes in seconds

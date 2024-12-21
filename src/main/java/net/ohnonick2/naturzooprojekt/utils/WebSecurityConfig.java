@@ -34,8 +34,6 @@ public class WebSecurityConfig implements WebMvcConfigurer {
 
     @Bean
     public SessionRegistry sessionRegistry() {
-
-
         return new SessionRegistryImpl();
     }
 
@@ -54,7 +52,6 @@ public class WebSecurityConfig implements WebMvcConfigurer {
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService());
-
         authProvider.setPasswordEncoder(passwordEncoder());
 
         return authProvider;
@@ -76,6 +73,14 @@ public class WebSecurityConfig implements WebMvcConfigurer {
                 .csrf(csrf -> csrf.ignoringRequestMatchers("/login", "/logout", "/static/**" , "/api/public/**" ,"/api/**"))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login", "/images/{filename}" , "/" , "/api/food/getFutterplan" , "/").permitAll()
+                        .requestMatchers("/usermanagement").hasAnyAuthority("USER_MANAGEMENT_READ" , "USER_MANAGEMENT_WRITE" , "*")
+                        .requestMatchers("/editUser/").hasAnyAuthority("USER_MANAGEMENT_WRITE" , "*")
+                        .requestMatchers("/editUser/**").hasAnyAuthority("USER_MANAGEMENT_WRITE" , "*")
+                        .requestMatchers("/addUser").hasAnyAuthority("USER_MANAGEMENT_WRITE" , "*")
+                        .requestMatchers("/addUser/**").hasAnyAuthority("USER_MANAGEMENT_WRITE" , "*")
+                        .requestMatchers("/deleteUser/**").hasAnyAuthority("USER_MANAGEMENT_WRITE" , "*")
+
+
                         .anyRequest().authenticated()
                 )
                 .formLogin(formLogin -> formLogin
@@ -106,8 +111,14 @@ public class WebSecurityConfig implements WebMvcConfigurer {
                 )
                 .sessionManagement(session -> session
                         .maximumSessions(1) // Nur eine aktive Sitzung pro Benutzer
-                        .maxSessionsPreventsLogin(true) // Zusätzliche Anmeldungen verhindern
-                );
+                        .maxSessionsPreventsLogin(true)
+                        .sessionRegistry(sessionRegistry())
+
+                )
+                .exceptionHandling(exceptionHandling -> exceptionHandling
+                        .accessDeniedPage("/access-denied")
+                )
+            ;
 
         return http.build();
     }

@@ -18,6 +18,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -94,40 +95,31 @@ public class Pflegermanagement {
         return "autharea/pflegemanagement/editpflegermanagement";
     }
 
-    @GetMapping("/createUser")
-    public String createUser(Model model) {
+    @GetMapping("/addPfleger")
+    public String addPfleger(Model model) {
         List<Ort> orte = ortrepository.findAll(); // Alle Orte abrufen
-
-        String json = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
-        JsonObject jsonObject = JsonParser.parseString(json).getAsJsonObject();
-        model.addAttribute("loggedInUserId", jsonObject.get("id").getAsLong());
-        List<Rolle> rollen = rolleRepository.findAll(); // Rollen abrufen
-
-        //wenn rolle SuperAdmin ist, dann rollen entfernen und ,wenn role vom eingeloggten user == die selbe rolle ist, dann auch entfernen
-        rollen = rollen.stream().filter(rolle -> !rolle.getName().equals("SuperAdmin")).collect(Collectors.toList());
-
-        System.out.println("Rollen: " + rollen);
-        model.addAttribute("roles", rollen);
-
-
-
-
 
         model.addAttribute("orte", orte); // Orte in das Model einfügen
 
+        List<Rolle> roles = rolleRepository.findAll();
+
+        Rolle superAdmin = rolleRepository.findRolleByName("SuperAdmin");
+        roles.remove(superAdmin);
+        model.addAttribute("roles", roles); // Alle Rollen abrufen
         return "autharea/pflegemanagement/addpflegermanament";
     }
-
 
     public static class UserWithRoles {
         private final Pfleger pfleger;
         private final List<Rolle> roles;
         private final boolean isSuperadmin;
+        private final boolean isAdmin;
 
         public UserWithRoles(Pfleger pfleger, List<Rolle> roles) {
             this.pfleger = pfleger;
             this.roles = roles;
-            this.isSuperadmin = roles.stream().anyMatch(role -> "SuperAdmin".equals(role.getName()));
+            this.isAdmin = roles.stream().anyMatch(role -> "Admin".equalsIgnoreCase(role.getName()));
+            this.isSuperadmin = roles.stream().anyMatch(role -> "SuperAdmin".equalsIgnoreCase(role.getName()));
         }
 
         public Pfleger getPfleger() {
@@ -141,5 +133,12 @@ public class Pflegermanagement {
         public boolean isSuperadmin() {
             return isSuperadmin;
         }
+
+        public boolean isAdmin() {
+            return isAdmin;
+        }
+
     }
+
+
 }

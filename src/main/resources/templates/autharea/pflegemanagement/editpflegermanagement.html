@@ -170,10 +170,26 @@
     </div>
 
     <div class="mb-3">
+      <label for="geburtstag" class="form-label">Geburtstag</label>
+      <input type="date" class="form-control" id="geburtstag" required />
+    </div>
+
+    <div class="mb-3">
       <label for="enabled" class="form-label">Aktiviert</label>
       <select class="form-control" id="enabled" required>
         <option value="true" th:selected="${pfleger.enabled} == true">Ja</option>
         <option value="false" th:selected="${pfleger.enabled} == false">Nein</option>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label for="role" class="form-label">Rolle</label>
+      <select class="form-control" id="role" name="role" required>
+        <option value="" disabled selected>Bitte wählen</option> <!-- Platzhalter -->
+        <option th:each="role : ${roles}"
+                th:value="${role.name}"
+                th:text="${role.name}">
+        </option>
       </select>
     </div>
 
@@ -254,7 +270,9 @@
       enabled: document.getElementById('enabled').value === 'true',
       ort: document.getElementById('ortPlz').value
               ? { plz: document.getElementById('ortPlz').value }
-              : { plz: '${pfleger.ort}' }
+              : { plz: '${pfleger.ort}' },
+      geburtstag: document.getElementById('geburtstag').value,
+      role : document.getElementById('role').value
     };
 
 
