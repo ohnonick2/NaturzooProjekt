@@ -92,6 +92,11 @@ public class Pflegermanagement {
         model.addAttribute("pfleger", pfleger);
         model.addAttribute("orte", orte); // Orte in das Model einfügen
 
+        List<Rolle> roles = rolleRepository.findAll();
+        Rolle superAdmin = rolleRepository.findRolleByName("SuperAdmin");
+        roles.remove(superAdmin);
+        model.addAttribute("roles", roles); // Alle Rollen abrufen
+
         return "autharea/pflegemanagement/editpflegermanagement";
     }
 

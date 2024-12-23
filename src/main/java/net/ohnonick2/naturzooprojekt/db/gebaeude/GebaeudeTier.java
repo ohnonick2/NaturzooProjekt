@@ -10,39 +10,37 @@ import java.time.LocalDate;
 @Table(name = "gebaeude_tier")
 public class GebaeudeTier {
 
+    @Id
+    @ManyToOne
+    @JoinColumn(name = "gebaeude_id", nullable = false)
+    private Gebaeude gebaeude;
 
     @Id
     @ManyToOne
-    @JoinColumn(name = "gebaeude_id")
-    private Gebaeude gebaeudeId;
-
-    @Id
-    @ManyToOne
-    @JoinColumn(name = "tier_id")
-    private Tier tierId;
-
+    @JoinColumn(name = "tier_id", nullable = false)
+    private Tier tier;
 
     public GebaeudeTier() {
     }
 
     public GebaeudeTier(Gebaeude gebaeude, Tier tier) {
-        this.gebaeudeId = gebaeude;
-        this.tierId = tier;
+        this.gebaeude = gebaeude;
+        this.tier = tier;
     }
 
     public Gebaeude getGebaeude() {
-        return gebaeudeId;
+        return gebaeude;
     }
 
     public void setGebaeude(Gebaeude gebaeude) {
-        this.gebaeudeId = gebaeude;
+        this.gebaeude = gebaeude;
     }
 
-    public Gebaeude getGebaeudeId() {
-        return gebaeudeId;
+    public Tier getTier() {
+        return tier;
     }
 
-    public void setGebaeudeId(Gebaeude gebaeude) {
-        this.gebaeudeId = gebaeude;
+    public void setTier(Tier tier) {
+        this.tier = tier;
     }
 }

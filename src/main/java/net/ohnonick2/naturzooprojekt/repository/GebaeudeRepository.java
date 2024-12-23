@@ -5,7 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface GebaeudeRepository extends JpaRepository<Gebaeude, Long> {
 
-
+    Gebaeude findByName(String name);
+    Gebaeude findById(long id);
 
 
 }

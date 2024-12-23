@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gebäude bearbeiten</title>
+    <div th:insert="~{vorlagen/icon :: icon}"></div>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('/images/background.png');
+            margin: 0;
+            padding: 0;
+            background-color: #f4f6f9;
+            overflow-x: hidden;
+        }
+
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .main-content.collapsed {
+            margin-left: 70px;
+        }
+
+        .card {
+            border: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+
+        .header {
+            background-color: #1f4e3e;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-radius: 8px;
+        }
+
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+        }
+
+        .alert {
+            margin-top: 15px;
+        }
+    </style>
+</head>
+
+<body>
+<!-- Sidebar -->
+<div th:insert="~{vorlagen/sidebar :: sidebar}"></div>
+
+<!-- Main Content -->
+<div class="main-content" id="main-content">
+    <!-- Header -->
+    <div class="header">
+        <h2>Gebäude bearbeiten</h2>
+    </div>
+
+    <!-- Building Edit Section -->
+    <div class="card">
+        <h4>Bearbeiten Sie das ausgewählte Gebäude</h4>
+
+        <!-- Allgemeine Fehlermeldung -->
+        <div id="serverError" class="alert alert-danger" role="alert" style="display: none;">
+            Es ist ein Fehler beim Speichern aufgetreten.
+        </div>
+
+        <!-- Edit Form -->
+        <form id="editGebaeudeForm" novalidate>
+            <!-- Hidden field for the building ID -->
+            <input type="hidden" id="gebaeudeId" name="id" th:value="${gebaeude.id}" />
+
+            <!-- Name des Gebäudes -->
+            <div class="mb-3">
+                <label for="name" class="form-label">Name</label>
+                <input type="text" class="form-control" id="name" name="name" th:value="${gebaeude.name}" required />
+            </div>
+
+            <!-- Beschreibung -->
+            <div class="mb-3">
+                <label for="beschreibung" class="form-label">Beschreibung</label>
+                <textarea class="form-control" id="beschreibung" name="beschreibung" rows="3" maxlength="255" oninput="validateBeschreibung()" th:text="${gebaeude.beschreibung}"></textarea>
+                <div id="errorBeschreibung" class="invalid-feedback">
+                    Die Beschreibung darf maximal 255 Zeichen lang sein.
+                </div>
+            </div>
+
+            <!-- Maximale Kapazität -->
+            <div class="mb-3">
+                <label for="maximaleKapazitaet" class="form-label">Maximale Kapazität</label>
+                <input type="number" class="form-control" id="maximaleKapazitaet" name="maximaleKapazitaet" th:value="${gebaeude.maximaleKapazitaet}" required />
+            </div>
+
+            <!-- Buttons -->
+            <div class="header-row">
+                <button type="button" class="btn btn-secondary" onclick="goBack()">Abbrechen</button>
+                <button type="submit" class="btn btn-primary">Speichern</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer th:insert="~{vorlagen/footer :: footer}"></footer>
+
+<script>
+    // Smooth fade-in effect
+    document.addEventListener('DOMContentLoaded', () => {
+        const mainContent = document.getElementById('main-content');
+        mainContent.classList.add('visible');
+    });
+
+    function validateBeschreibung() {
+        const beschreibung = document.getElementById('beschreibung');
+        const errorBeschreibung = document.getElementById('errorBeschreibung');
+
+        if (beschreibung.value.length > 255) {
+            beschreibung.classList.add('is-invalid');
+            errorBeschreibung.style.display = 'block';
+        } else {
+            beschreibung.classList.remove('is-invalid');
+            errorBeschreibung.style.display = 'none';
+        }
+    }
+
+    document.getElementById('editGebaeudeForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const beschreibung = document.getElementById('beschreibung');
+        const errorBeschreibung = document.getElementById('errorBeschreibung');
+
+        // Validate Beschreibung length
+        if (beschreibung.value.length > 255) {
+            beschreibung.classList.add('is-invalid');
+            errorBeschreibung.textContent = "Die Beschreibung darf maximal 255 Zeichen lang sein.";
+            errorBeschreibung.style.display = 'block';
+            return;
+        } else {
+            beschreibung.classList.remove('is-invalid');
+            errorBeschreibung.style.display = 'none';
+        }
+
+        const payload = {
+            id: document.getElementById('gebaeudeId').value,
+            name: document.getElementById('name').value,
+            beschreibung: beschreibung.value,
+            maximaleKapazitaet: document.getElementById('maximaleKapazitaet').value
+        };
+
+        fetch('/api/gebaeude/edit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = "/gebaeudemanagement";
+                } else {
+                    return response.text().then(text => {
+                        const serverError = document.getElementById('serverError');
+                        serverError.textContent = 'Fehler beim Speichern: ' + text;
+                        serverError.style.display = 'block';
+                    });
+                }
+            })
+            .catch(error => {
+                const serverError = document.getElementById('serverError');
+                serverError.textContent = 'Ein unerwarteter Fehler ist aufgetreten: ' + error;
+                serverError.style.display = 'block';
+            });
+    });
+
+
+    function goBack() {
+        window.history.back();
+    }
+
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('collapsed');
+        document.getElementById('main-content').classList.toggle('collapsed');
+    }
+
+</script>
+</body>
+</html>

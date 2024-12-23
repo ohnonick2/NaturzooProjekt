@@ -27,11 +27,35 @@ public class Gebaeude {
         this.maximaleKapazitaet = maximaleKapazitaet;
     }
 
-    public void setId(Long id) {
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
         this.id = id;
     }
 
-    public Long getId() {
-        return id;
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getBeschreibung() {
+        return beschreibung;
+    }
+
+    public void setBeschreibung(String beschreibung) {
+        this.beschreibung = beschreibung;
+    }
+
+    public int getMaximaleKapazitaet() {
+        return maximaleKapazitaet;
+    }
+
+    public void setMaximaleKapazitaet(int maximaleKapazitaet) {
+        this.maximaleKapazitaet = maximaleKapazitaet;
     }
 }

@@ -95,45 +95,16 @@
 
 </body>
 
-</th:block>
+
 
 
 <script>
-  const LOGOUT_TIMEOUT = 1200; // 20 minutes in seconds
-  let remainingTime = LOGOUT_TIMEOUT;
-
-  function formatTime(seconds) {
-    const minutes = Math.floor(seconds / 60);
-    const sec = seconds % 60;
-
-    // Debugging: Log the minutes and seconds to the console
-    console.log(`Remaining Minutes: ${minutes}, Remaining Seconds: ${sec}`);
-
-    return `${String(minutes).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
-  }
-
-  function updateLogoutTimer() {
-    if (remainingTime > 0) {
-      remainingTime--;
-      document.getElementById("logoutText").textContent = `Logout (${formatTime(remainingTime)})`;
-    } else {
-      // Redirect to /loginforce when session times out
-      window.location.href = "/loginforce";
-    }
-  }
-
-  // Initialize the timer on page load
-  document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("logoutText").textContent = `Logout (${formatTime(remainingTime)})`;
-    setInterval(updateLogoutTimer, 1000);
-  });
-
   // Sidebar toggle
   function toggleSidebar() {
     const sidebar = document.getElementById("sidebar");
     sidebar.classList.toggle("collapsed");
   }
 </script>
-
+</th:block>
 </body>
 </html>
