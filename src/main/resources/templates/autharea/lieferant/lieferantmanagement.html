@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lieferantenverwaltung</title>
+
+  <!-- Styles und andere Ressourcen im Head -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-image: url('/images/background.png');
+      margin: 0;
+      padding: 0;
+      background-color: #f4f6f9;
+      overflow-x: hidden;
+    }
+
+    .main-content {
+      margin-left: 250px;
+      padding: 20px;
+      transition: margin-left 0.3s ease;
+    }
+
+    .main-content.collapsed {
+      margin-left: 70px;
+    }
+
+    .card {
+      border: none;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    .header {
+      background-color: #1f4e3e;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      border-radius: 8px;
+    }
+
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .btn-success {
+      background-color: #218838;
+      color: white;
+    }
+
+    table tbody td {
+      word-break: break-word;
+    }
+  </style>
+</head>
+
+<body>
+<!-- Sidebar -->
+<div th:insert="~{vorlagen/sidebar :: sidebar}"></div>
+
+<!-- Main Content -->
+<div class="main-content" id="main-content">
+  <!-- Header -->
+  <div class="header">
+    <h2>Lieferantenverwaltung</h2>
+  </div>
+
+  <!-- Lieferant List Section -->
+  <div class="card p-4">
+    <div class="header-row">
+      <h4>Verwalten Sie die Lieferanten des Rheiner Zoos</h4>
+      <button class="btn btn-success" onclick="addLieferant()">
+        <i class="fas fa-plus"></i> Lieferant hinzufügen
+      </button>
+    </div>
+
+    <!-- Lieferant List -->
+    <div th:if="${lieferantList.size() > 0}">
+      <table class="table table-striped">
+        <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Adresse</th>
+          <th>Telefonnummer</th>
+          <th>Ansprechpartner</th>
+          <th>Aktionen</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="lieferant : ${lieferantList}">
+          <td th:text="${lieferant.id}"></td>
+          <td th:text="${lieferant.name}"></td>
+          <td th:text="${lieferant.adresse?.ort.plz} + ' ' + ${lieferant.adresse?.ort.ortname}"></td>
+          <td th:text="${lieferant.telefonnummer}"></td>
+          <td th:text="${lieferant.ansprechpartner}"></td>
+          <td>
+            <button class="btn btn-primary" th:onclick="'editLieferant(' + ${lieferant.id} + ')'">
+              <i class="fas fa-edit"></i> Bearbeiten
+            </button>
+            <button class="btn btn-danger" th:onclick="'deleteLieferant(' + ${lieferant.id} + ')'">
+              <i class="fas fa-trash"></i> Löschen
+            </button>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- No Lieferanten Message -->
+    <div th:if="${lieferantList.size() == 0}" class="alert alert-warning" role="alert">
+      Es sind keine Lieferanten vorhanden. Bitte fügen Sie einen Lieferanten hinzu.
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer th:insert="~{vorlagen/footer :: footer}"></footer>
+
+<script>
+  function addLieferant() {
+    window.location.href = '/addLieferant';
+  }
+
+  function editLieferant(id) {
+    window.location.href = '/editLieferant/' + id;
+  }
+
+  function deleteLieferant(id) {
+    if (confirm('Möchten Sie den Lieferanten mit ID ' + id + ' wirklich löschen?')) {
+      fetch('/api/lieferant/delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id: id })
+      })
+              .then(response => {
+                if (response.ok) {
+                  alert('Lieferant erfolgreich gelöscht!');
+                  location.reload();
+                } else {
+                  response.text().then(text => {
+                    alert('Fehler beim Löschen: ' + text);
+                  });
+                }
+              })
+              .catch(error => {
+                console.error('Fehler:', error);
+                alert('Es ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.');
+              });
+    }
+  }
+</script>
+</body>
+
+</html>

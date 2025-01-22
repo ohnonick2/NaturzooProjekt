@@ -27,8 +27,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Scanner;
 
 @SpringBootApplication
 @Configuration
@@ -99,6 +101,10 @@ public class NaturzooProjektApplication {
 
         SpringApplication.run(NaturzooProjektApplication.class, args);
     }
+
+
+
+
 
 
 

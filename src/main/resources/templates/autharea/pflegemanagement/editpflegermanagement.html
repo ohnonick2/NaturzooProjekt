@@ -62,6 +62,26 @@
       cursor: pointer;
       color: #6c757d;
     }
+    .autocomplete-suggestions {
+      border: 1px solid #ddd;
+      max-height: 150px;
+      overflow-y: auto;
+      position: absolute;
+      background: white;
+      z-index: 1000;
+      width: calc(100% - 20px);
+      margin-left: 10px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      border-radius: 5px;
+    }
+    .autocomplete-suggestion {
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    .autocomplete-suggestion:hover {
+      background: #f0f0f0;
+    }
   </style>
 </head>
 
@@ -108,6 +128,18 @@
         <select class="form-control" id="role" required>
           <option th:each="role : ${roles}" th:value="${role.name}" th:text="${role.name}"></option>
         </select>
+      </div>
+
+      <div class="mb-3 autocomplete-container">
+        <label for="ort" class="form-label">Ort (PLZ oder Name suchen)</label>
+        <input type="text" class="form-control" id="ort" placeholder="Ort suchen..." autocomplete="off" required />
+        <input type="hidden" id="ortPlz" /> <!-- Versteckte Eingabe für PLZ -->
+        <div id="autocomplete-suggestions" class="autocomplete-suggestions"></div>
+        <ul id="orte-list" style="display: none;">
+          <li th:each="ort : ${orte}" th:data-id="${ort.plz}" th:data-plz="${ort.plz}" th:data-name="${ort.ortname}">
+            <span th:text="${ort.ortname} + ' (' + ${ort.plz} + ')'"></span>
+          </li>
+        </ul>
       </div>
 
       <div class="mb-3">

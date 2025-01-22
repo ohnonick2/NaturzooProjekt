@@ -6,4 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface LieferantRepository extends JpaRepository<Lieferant, Long> {
 
     Lieferant findLieferantById(Long id);
+
+    Lieferant findByLieferantName(String lieferantName);
 }

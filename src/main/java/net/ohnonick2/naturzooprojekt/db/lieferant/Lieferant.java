@@ -11,7 +11,7 @@ public class Lieferant {
     private Long id;
 
     private String name;
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "adresse")
     private Adresse adresse;
     private String telefonnummer;
@@ -54,6 +54,18 @@ public class Lieferant {
 
     public void setAnsprechpartner(String ansprechpartner) {
         this.ansprechpartner = ansprechpartner;
+    }
+
+    public Adresse getAdresse() {
+        return adresse;
+    }
+
+    public void setAdresse(Adresse adresse) {
+        this.adresse = adresse;
+    }
+
+    public Long getId() {
+        return id;
     }
 
 

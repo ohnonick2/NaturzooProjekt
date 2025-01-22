@@ -6,4 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface FutterRepositority extends JpaRepository<Futter, Long> {
 
     Futter findFutterById(Long id);
+    Futter findFutterByName(String name);
 }

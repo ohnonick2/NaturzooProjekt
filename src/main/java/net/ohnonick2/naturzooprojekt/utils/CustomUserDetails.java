@@ -98,15 +98,14 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return user.getLockedUntil() == null ||
-                user.getLockedUntil().isBefore(LocalDateTime.now(ZoneId.systemDefault()));
+        return user.getLockedUntil() == null || LocalDateTime.now().isAfter(user.getLockedUntil());
     }
 
 
     @Override
     public boolean isCredentialsNonExpired() {
 
-        return true;
+        return user.isEnabled();
     }
 
     @Override

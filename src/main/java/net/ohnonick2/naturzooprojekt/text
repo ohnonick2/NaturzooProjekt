@@ -1,4 +1,4 @@
-  @Bean
+ @Bean
     CommandLineRunner initDatabase() {
         return args -> {
 
@@ -9,16 +9,21 @@
 
             TierArt tierArt = new TierArt("Elefant");
             tierartrepository.save(tierArt);
-
-            Tier tier = new Tier("Hans",   geburtsdatum  , null, TierGeschlecht.MAENNLICH, tierArt);
-            Tier eli = new Tier("ELI" , geburtsdatum , null , TierGeschlecht.MAENNLICH , tierArt);
+            Date date = new Date();
+            LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            Tier tier = new Tier("Hans",   geburtsdatum , null , null, TierGeschlecht.MAENNLICH, tierArt);
+            Tier eli = new Tier("ELI" , geburtsdatum , null , null , TierGeschlecht.MAENNLICH , tierArt);
             tierrespository.save(tier);
 
 
 
             BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
             String encodedPassword = bCryptPasswordEncoder.encode("test");
-            Pfleger pfleger = new Pfleger("Hans", "Müller", encodedPassword, ort);
+
+
+
+
+            Pfleger pfleger = new Pfleger("Hans", "Müller", encodedPassword, localDate  , ort);
 
             pflegerrepository.save(pfleger);
 
@@ -51,7 +56,20 @@
 
 
             Wochentag wochentag = new Wochentag("Montag");
+            Wochentag wochentag1 = new Wochentag("Dienstag");
+            Wochentag wochentag2 = new Wochentag("Mittwoch");
+            Wochentag wochentag3 = new Wochentag("Donnerstag");
+            Wochentag wochentag4 = new Wochentag("Freitag");
+            Wochentag wochentag5 = new Wochentag("Samstag");
+            Wochentag wochentag6 = new Wochentag("Sonntag");
+
             wochentagRepository.save(wochentag);
+            wochentagRepository.save(wochentag1);
+            wochentagRepository.save(wochentag2);
+            wochentagRepository.save(wochentag3);
+            wochentagRepository.save(wochentag4);
+            wochentagRepository.save(wochentag5);
+            wochentagRepository.save(wochentag6);
 
             FutterPlanWochentag futterPlanWochentag = new FutterPlanWochentag(futterplan , wochentag);
             futterPlanWochentagRepository.save(futterPlanWochentag);
@@ -125,5 +143,3 @@
         };
 
     }
-
-

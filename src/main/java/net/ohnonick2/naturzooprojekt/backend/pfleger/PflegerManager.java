@@ -97,54 +97,52 @@ public class PflegerManager {
             return ResponseEntity.badRequest().body("Fehler beim Parsen der JSON-Daten.");
         }
 
+
+
         // Verhindern, dass der Benutzer sich selbst bearbeitet
         if (userloggedIn.get("id").getAsLong() == targetUser.get("id").getAsLong()) {
             return ResponseEntity.badRequest().body("Benutzer kann sich nicht selbst bearbeiten.");
         }
+
+        System.out.println("TEST");
 
         // Ziel-Pfleger aus der Datenbank abrufen
         Pfleger pfleger = pflegerrepository.findById(targetUser.get("id").getAsLong()).orElse(null);
         if (pfleger == null) {
             return ResponseEntity.badRequest().body("Pfleger mit der angegebenen ID wurde nicht gefunden.");
         }
+        System.out.println("TEST");
+        // Aktualisierung der Pfleger-Daten
+        pfleger.setBenutzername(targetUser.get("benutzername").getAsString());
+        pfleger.setVorname(targetUser.get("vorname").getAsString());
+        pfleger.setNachname(targetUser.get("nachname").getAsString());
+        pfleger.setEnabled(targetUser.get("enabled").getAsBoolean());
 
-        try {
-            // Aktualisierung der Pfleger-Daten
-            pfleger.setBenutzername(targetUser.get("benutzername").getAsString());
-            pfleger.setVorname(targetUser.get("vorname").getAsString());
-            pfleger.setNachname(targetUser.get("nachname").getAsString());
-            pfleger.setEnabled(targetUser.get("enabled").getAsBoolean());
-
-            // Geburtsdatum setzen
-            String geburtstag = targetUser.get("geburtstag").getAsString();
-            if (geburtstag != null && !geburtstag.isEmpty()) {
-                pfleger.setGeburtsdatum(LocalDate.parse(geburtstag)); // Erwartet ISO-Format (yyyy-MM-dd)
-            } else {
-                pfleger.setGeburtsdatum(null); // Geburtsdatum auf null setzen, falls leer
-            }
-
-            // Ort setzen
-            JsonObject ortJson = targetUser.getAsJsonObject("ort");
-            if (ortJson != null && ortJson.has("plz")) {
-                int plz = ortJson.get("plz").getAsInt(); // PLZ extrahieren
-                Ort ort = ortrepository.findByPlz(plz); // Ort aus der Datenbank abrufen
-                if (ort != null) {
-                    pfleger.setOrt(ort);
-                } else {
-                    return ResponseEntity.badRequest().body("Ort mit der angegebenen PLZ wurde nicht gefunden.");
-                }
-            } else {
-                return ResponseEntity.badRequest().body("Ungültige oder fehlende Ort-Daten.");
-            }
-
-            // Änderungen speichern
-            pflegerrepository.save(pfleger);
-            return ResponseEntity.ok("Pfleger erfolgreich aktualisiert.");
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Fehler bei der Aktualisierung des Pflegers.");
+        // Geburtsdatum setzen
+        String geburtstag = targetUser.get("geburtstag").getAsString();
+        if (geburtstag != null && !geburtstag.isEmpty()) {
+            pfleger.setGeburtsdatum(LocalDate.parse(geburtstag)); // Erwartet ISO-Format (yyyy-MM-dd)
+        } else {
+            pfleger.setGeburtsdatum(null); // Geburtsdatum auf null setzen, falls leer
         }
+        System.out.println("TEST");
+        // Ort setzen
+        JsonObject ortJson = targetUser.getAsJsonObject("ort");
+        if (ortJson != null && ortJson.has("plz")) {
+            int plz = ortJson.get("plz").getAsInt(); // PLZ extrahieren
+            Ort ort = ortrepository.findByPlz(plz); // Ort aus der Datenbank abrufen
+            if (ort != null) {
+                pfleger.setOrt(ort);
+            } else {
+                return ResponseEntity.badRequest().body("Ort mit der angegebenen PLZ wurde nicht gefunden.");
+            }
+        } else {
+            return ResponseEntity.badRequest().body("Ungültige oder fehlende Ort-Daten.");
+        }
+
+        // Änderungen speichern
+        pflegerrepository.save(pfleger);
+        return ResponseEntity.ok("Pfleger erfolgreich aktualisiert.");
     }
 
 
@@ -181,15 +179,15 @@ public class PflegerManager {
 
         String username = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
         JsonObject userloggedIn = JsonParser.parseString(username).getAsJsonObject();
+
+
+
         JsonObject targetUser = JsonParser.parseString(body).getAsJsonObject();
 
-
-        //check if user already exists
         Pfleger pflegerCheck = pflegerrepository.findByBenutzername(targetUser.get("benutzername").getAsString());
         if (pflegerCheck != null) {
             return ResponseEntity.badRequest().body("Benutzername bereits vergeben");
         }
-
 
         Pfleger pfleger = new Pfleger();
         pfleger.setBenutzername(targetUser.get("benutzername").getAsString());
@@ -205,22 +203,27 @@ public class PflegerManager {
             return ResponseEntity.badRequest().body("Rolle nicht gefunden");
         }
 
+        /**
+        if (targetUser.has("ortName") || targetUser.get("ortName").getAsString().isEmpty() || !targetUser.has("ort") || targetUser.get("ort").isJsonNull()) {
+            String ortName = targetUser.get("ortName").getAsString();
+            String[] parts = ortName.split(" ");
+            if (parts.length > 0) {
+                targetUser.addProperty("ort", parts[0]);
+            } else {
+                return ResponseEntity.badRequest().body("Ungültiger Ortname");
+            }
+        }
+         */
 
+        System.out.println(body);
 
-
-
-
-        // Ort prüfen
-        if (!targetUser.has("ort")) {
-            return ResponseEntity.badRequest().body("Ort fehlt im Request");
+        Ort existingOrt = ortrepository.findByPlz(targetUser.get("ort").getAsInt());
+        if (existingOrt == null) {
+            existingOrt = new Ort(targetUser.get("ort").getAsInt(), targetUser.get("ortName").getAsString());
+            ortrepository.save(existingOrt);
         }
 
-        Ort ort = ortrepository.findByPlz(targetUser.get("ort").getAsInt());
-        if (ort == null) {
-            return ResponseEntity.badRequest().body("Ort nicht gefunden");
-        }
-
-        pfleger.setOrt(ort);
+        pfleger.setOrt(existingOrt);
         pflegerrepository.save(pfleger);
         RolleUser rolleUser = new RolleUser();
         rolleUser.setUser(pfleger);
@@ -229,6 +232,5 @@ public class PflegerManager {
 
         return ResponseEntity.ok("Pfleger erfolgreich hinzugefügt");
     }
-
 
 }

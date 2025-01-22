@@ -1,19 +1,20 @@
 package net.ohnonick2.naturzooprojekt.db.futter;
 
 import jakarta.persistence.*;
+import java.util.Objects;
 
 @Entity(name = "futterplan_futter_zeit")
 @IdClass(FutterPlanFutterZeitId.class)
 public class FutterPlanFutterZeit {
 
     @Id
-    @OneToOne
-    @JoinColumn(name = "futterzeit_id") // Spaltenname in der Datenbank
+    @ManyToOne
+    @JoinColumn(name = "futterzeit_id")
     private FutterZeit futterZeit;
 
     @Id
-    @OneToOne
-    @JoinColumn(name = "futterplan_id") // Spaltenname in der Datenbank
+    @ManyToOne
+    @JoinColumn(name = "futterplan_id")
     private FutterPlan futterplan;
 
     public FutterPlanFutterZeit() {}
@@ -38,5 +39,19 @@ public class FutterPlanFutterZeit {
 
     public void setFutterplan(FutterPlan futterplan) {
         this.futterplan = futterplan;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FutterPlanFutterZeit that = (FutterPlanFutterZeit) o;
+        return Objects.equals(futterZeit, that.futterZeit) &&
+                Objects.equals(futterplan, that.futterplan);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(futterZeit, futterplan);
     }
 }

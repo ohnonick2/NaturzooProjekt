@@ -15,6 +15,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 
 
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -86,10 +87,12 @@ public class WebSecurityConfig implements WebMvcConfigurer {
                 .formLogin(formLogin -> formLogin
                         .loginPage("/login")
                         .failureHandler((request, response, exception) -> {
-                            request.getSession().setAttribute("error", "Benutzername oder Passwort ist falsch.");
-                            response.sendRedirect("/login?error");
+
+
+                            request.getSession().setAttribute("error", "Benutzernamen oder Passwort falsch oder Benutzer gesperrt");
+                            response.sendRedirect("/login?error=error");
                         })
-                        .defaultSuccessUrl("/dashboard", true)
+                        .defaultSuccessUrl("/dashboard", false)
                         .permitAll()
                 )
                 .logout(logout -> logout
@@ -98,13 +101,13 @@ public class WebSecurityConfig implements WebMvcConfigurer {
                         .permitAll()
                 )
                 .sessionManagement(session -> session
-                        .invalidSessionUrl("/login?session=invalid") // URL für ungültige Sitzungen
+                        .invalidSessionUrl("/login?error=session") // URL für ungültige Sitzungen
                         .sessionFixation().migrateSession() // Sitzungsfixierung verhindern
-                        .sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.IF_REQUIRED) // Sitzung bei Bedarf erstellen
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // Sitzung bei Bedarf erstellen
                         .maximumSessions(1) // Nur eine aktive Sitzung pro Benutzer
                         .expiredSessionStrategy(event -> { // Strategie bei Ablauf der Sitzung
                             HttpServletResponse response = event.getResponse();
-                            response.sendRedirect("/login?session=expired"); // Weiterleitung bei abgelaufener Sitzung
+                            response.sendRedirect("/login?error=session"); // Weiterleitung bei abgelaufener Sitzung
                         })
                         .maxSessionsPreventsLogin(true) // Zusätzliche Anmeldungen verhindern
                         .sessionRegistry(sessionRegistry()) // SessionRegistry für Verwaltung

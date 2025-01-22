@@ -91,36 +91,27 @@
         </div>
 
         <!-- Edit Form -->
-        <form id="editGebaeudeForm" novalidate>
-            <!-- Hidden field for the building ID -->
-            <input type="hidden" id="gebaeudeId" name="id" th:value="${gebaeude.id}" />
+        <form th:action="@{'/saveFutterplan/' + ${futterplan.id}}" method="post">
+            <label for="name">Futterplan Name:</label>
+            <input type="text" id="name" name="name" th:value="${futterplan.name}" required>
 
-            <!-- Name des Gebäudes -->
-            <div class="mb-3">
-                <label for="name" class="form-label">Name</label>
-                <input type="text" class="form-control" id="name" name="name" th:value="${gebaeude.name}" required />
+            <!-- Aktuelle Futtermittel -->
+            <div class="current-items">
+                <h3>Aktuelle Futtermittel</h3>
+                <ul>
+                    <li th:each="futter : ${futterList}">
+                        <span th:text="${futter.name}"></span>
+                        <button type="button" onclick="'removeFutter([[${futter.id}]]'")>Entfernen</button>
+                    </li>
+                </ul>
             </div>
 
-            <!-- Beschreibung -->
-            <div class="mb-3">
-                <label for="beschreibung" class="form-label">Beschreibung</label>
-                <textarea class="form-control" id="beschreibung" name="beschreibung" rows="3" maxlength="255" oninput="validateBeschreibung()" th:text="${gebaeude.beschreibung}"></textarea>
-                <div id="errorBeschreibung" class="invalid-feedback">
-                    Die Beschreibung darf maximal 255 Zeichen lang sein.
-                </div>
-            </div>
-
-            <!-- Maximale Kapazität -->
-            <div class="mb-3">
-                <label for="maximaleKapazitaet" class="form-label">Maximale Kapazität</label>
-                <input type="number" class="form-control" id="maximaleKapazitaet" name="maximaleKapazitaet" th:value="${gebaeude.maximaleKapazitaet}" required />
-            </div>
-
-            <!-- Buttons -->
-            <div class="header-row">
-                <button type="button" class="btn btn-secondary" onclick="goBack()">Abbrechen</button>
-                <button type="submit" class="btn btn-primary">Speichern</button>
-            </div>
+            <!-- Dropdown zum Hinzufügen -->
+            <label for="addFutter">Futter hinzufügen:</label>
+            <select id="addFutter" name="addFutter">
+                <option th:each="futter : ${futterList}" th:value="${futter.id}" th:text="${futter.name}"></option>
+            </select>
+            <button type="button" onclick="addFutter()">Hinzufügen</button>
         </form>
     </div>
 </div>

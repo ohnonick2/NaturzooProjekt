@@ -5,8 +5,12 @@ import net.ohnonick2.naturzooprojekt.db.futter.FutterPlanWochentag;
 import net.ohnonick2.naturzooprojekt.db.wochentag.Wochentag;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
+
 public interface FutterPlanWochentagRepository extends JpaRepository<FutterPlanWochentag, Long> {
 
     FutterPlanWochentag findByFutterplanAndWochentag(FutterPlan futterplan, Wochentag wochentag);
+    List<FutterPlanWochentag> findByFutterplan(FutterPlan futterplan);
+
 
 }

@@ -175,42 +175,41 @@
 <footer th:insert="~{vorlagen/footer :: footer}"></footer>
 
 <script>
-    // Fehler-Meldung oben links zeigen
-    const urlParams = new URLSearchParams(window.location.search);
-    const errorParam = urlParams.get('error');
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const errorParam = urlParams.get('error');
+        console.log(errorParam);
+        if (errorParam) {
+            const errorMessageTopLeft = document.getElementById('error-message-top-left');
+            const errorTextTopLeft = document.getElementById('error-text-top-left');
+            const errorMessages = {
+                'session': 'Ihre Sitzung ist abgelaufen!',
+                'error': 'Benutzername oder Passwort ist falsch!'
+            };
 
-    if (errorParam) {
-        const errorMessageTopLeft = document.getElementById('error-message-top-left');
-        const errorTextTopLeft = document.getElementById('error-text-top-left');
+            errorTextTopLeft.innerText = errorMessages[errorParam] || 'Unbekannter Fehler';
+            errorMessageTopLeft.style.display = 'block';
 
-        if (errorParam === 'session') {
-            errorTextTopLeft.innerText = 'Ihre Sitzung ist abgelaufen!';
-        } else if (errorParam === 'error') {
-            errorTextTopLeft.innerText = 'Benutzername oder Passwort ist falsch!';
+            setTimeout(() => {
+                errorMessageTopLeft.style.opacity = '0';
+            }, 5000);
+
+            setTimeout(() => {
+                errorMessageTopLeft.style.display = 'none';
+            }, 6000);
         }
 
-        errorMessageTopLeft.style.display = 'block';
+        const passwordToggle = document.getElementById('password-toggle');
+        const passwordField = document.getElementById('password');
 
-        // Fehlernachricht nach 10 Sekunden ausblenden
-        setTimeout(() => {
-            errorMessageTopLeft.style.opacity = '0';
-        }, 9000);
-
-        setTimeout(() => {
-            errorMessageTopLeft.style.display = 'none';
-        }, 10000);
-    }
-
-    // Passwort sichtbar/unsichtbar machen
-    const passwordToggle = document.getElementById('password-toggle');
-    const passwordField = document.getElementById('password');
-
-    passwordToggle.addEventListener('click', () => {
-        const isPassword = passwordField.type === 'password';
-        passwordField.type = isPassword ? 'text' : 'password';
-        passwordToggle.classList.toggle('fa-eye');
-        passwordToggle.classList.toggle('fa-eye-slash');
+        passwordToggle.addEventListener('click', () => {
+            const isPassword = passwordField.type === 'password';
+            passwordField.type = isPassword ? 'text' : 'password';
+            passwordToggle.classList.toggle('fa-eye');
+            passwordToggle.classList.toggle('fa-eye-slash');
+        });
     });
+
 </script>
 </body>
 </html>

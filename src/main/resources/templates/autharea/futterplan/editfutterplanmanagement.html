@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Futterplan Bearbeiten</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    /* Deine vorherigen CSS-Styles */
+  </style>
+</head>
+
+<body>
+<div class="container mt-4">
+  <h2>Futterplan Bearbeiten: <span th:text="${futterplan.name}">Futterplan Name</span></h2>
+  <form th:action="@{/editFutterplan/{id}(id=${futterplan.id})}" method="post">
+
+    <!-- Futterplan Name -->
+    <div class="mb-3">
+      <label for="name" class="form-label">Futterplan Name</label>
+      <input type="text" class="form-control" id="name" name="name" th:value="${futterplan.name}">
+    </div>
+
+    <!-- Aktuelle Futtermittel -->
+    <div class="mb-3">
+      <h4>Aktuelle Futtermittel</h4>
+      <ul class="list-group">
+        <li th:each="futter : ${aktuelleFutterList}" class="list-group-item d-flex justify-content-between align-items-center">
+          <span th:text="${futter.name}"></span>
+          <button type="button" class="btn btn-danger btn-sm" th:onclick="'removeFutter(' + ${futter.id} + ')'">
+            Entfernen
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Futter Mengen -->
+    <div class="mb-3">
+      <label for="futterMenge" class="form-label">Menge des Futters</label>
+      <input type="number" class="form-control" id="futterMenge" name="futterMenge">
+    </div>
+
+    <!-- Wochentage Auswahl -->
+    <div class="mb-3">
+      <label for="wochentage" class="form-label">Wochentage</label>
+      <select class="form-select" id="wochentage" name="wochentage" multiple>
+        <option th:each="wochentag : ${wochentagList}" th:value="${wochentag.id}" th:text="${wochentag.name}"></option>
+      </select>
+    </div>
+
+    <!-- Futterzeiten Auswahl -->
+    <div class="mb-3">
+      <label for="futterzeiten" class="form-label">Futterzeiten</label>
+      <select class="form-select" id="futterzeiten" name="futterzeiten" multiple>
+        <option th:each="futterzeit : ${futterzeitenList}" th:value="${futterzeit.id}" th:text="${futterzeit.uhrzeit}"></option>
+      </select>
+    </div>
+
+    <!-- Futtermittel Auswahl -->
+    <div class="mb-3">
+      <label for="verfügbareFutter" class="form-label">Verfügbare Futtermittel</label>
+      <select class="form-select" id="verfügbareFutter" name="verfügbareFutter" multiple>
+        <option th:each="futter : ${verfügbareFutterList}" th:value="${futter.id}" th:text="${futter.name}"></option>
+      </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Speichern</button>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
