@@ -98,10 +98,14 @@
                 <tr th:each="futterplan : ${futterplanList}">
                     <td th:text="${futterplan.id}"></td>
                     <td th:text="${futterplan.name}"></td>
-                    <td th:text="${futterplan.futter}"></td>
-                    <td th:text="${futterplan.menge}"></td>
-                    <td th:text="${futterplan.getFutterZeiten()}"></td>
-                    <td th:text="${futterplan.wochentage}"></td>
+                    <!-- Futter, falls leer oder null, Platzhalter "-" anzeigen -->
+                    <td th:text="${futterplan.futter != null ? futterplan.futter : '-'}"></td>
+                    <!-- Menge, falls leer oder null, Platzhalter "-" anzeigen -->
+                    <td th:text="${futterplan.menge != null ? futterplan.menge : '-'}"></td>
+                    <!-- Futterzeiten, falls leer oder null, Platzhalter "-" anzeigen -->
+                    <td th:text="${futterplan.getFutterZeiten() != null && !futterplan.getFutterZeiten().isEmpty() ? futterplan.getFutterZeiten() : '-'}"></td>
+                    <!-- Wochentage, falls leer oder null, Platzhalter "-" anzeigen -->
+                    <td th:text="${futterplan.wochentage != null && !futterplan.wochentage.isEmpty() ? futterplan.wochentage : '-'}"></td>
 
                     <td>
                         <button class="btn btn-primary" th:onclick="'editFutterplan(' + ${futterplan.id} + ')'">

@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface FutterPlanRepository extends JpaRepository<FutterPlan, Long> {
 
-    List<FutterPlan> findFutterplanById(Long id);
+    FutterPlan findFutterPlanById(Long id);
 
 
 

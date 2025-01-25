@@ -65,10 +65,11 @@ public class Futterplanmanagement {
 
             // Wochentage sammeln
             List<FutterPlanWochentag> futterPlanWochentage = futterPlanWochentagRepository.findByFutterplan(futterPlan);
-            String wochentage = futterPlanWochentage.stream()
-                    .map(FutterPlanWochentag::getWochentag)
-                    .map(Wochentag::getName)
-                    .collect(Collectors.joining(", "));
+            String wochentage = futterPlanWochentage.isEmpty() ? "-" :
+                    futterPlanWochentage.stream()
+                            .map(FutterPlanWochentag::getWochentag)
+                            .map(Wochentag::getName)
+                            .collect(Collectors.joining(", "));
 
             // Futternamen, Mengen und Futterzeiten korrekt zusammenfassen
             List<String> futterList = new ArrayList<>();
@@ -86,21 +87,21 @@ public class Futterplanmanagement {
                 });
             });
 
-            // Konvertiere die Listen zu Strings ohne Klammern
-            String futter = String.join(", ", futterList);
-            String menge = String.join(", ", mengeList);
-            String futterzeiten = String.join(", ", futterzeitenList);
+            // Wenn keine Futtermittel, Mengen oder Futterzeiten vorhanden sind, setze "-" als Platzhalter
+            String futter = futterList.isEmpty() ? "-" : String.join(", ", futterList);
+            String menge = mengeList.isEmpty() ? "-" : String.join(", ", mengeList);
+            String futterzeiten = futterzeitenList.isEmpty() ? "-" : String.join(", ", futterzeitenList);
 
             // Erstellen des DTOs
             futterplanDTOs.add(new FutterplanDTO(futterPlan.getId(), futterPlan.getName(),
                     futter, wochentage, menge, futterzeiten));
         });
 
-
         model.addAttribute("futterplanList", futterplanDTOs);
 
         return "autharea/futterplan/futterplanmanagement";
     }
+
 
 
     @GetMapping("/editFutterplan/{id}")
@@ -155,6 +156,13 @@ public class Futterplanmanagement {
         model.addAttribute("verfügbareFutterList", futterRepository.findAll()); // Dropdown für verfügbare Futtermittel
 
         return "autharea/futterplan/editfutterplanmanagement";
+    }
+
+    @GetMapping("/addFutterplan")
+    public String addFutterplan(Model model) {
+
+
+        return "autharea/futterplan/addfutterplanmanagement";
     }
 
 

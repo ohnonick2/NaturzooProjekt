@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rollen-Verwaltung</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-image: url('/images/background.png');
+      margin: 0;
+      padding: 0;
+      background-color: #f4f6f9;
+      overflow-x: hidden;
+    }
+
+    .main-content {
+      margin-left: 250px;
+      padding: 20px;
+      transition: margin-left 0.3s ease;
+    }
+
+    .card {
+      border: none;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+      padding: 20px;
+    }
+
+    .header {
+      background-color: #1f4e3e;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      border-radius: 8px;
+    }
+
+    table tbody td {
+      word-break: break-word;
+    }
+
+    .btn-success {
+      background-color: #218838;
+      color: white;
+    }
+
+    .search-container input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+
+<body>
+<!-- Sidebar -->
+<div th:insert="~{vorlagen/sidebar :: sidebar}"></div>
+
+<!-- Main Content -->
+<div class="main-content" id="main-content">
+  <div class="header">
+    <h2>Rollen-Verwaltung</h2>
+  </div>
+
+  <div class="card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4>Verwalten Sie die Rollen</h4>
+      <button class="btn btn-success" onclick="addRolle()">
+        <i class="fas fa-plus"></i> Rolle hinzufügen
+      </button>
+    </div>
+
+    <div class="search-container mb-3">
+      <input type="text" id="searchInput" placeholder="Suchen Sie nach Name..." onkeyup="filterTable()">
+    </div>
+
+    <table class="table table-striped" id="rollenTable">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Aktionen</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="rolle : ${rollen}">
+        <td th:text="${rolle.name}"></td>
+        <td>
+          <button class="btn btn-primary btn-sm" th:onclick="'editRolle(' + ${rolle.id} + ')'">
+            <i class="fas fa-edit"></i> Bearbeiten
+          </button>
+          <button class="btn btn-danger btn-sm" th:onclick="'deleteRolle(' + ${rolle.id} + ')'">
+            <i class="fas fa-trash"></i> Löschen
+          </button>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div id="noRollenMessage" class="alert alert-warning d-none" role="alert">
+      Es sind keine Rollen vorhanden. Bitte fügen Sie eine Rolle hinzu.
+    </div>
+  </div>
+</div>
+
+<script>
+  async function deleteRolle(rolleId) {
+    if (confirm('Möchten Sie die Rolle mit ID ' + rolleId + ' wirklich löschen?')) {
+      try {
+        const response = await fetch(`/api/rolle/delete/${rolleId}`, { method: 'DELETE' });
+        if (response.ok) {
+          alert('Rolle erfolgreich gelöscht!');
+          location.reload();
+        } else {
+          const errorText = await response.text();
+          alert('Fehler beim Löschen: ' + errorText);
+        }
+      } catch (error) {
+        console.error('Fehler:', error);
+        alert('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
+      }
+    }
+  }
+
+  function editRolle(rolleId) {
+    window.location.href = '/editRolle/' + rolleId;
+  }
+
+  function addRolle() {
+    window.location.href = '/addRolle';
+  }
+
+  function filterTable() {
+    const input = document.getElementById('searchInput').value.toLowerCase();
+    const rows = document.querySelectorAll('#rollenTable tbody tr');
+    rows.forEach(row => {
+      const cells = row.querySelectorAll('td');
+      const matches = Array.from(cells).some(cell => cell.innerText.toLowerCase().includes(input));
+      row.style.display = matches ? '' : 'none';
+    });
+  }
+</script>
+</body>
+</html>

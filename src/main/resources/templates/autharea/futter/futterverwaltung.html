@@ -160,8 +160,9 @@
                         alert('Futter erfolgreich gelöscht!');
                         location.reload();
                     } else {
-                        response.text().then(text => {
-                            alert('Fehler beim Löschen: ' + text);
+                        // Fehlernachricht auslesen
+                        return response.text().then(errorMessage => {
+                            alert('Fehler: ' + errorMessage);
                         });
                     }
                 })

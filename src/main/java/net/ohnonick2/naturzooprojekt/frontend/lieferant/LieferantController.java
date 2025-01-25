@@ -1,5 +1,6 @@
 package net.ohnonick2.naturzooprojekt.frontend.lieferant;
 
+import net.ohnonick2.naturzooprojekt.repository.AdresseRepository;
 import net.ohnonick2.naturzooprojekt.repository.LieferantRepository;
 import net.ohnonick2.naturzooprojekt.repository.Ortrepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,9 @@ public class LieferantController {
     @Autowired
     private Ortrepository ortrepository;
 
+    @Autowired
+    private AdresseRepository adresseRepository;
+
     @GetMapping("/lieferanten")
     public String lieferant(Model model) {
 
@@ -28,7 +32,7 @@ public class LieferantController {
     public String addLieferant(Model model) {
 
         model.addAttribute("orte", ortrepository.findAll());
-
+        model.addAttribute("adressen", adresseRepository.findAll());
         return "autharea/lieferant/addlieferantmanagement";
     }
 

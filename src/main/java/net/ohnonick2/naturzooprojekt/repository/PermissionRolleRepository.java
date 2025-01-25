@@ -14,4 +14,7 @@ public interface PermissionRolleRepository extends JpaRepository<PermissionRolle
 
     // Suche alle PermissionRolle-Einträge nach einer bestimmten Rolle
     List<PermissionRolle> findByRolle(Rolle rolle);
+
+    PermissionRolle findByRolleAndPermission(Rolle rolle , Permission permission );
+
 }

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revier Bearbeiten</title>
+    <div th:insert="~{vorlagen/icon :: icon}"></div>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            background-image: url('/images/background.png');
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .main-content {
+            margin: 0 auto;
+            max-width: 900px;
+            padding: 20px;
+        }
+
+        .header {
+            background-color: #1f4e3e;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-radius: 8px;
+        }
+
+        .card {
+            border: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .btn-primary {
+            background-color: #1f4e3e;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: #173b2c;
+        }
+
+        .btn-danger {
+            background-color: #d9534f;
+            border: none;
+        }
+
+        .btn-danger:hover {
+            background-color: #c9302c;
+        }
+
+        .btn-success {
+            background-color: #5cb85c;
+            border: none;
+        }
+
+        .btn-success:hover {
+            background-color: #449d44;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            border: none;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        table tbody td {
+            word-break: break-word;
+        }
+
+        .caretaker-table th {
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<div th:insert="~{vorlagen/sidebar :: sidebar}"></div>
+<body>
+<div class="main-content">
+    <div class="header">
+        <h2>Revier Bearbeiten</h2>
+    </div>
+
+    <!-- Zurück-Button -->
+    <div class="d-flex justify-content-start mb-4">
+        <a href="/revier" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Zurück
+        </a>
+    </div>
+
+    <div class="card p-4">
+        <form id="editRevierForm" onsubmit="submitForm(event)">
+            <div class="mb-3">
+                <label for="revierName" class="form-label">Revier Name</label>
+                <input type="hidden" id="id" name="id" th:value="${revier.id}">
+                <input type="text" class="form-control" id="revierName" name="name" th:value="${revier.name}" required>
+            </div>
+            <!-- Speichern-Button -->
+            <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Speichern
+                </button>
+            </div>
+        </form>
+
+        <h4 class="mb-4">Pfleger Verwaltung</h4>
+
+        <!-- Verfügbare Pfleger -->
+        <div class="d-flex mb-3">
+            <select id="availableCaretaker" class="form-control me-2" name="availableCaretaker">
+                <option value="">Bitte wählen...</option>
+                <option th:each="pfleger : ${verfuegbarePfleger}" th:value="${pfleger.id}" th:text="${pfleger.benutzername}"></option>
+            </select>
+            <button class="btn btn-success" onclick="addCaretaker()">
+                <i class="fas fa-plus"></i> Hinzufügen
+            </button>
+        </div>
+
+        <table class="table table-striped caretaker-table" id="caretakerTable">
+            <thead>
+            <tr>
+                <th>Benutzername</th>
+                <th>Vorname</th>
+                <th>Nachname</th>
+                <th>Aktionen</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="pfleger : ${revierPflegerList}">
+                <td th:text="${pfleger.getPfleger().benutzername}"></td>
+                <td th:text="${pfleger.getPfleger().vorname}"></td>
+                <td th:text="${pfleger.getPfleger().nachname}"></td>
+                <td>
+                    <!-- Versteckter Input für die Pfleger-ID -->
+                    <input type="hidden" name="pflegerId" th:value="${pfleger.getPfleger().id}">
+                    <button class="btn btn-danger me-2" onclick="removeCaretaker(this)">
+                        <i class="fas fa-trash-alt"></i> Entfernen
+                    </button>
+                    <button class="btn btn-secondary" disabled>
+                        <i class="fas fa-pencil-alt"></i> Coming Soon
+                    </button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Revier speichern
+    async function submitForm(event) {
+        event.preventDefault();
+
+        const id = document.getElementById('id').value;
+        const name = document.getElementById('revierName').value;
+
+        const payload = { id: parseInt(id, 10), name };
+
+        const response = await fetch('/api/revier/edit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+            alert('Revier erfolgreich aktualisiert!');
+            location.reload();
+        } else {
+            alert('Fehler beim Speichern!');
+        }
+    }
+
+    // Pfleger hinzufügen
+    async function addCaretaker() {
+        const revierId = document.getElementById('id').value;
+        const caretakerSelect = document.getElementById('availableCaretaker');
+
+        if (!caretakerSelect || !caretakerSelect.value) {
+            alert('Bitte wählen Sie einen Pfleger aus!');
+            return;
+        }
+
+        const pflegerId = caretakerSelect.value;
+
+        const payload = {
+            revierId: parseInt(revierId, 10),
+            pflegerId: parseInt(pflegerId, 10)
+        };
+
+        try {
+            const response = await fetch('/api/revier/addPfleger', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                alert('Pfleger erfolgreich hinzugefügt!');
+                location.reload();
+            } else {
+                const errorMessage = await response.text();
+                alert('Fehler beim Hinzufügen des Pflegers: ' + errorMessage);
+            }
+        } catch (error) {
+            alert('Ein unerwarteter Fehler ist aufgetreten.');
+        }
+    }
+
+    // Pfleger entfernen
+    async function removeCaretaker(buttonElement) {
+        if (confirm("Möchten Sie diesen Pfleger wirklich entfernen?")) {
+            const row = buttonElement.closest('tr');
+            const revierId = document.getElementById('id').value;
+            const pflegerId = row.querySelector('input[name="pflegerId"]').value;
+
+            const payload = {
+                revierId: parseInt(revierId, 10),
+                pflegerId: parseInt(pflegerId, 10)
+            };
+
+            try {
+                const response = await fetch('/api/revier/removePfleger', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    alert('Pfleger erfolgreich entfernt!');
+                    row.remove();
+                    window.location.reload();
+                } else {
+                    const errorMessage = await response.text();
+                    alert('Fehler beim Entfernen des Pflegers: ' + errorMessage);
+                }
+            } catch (error) {
+                alert('Ein unerwarteter Fehler ist aufgetreten.');
+            }
+        }
+    }
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('collapsed');
+        document.getElementById('main-content').classList.toggle('collapsed');
+    }
+</script>
+</body>
+</html>

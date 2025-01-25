@@ -7,5 +7,4 @@ public interface LieferantRepository extends JpaRepository<Lieferant, Long> {
 
     Lieferant findLieferantById(Long id);
 
-    Lieferant findByLieferantName(String lieferantName);
 }

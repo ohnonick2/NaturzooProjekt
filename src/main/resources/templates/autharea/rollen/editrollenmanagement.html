@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rolle bearbeiten</title>
+  <div th:insert="~{vorlagen/icon :: icon}"></div>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-image: url('/images/background.png');
+      background-size: cover;
+      background-attachment: fixed;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .main-content {
+      margin-left: 250px;
+      padding: 20px;
+      transition: margin-left 0.3s ease;
+      flex: 1;
+    }
+
+    .main-content.collapsed {
+      margin-left: 70px;
+    }
+
+    .accordion-button:not(.collapsed) {
+      background-color: #1f4e3e;
+      color: white;
+    }
+
+    .table-container {
+      background-color: #ffffff;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    .btn-sm {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .btn-sm i {
+      font-size: 0.8rem;
+    }
+
+    h5 {
+      color: #1f4e3e;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .header {
+      background-color: #1f4e3e;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      border-radius: 8px;
+    }
+
+    .search-bar {
+      margin-bottom: 10px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background-color: white;
+      padding: 10px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      border-radius: 5px;
+    }
+
+    footer {
+      background-color: #1f4e3e;
+      color: white;
+      text-align: center;
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+<!-- Sidebar -->
+<div th:insert="~{vorlagen/sidebar :: sidebar}"></div>
+
+<!-- Main Content -->
+<div class="main-content">
+  <!-- Zurück-Button -->
+  <button class="btn btn-secondary mb-3" onclick="window.location.href='/rollen'">
+    <i class="fas fa-arrow-left"></i> Zurück zur Rollenübersicht
+  </button>
+  <input type="hidden" id="roleid" th:value="${rolle.id}"/>
+
+  <h2><i class="fas fa-user-cog"></i> Rolle bearbeiten: <span th:text="${rolle.name}"></span></h2>
+
+
+  <!-- Accordion -->
+  <div class="accordion" id="roleAccordion">
+    <!-- Berechtigungen -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="permissionsHeader">
+        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#permissionsCollapse" aria-expanded="true" aria-controls="permissionsCollapse">
+          <i class="fas fa-lock"></i> Berechtigungen
+        </button>
+      </h2>
+      <div id="permissionsCollapse" class="accordion-collapse collapse show" aria-labelledby="permissionsHeader" data-bs-parent="#roleAccordion">
+        <div class="accordion-body">
+          <!-- Zugewiesene Berechtigungen -->
+          <div class="table-container">
+            <h5>Zugewiesene Berechtigungen</h5>
+            <input type="text" class="form-control search-bar" id="assignedPermissionsSearch" placeholder="Suchen..." onkeyup="filterAndPaginate('assignedPermissionsTable', 'assignedPermissionsSearch', 'assignedPermissionsPagination')">
+            <table class="table table-striped table-hover" id="assignedPermissionsTable">
+              <thead>
+              <tr>
+                <th>Name</th>
+                <th>Beschreibung</th>
+                <th>Aktionen</th>
+              </tr>
+              </thead>
+
+
+              <tbody>
+              <tr th:each="permissionRolle : ${permissionRolleList}">
+                <td th:text="${permissionRolle.permission.permission}"></td>
+                <td th:text="${permissionRolle.permission.description}"></td>
+                <td>
+                  <button class="btn btn-danger btn-sm" th:data-id="${permissionRolle.permission.id}" onclick="removePermission(this.dataset.id)">
+                    <i class="fas fa-minus-circle"></i>
+                  </button>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+            <nav>
+              <ul class="pagination" id="assignedPermissionsPagination"></ul>
+            </nav>
+          </div>
+
+          <!-- Alle Berechtigungen -->
+          <div class="table-container">
+            <h5>Alle Berechtigungen</h5>
+            <input type="text" class="form-control search-bar" id="allPermissionsSearch" placeholder="Suchen..." onkeyup="filterAndPaginate('allPermissionsTable', 'allPermissionsSearch', 'allPermissionsPagination')">
+            <table class="table table-striped table-hover" id="allPermissionsTable">
+              <thead>
+              <tr>
+                <th>Name</th>
+                <th>Beschreibung</th>
+                <th>Aktionen</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr th:each="permission : ${permissions}">
+                <td th:text="${permission.permission}"></td>
+                <td th:text="${permission.description}"></td>
+                <td>
+                  <button class="btn btn-primary btn-sm" th:data-id="${permission.id}" onclick="addPermission(this.dataset.id)">
+                    <i class="fas fa-plus-circle"></i>
+                  </button>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+            <nav>
+              <ul class="pagination" id="allPermissionsPagination"></ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pflegekräfte -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="caretakersHeader">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#caretakersCollapse" aria-expanded="false" aria-controls="caretakersCollapse">
+          <i class="fas fa-users"></i> Pflegekräfte
+        </button>
+      </h2>
+      <div id="caretakersCollapse" class="accordion-collapse collapse" aria-labelledby="caretakersHeader" data-bs-parent="#roleAccordion">
+        <div class="accordion-body">
+          <!-- Verfügbare Pflegekräfte -->
+          <div class="table-container">
+            <h5>Verfügbare Pflegekräfte</h5>
+            <input type="text" class="form-control search-bar" id="caretakersSearch" placeholder="Suchen..." onkeyup="filterAndPaginate('caretakersTable', 'caretakersSearch', 'caretakersPagination')">
+            <table class="table table-striped table-hover" id="caretakersTable">
+              <thead>
+              <tr>
+                <th>Benutzername</th>
+                <th>Vorname</th>
+                <th>Nachname</th>
+                <th>Aktionen</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr th:each="user : ${availableUsers}">
+                <td th:text="${user.benutzername}"></td>
+                <td th:text="${user.vorname}"></td>
+                <td th:text="${user.nachname}"></td>
+                <td>
+                  <button class="btn btn-primary btn-sm" th:data-id="${user.id}" onclick="addCaretaker(this.dataset.id)">
+                    <i class="fas fa-user-plus"></i>
+                  </button>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+            <nav>
+              <ul class="pagination" id="caretakersPagination"></ul>
+            </nav>
+          </div>
+
+          <!-- Zugewiesene Pflegekräfte -->
+          <div class="table-container">
+            <h5>Zugewiesene Pflegekräfte</h5>
+            <input type="text" class="form-control search-bar" id="assignedCaretakersSearch" placeholder="Suchen..." onkeyup="filterAndPaginate('assignedCaretakersTable', 'assignedCaretakersSearch', 'assignedCaretakersPagination')">
+            <table class="table table-striped table-hover" id="assignedCaretakersTable">
+              <thead>
+              <tr>
+                <th>Benutzername</th>
+                <th>Vorname</th>
+                <th>Nachname</th>
+                <th>Aktionen</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr th:each="rolleUser : ${rolleUserList}">
+                <td th:text="${rolleUser.user.benutzername}"></td>
+                <td th:text="${rolleUser.user.vorname}"></td>
+                <td th:text="${rolleUser.user.nachname}"></td>
+                <td>
+                  <button class="btn btn-danger btn-sm" th:data-id="${rolleUser.user.id}" onclick="removeCaretaker(this.dataset.id)">
+                    <i class="fas fa-user-minus"></i>
+                  </button>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+            <nav>
+              <ul class="pagination" id="assignedCaretakersPagination"></ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  const itemsPerPage = 5;
+
+  function filterAndPaginate(tableId, searchInputId, paginationId) {
+    const searchInput = document.getElementById(searchInputId).value.toLowerCase();
+    const table = document.getElementById(tableId);
+    const rows = Array.from(table.getElementsByTagName('tr')).slice(1);
+    const pagination = document.getElementById(paginationId);
+
+    let filteredRows = rows.filter(row => {
+      const cells = row.getElementsByTagName('td');
+      return Array.from(cells).some(cell => cell.textContent.toLowerCase().includes(searchInput));
+    });
+
+    rows.forEach(row => (row.style.display = 'none'));
+    filteredRows.forEach((row, index) => {
+      row.style.display = index < itemsPerPage ? '' : 'none';
+    });
+
+    renderPagination(filteredRows, paginationId, tableId);
+  }
+
+  function renderPagination(filteredRows, paginationId, tableId) {
+    const pagination = document.getElementById(paginationId);
+    pagination.innerHTML = '';
+    const totalPages = Math.ceil(filteredRows.length / itemsPerPage);
+
+    for (let i = 0; i < totalPages; i++) {
+      const pageItem = document.createElement('li');
+      pageItem.classList.add('page-item');
+      const pageLink = document.createElement('a');
+      pageLink.classList.add('page-link');
+      pageLink.textContent = i + 1;
+      pageLink.href = '#';
+      pageLink.addEventListener('click', (event) => {
+        event.preventDefault();
+        const table = document.getElementById(tableId);
+        const rows = Array.from(table.getElementsByTagName('tr')).slice(1);
+        rows.forEach(row => (row.style.display = 'none'));
+        filteredRows.slice(i * itemsPerPage, (i + 1) * itemsPerPage).forEach(row => (row.style.display = ''));
+        table.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      pageItem.appendChild(pageLink);
+      pagination.appendChild(pageItem);
+    }
+  }
+
+  async function addPermission(id) {
+    const roleid = document.getElementById('roleid').value; // Stelle sicher, dass das RoleID im HTML verfügbar ist
+
+    try {
+      const response = await fetch('/api/permissions/addPermission', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roleid: roleid,
+          permissionid: id
+        })
+      });
+
+      // Antwort vom Server prüfen
+      const responseBody = await response.text();
+      if (response.ok) {
+        if (responseBody.includes('Permission added') && id.endsWith('_WRITE')) {
+          showAlert('Erfolg', 'Berechtigung hinzugefügt! Da es sich um eine "WRITE"-Berechtigung handelt, wurde auch automatisch die zugehörige "READ"-Berechtigung hinzugefügt.');
+        } else {
+          showAlert('Erfolg', 'Berechtigung hinzugefügt!');
+        }
+        // Warten, bis das Modal geschlossen wurde, dann Seite neu laden
+      } else {
+        showAlert('Fehler', `Fehler: ${responseBody}`);
+      }
+    } catch (error) {
+      console.error('Fehler beim Hinzufügen der Berechtigung:', error);
+      showAlert('Fehler', 'Es gab einen Fehler beim Hinzufügen der Berechtigung. Bitte versuchen Sie es später erneut.');
+    }
+  }
+
+  async function removePermission(id) {
+    const roleid = document.getElementById('roleid').value; // Stelle sicher, dass das RoleID im HTML verfügbar ist
+
+    try {
+      const response = await fetch('/api/permissions/removePermission', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roleid: roleid,
+          permissionid: id
+        })
+      });
+
+      if (response.ok) {
+        if (id.endsWith('_WRITE')) {
+          showAlert('Erfolg', 'Berechtigung entfernt! Da es sich um eine "WRITE"-Berechtigung handelt, wurde auch automatisch die zugehörige "READ"-Berechtigung entfernt.');
+        } else {
+          showAlert('Erfolg', 'Berechtigung entfernt!');
+        }
+      } else {
+        const error = await response.text();
+        showAlert('Fehler', `Fehler: ${error}`);
+      }
+    } catch (error) {
+      console.error('Fehler beim Entfernen der Berechtigung:', error);
+      showAlert('Fehler', 'Es gab einen Fehler beim Entfernen der Berechtigung. Bitte versuchen Sie es später erneut.');
+    }
+  }
+
+  function showAlert(title, message) {
+    // Dynamische Inhalte für die Modal-Nachricht setzen
+    document.getElementById('alertModalLabel').textContent = title;
+    document.getElementById('alertMessage').textContent = message;
+
+    // Das Modal anzeigen
+    const modal = new bootstrap.Modal(document.getElementById('alertModal'));
+    modal.show();
+
+    // Sobald der Benutzer auf "OK" klickt und das Modal schließt
+    const modalCloseButton = document.getElementById('alertModal').querySelector('.btn-secondary');
+    modalCloseButton.addEventListener('click', function () {
+      // Seite nach Schließen des Modals neu laden
+      location.reload();
+    });
+  }
+
+  async function addCaretaker(id) {
+    try {
+      const response = await fetch(`/api/caretakers/add/${id}`, { method: 'POST' });
+      if (response.ok) {
+        alert('Pflegekraft hinzugefügt!');
+        location.reload();
+      } else {
+        const error = await response.text();
+        alert(`Fehler: ${error}`);
+      }
+    } catch (error) {
+      console.error('Fehler beim Hinzufügen der Pflegekraft:', error);
+    }
+  }
+
+  async function removeCaretaker(id) {
+    try {
+      const response = await fetch(`/api/caretakers/remove/${id}`, { method: 'POST' });
+      if (response.ok) {
+        alert('Pflegekraft entfernt!');
+        location.reload();
+      } else {
+        const error = await response.text();
+        alert(`Fehler: ${error}`);
+      }
+    } catch (error) {
+      console.error('Fehler beim Entfernen der Pflegekraft:', error);
+    }
+  }
+
+  function showModal(title, message) {
+    const modalHtml = `
+    <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="infoModalLabel">${title}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
+          </div>
+          <div class="modal-body">
+            ${message}
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const modal = new bootstrap.Modal(document.getElementById('infoModal'));
+    modal.show();
+    modal._element.addEventListener('hidden.bs.modal', () => modal._element.remove());
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    filterAndPaginate('assignedPermissionsTable', 'assignedPermissionsSearch', 'assignedPermissionsPagination');
+    filterAndPaginate('allPermissionsTable', 'allPermissionsSearch', 'allPermissionsPagination');
+    filterAndPaginate('caretakersTable', 'caretakersSearch', 'caretakersPagination');
+    filterAndPaginate('assignedCaretakersTable', 'assignedCaretakersSearch', 'assignedCaretakersPagination');
+  });
+
+</script>
+<div class="modal fade" id="alertModal" tabindex="-1" aria-labelledby="alertModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="alertModalLabel">Berechtigung Status</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="alertMessage">
+        <!-- Die Nachricht wird hier dynamisch eingefügt -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

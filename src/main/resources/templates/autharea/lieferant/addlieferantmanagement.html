@@ -1,113 +1,93 @@
 <!DOCTYPE html>
-<html lang="de">
-
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lieferanten hinzufügen</title>
+    <title>Lieferant hinzufügen</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-image: url('/images/background.png');
-            margin: 0;
-            padding: 0;
-            background-color: #f4f6f9;
-            overflow-x: hidden;
-        }
-
-        .container {
-            max-width: 800px;
-            margin-top: 50px;
-        }
-
-        .card {
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .card-header {
-            background-color: #1f4e3e;
-            color: white;
-            font-size: 1.5rem;
-            padding: 15px;
-            border-radius: 10px 10px 0 0;
-        }
-
-        .form-label {
-            font-weight: bold;
-        }
-
-        .btn-primary {
-            background-color: #1f4e3e;
-            border: none;
-            width: 100%;
-            padding: 10px;
-            font-size: 1.1rem;
-        }
-
-        .btn-primary:hover {
-            background-color: #155a41;
-        }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
-
 <body>
-
-<div class="container">
-    <div class="card">
-        <div class="card-header">
-            <h2>Lieferanten hinzufügen</h2>
+<div class="container mt-5">
+    <h1 class="text-center">Lieferant hinzufügen</h1>
+    <form id="lieferantForm" class="mt-4">
+        <div class="mb-3">
+            <label for="name" class="form-label">Name</label>
+            <input type="text" class="form-control" id="name" name="name" required>
         </div>
-        <div class="card-body">
-            <form th:action="@{/addLieferant}" th:object="${lieferant}" method="post">
-                <!-- Lieferant Name -->
-                <div class="mb-3">
-                    <label for="name" class="form-label">Name des Lieferanten</label>
-                    <input type="text" class="form-control" id="name" th:field="*{name}" required>
-                </div>
-
-                <!-- Adresse -->
-                <h5 class="mt-4">Adresse</h5>
-                <div class="mb-3">
-                    <label for="strasse" class="form-label">Straße</label>
-                    <input type="text" class="form-control" id="strasse" th:field="*{adresse.strasse}" placeholder="Straße" required>
-                </div>
-                <div class="mb-3">
-                    <label for="hausnummer" class="form-label">Hausnummer</label>
-                    <input type="text" class="form-control" id="hausnummer" th:field="*{adresse.hausnummer}" placeholder="Hausnummer" required>
-                </div>
-
-                <!-- Ort -->
-                <div class="mb-3">
-                    <label for="plz" class="form-label">PLZ</label>
-                    <input type="text" class="form-control" id="plz" th:field="*{adresse.ort.plz}" placeholder="PLZ" required>
-                </div>
-                <div class="mb-3">
-                    <label for="ortname" class="form-label">Stadt</label>
-                    <input type="text" class="form-control" id="ortname" th:field="*{adresse.ort.ortname}" placeholder="Stadt" required>
-                </div>
-
-                <!-- Telefonnummer -->
-                <div class="mb-3">
-                    <label for="telefonnummer" class="form-label">Telefonnummer</label>
-                    <input type="text" class="form-control" id="telefonnummer" th:field="*{telefonnummer}" required>
-                </div>
-
-                <!-- Ansprechpartner -->
-                <div class="mb-3">
-                    <label for="ansprechpartner" class="form-label">Ansprechpartner</label>
-                    <input type="text" class="form-control" id="ansprechpartner" th:field="*{ansprechpartner}" required>
-                </div>
-
-                <!-- Submit Button -->
-                <button type="submit" class="btn btn-primary">Lieferant hinzufügen</button>
-            </form>
+        <div class="mb-3">
+            <label for="adresse" class="form-label">Adresse</label>
+            <select class="form-select" id="adresse" name="adresse" required>
+                <option value="" disabled selected>Wähle eine Adresse</option>
+                <option th:each="adresse : ${adressen}"
+                        th:value="${adresse.id}"
+                        th:text="${adresse.strasse} + ' ' + ${adresse.hausnummer} + ', ' + ${adresse.ort.plz} + ' ' + ${adresse.ort.ortname}">
+                </option>
+            </select>
         </div>
-    </div>
+        <div class="mb-3">
+            <label for="telefon" class="form-label">Telefon</label>
+            <input type="text" class="form-control" id="telefon" name="telefon" required>
+        </div>
+        <div class="mb-3">
+            <label for="email" class="form-label">E-Mail</label>
+            <input type="email" class="form-control" id="email" name="email" required>
+        </div>
+        <button type="button" id="submitBtn" class="btn btn-primary">Hinzufügen</button>
+    </form>
+    <div id="message" class="mt-3"></div>
 </div>
 
-</body>
+<script>
+    document.getElementById("submitBtn").addEventListener("click", async function () {
+        const name = document.getElementById("name").value.trim();
+        const adresse = document.getElementById("adresse").value;
+        const telefon = document.getElementById("telefon").value.trim();
+        const email = document.getElementById("email").value.trim();
 
+        const telefonRegex = /^[+\d\s-]+$/; // Erlaubt Zahlen, Leerzeichen, Bindestriche und Pluszeichen
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Standard E-Mail-Validierung
+
+        if (!name || !adresse || !telefon || !email) {
+            document.getElementById("message").innerHTML = `
+                <div class="alert alert-danger">Bitte füllen Sie alle Felder aus.</div>
+            `;
+            return;
+        }
+
+        if (!telefonRegex.test(telefon)) {
+            document.getElementById("message").innerHTML = `
+                <div class="alert alert-danger">Ungültige Telefonnummer. Verwenden Sie nur Zahlen, Leerzeichen, Bindestriche oder Pluszeichen.</div>
+            `;
+            return;
+        }
+
+        if (!emailRegex.test(email)) {
+            document.getElementById("message").innerHTML = `
+                <div class="alert alert-danger">Ungültige E-Mail-Adresse. Bitte überprüfen Sie das Format.</div>
+            `;
+            return;
+        }
+
+        const data = {
+            name: name,
+            adresseId: adresse,
+            telefon: telefon,
+            email: email
+        };
+
+        try {
+            const response = await axios.post('/api/lieferant/add', data);
+            document.getElementById("message").innerHTML = `
+                <div class="alert alert-success">Lieferant erfolgreich hinzugefügt!</div>
+            `;
+            document.getElementById("lieferantForm").reset();
+        } catch (error) {
+            document.getElementById("message").innerHTML = `
+                <div class="alert alert-danger">Fehler: ${error.response?.data || error.message}</div>
+            `;
+        }
+    });
+</script>
+</body>
 </html>

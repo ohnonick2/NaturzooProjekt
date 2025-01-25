@@ -27,5 +27,11 @@ public class Ort {
         return ortname;
     }
 
+    public void setOrtname(String ortname) {
+        this.ortname = ortname;
+    }
 
+    public void setPlz(Integer plz) {
+        this.plz = plz;
+    }
 }

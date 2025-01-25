@@ -8,6 +8,7 @@ import java.util.List;
 public interface RolleUserRepository extends JpaRepository<RolleUser, Long> {
 
     RolleUser findByUserId(Long userId);
+    List<RolleUser> findByRolleId(Long rolleId);
 
 
 
