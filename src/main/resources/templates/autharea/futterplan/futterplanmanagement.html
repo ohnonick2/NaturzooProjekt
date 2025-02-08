@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
-
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,9 +11,9 @@
         body {
             font-family: Arial, sans-serif;
             background-image: url('/images/background.png');
+            background-color: #f4f6f9;
             margin: 0;
             padding: 0;
-            background-color: #f4f6f9;
             overflow-x: hidden;
         }
 
@@ -30,16 +29,18 @@
 
         .card {
             border: none;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
             margin-bottom: 20px;
+            border-radius: 8px;
         }
 
         .header {
-            background-color: #3a5fcd;
+            background-color: #007bff;
             color: white;
             padding: 15px;
             text-align: center;
             border-radius: 8px;
+            font-weight: bold;
         }
 
         .header-row {
@@ -50,13 +51,56 @@
         }
 
         .btn-success {
+            background-color: #28a745;
+            color: white;
+            font-weight: bold;
+        }
+
+        .btn-success:hover {
             background-color: #218838;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
             color: white;
         }
 
-        table tbody td {
-            word-break: break-word;
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
         }
+
+        .btn i {
+            margin-right: 5px;
+        }
+
+        table {
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .table thead {
+            background-color: #007bff;
+            color: white;
+            text-align: center;
+        }
+
+        .table td, .table th {
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading i {
+            font-size: 2rem;
+            color: #007bff;
+        }
+
     </style>
 </head>
 
@@ -74,55 +118,57 @@
     <!-- Futterplan List Section -->
     <div class="card p-4">
         <div class="header-row">
-            <h4>Verwalten Sie die Futterpläne des Zoos</h4>
+            <h4 class="mb-0">Verwalten Sie die Futterpläne des Zoos</h4>
             <button class="btn btn-success" onclick="addFutterplan()">
-                <i class="fas fa-plus"></i> Futterplan hinzufügen
+                <i class="fas fa-plus"></i> Neuer Futterplan
             </button>
+        </div>
+
+        <!-- Ladeanimation -->
+        <div class="loading" id="loading">
+            <i class="fas fa-spinner fa-spin"></i> Daten werden geladen...
         </div>
 
         <!-- Futterplan List -->
         <div th:if="${futterplanList.size() > 0}">
-            <table class="table table-striped">
-                <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Futter</th>
-                    <th>Menge</th>
-                    <th>Futterzeiten</th>
-                    <th>Wochentage</th>
-                    <th>Aktionen</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="futterplan : ${futterplanList}">
-                    <td th:text="${futterplan.id}"></td>
-                    <td th:text="${futterplan.name}"></td>
-                    <!-- Futter, falls leer oder null, Platzhalter "-" anzeigen -->
-                    <td th:text="${futterplan.futter != null ? futterplan.futter : '-'}"></td>
-                    <!-- Menge, falls leer oder null, Platzhalter "-" anzeigen -->
-                    <td th:text="${futterplan.menge != null ? futterplan.menge : '-'}"></td>
-                    <!-- Futterzeiten, falls leer oder null, Platzhalter "-" anzeigen -->
-                    <td th:text="${futterplan.getFutterZeiten() != null && !futterplan.getFutterZeiten().isEmpty() ? futterplan.getFutterZeiten() : '-'}"></td>
-                    <!-- Wochentage, falls leer oder null, Platzhalter "-" anzeigen -->
-                    <td th:text="${futterplan.wochentage != null && !futterplan.wochentage.isEmpty() ? futterplan.wochentage : '-'}"></td>
-
-                    <td>
-                        <button class="btn btn-primary" th:onclick="'editFutterplan(' + ${futterplan.id} + ')'">
-                            <i class="fas fa-edit"></i> Bearbeiten
-                        </button>
-                        <button class="btn btn-danger" th:onclick="'deleteFutterplan(' + ${futterplan.id} + ')'">
-                            <i class="fas fa-trash"></i> Löschen
-                        </button>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Futter</th>
+                        <th>Menge</th>
+                        <th>Futterzeiten</th>
+                        <th>Wochentage</th>
+                        <th>Aktionen</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="futterplan : ${futterplanList}">
+                        <td th:text="${futterplan.id}"></td>
+                        <td th:text="${futterplan.name}"></td>
+                        <td th:text="${futterplan.futter != null ? futterplan.futter : '-'}"></td>
+                        <td th:text="${futterplan.menge != null ? futterplan.menge : '-'}"></td>
+                        <td th:text="${futterplan.getFutterZeiten() != null && !futterplan.getFutterZeiten().isEmpty() ? futterplan.getFutterZeiten() : '-'}"></td>
+                        <td th:text="${futterplan.wochentage != null && !futterplan.wochentage.isEmpty() ? futterplan.wochentage : '-'}"></td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" th:onclick="'editFutterplan(' + ${futterplan.id} + ')'">
+                                <i class="fas fa-edit"></i> Bearbeiten
+                            </button>
+                            <button class="btn btn-danger btn-sm" th:onclick="'deleteFutterplan(' + ${futterplan.id} + ')'">
+                                <i class="fas fa-trash"></i> Löschen
+                            </button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- No Futterplans Message -->
-        <div th:if="${futterplanList.size() == 0}" class="alert alert-warning" role="alert">
-            Es sind keine Futterpläne vorhanden. Bitte fügen Sie einen Futterplan hinzu.
+        <div th:if="${futterplanList.size() == 0}" class="alert alert-warning text-center">
+            <i class="fas fa-exclamation-circle"></i> Keine Futterpläne vorhanden. Bitte fügen Sie einen Futterplan hinzu.
         </div>
     </div>
 </div>
@@ -141,14 +187,15 @@
 
     function deleteFutterplan(id) {
         if (confirm('Möchten Sie den Futterplan mit ID ' + id + ' wirklich löschen?')) {
+            document.getElementById('loading').style.display = 'block';
+
             fetch('/api/futterplan/delete', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id: id })
             })
                 .then(response => {
+                    document.getElementById('loading').style.display = 'none';
                     if (response.ok) {
                         alert('Futterplan erfolgreich gelöscht!');
                         location.reload();
@@ -159,6 +206,7 @@
                     }
                 })
                 .catch(error => {
+                    document.getElementById('loading').style.display = 'none';
                     console.error('Fehler:', error);
                     alert('Es ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.');
                 });
@@ -171,5 +219,4 @@
     }
 </script>
 </body>
-
 </html>

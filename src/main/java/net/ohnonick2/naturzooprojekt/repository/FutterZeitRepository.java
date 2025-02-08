@@ -7,4 +7,6 @@ public interface FutterZeitRepository extends JpaRepository<FutterZeit, Long> {
 
     FutterZeit findFutterZeitById(Long id);
 
+    FutterZeit findFutterZeitByuhrzeit(String uhrzeit);
+
 }

@@ -4,7 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.ohnonick2.naturzooprojekt.db.ort.Ort;
 import net.ohnonick2.naturzooprojekt.repository.Ortrepository;
-import net.ohnonick2.naturzooprojekt.utils.FoodReponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

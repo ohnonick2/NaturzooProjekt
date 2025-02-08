@@ -23,18 +23,11 @@ public class LogsController {
 
     @GetMapping("/logs")
     public String logs(Model model) {
-
         model.addAttribute("logs", aktivitaetRepository.findAll());
-
-
         List<String> actions = Arrays.stream(ActivityAction.values())
                 .map(ActivityAction::getActionname)
                 .collect(Collectors.toList());
-
         model.addAttribute("type" , actions);
-
-
-
         return "autharea/logs/logs";
     }
 

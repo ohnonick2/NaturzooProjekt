@@ -11,5 +11,5 @@ public interface RolleUserRepository extends JpaRepository<RolleUser, Long> {
     List<RolleUser> findByRolleId(Long rolleId);
 
 
-
+    boolean existsByUserId(Long id);
 }

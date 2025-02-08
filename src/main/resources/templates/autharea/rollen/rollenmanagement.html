@@ -68,7 +68,7 @@
   <div class="card p-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h4>Verwalten Sie die Rollen</h4>
-      <button class="btn btn-success" onclick="addRolle()">
+      <button class="btn btn-success" th:onclick="'addRolle()'">
         <i class="fas fa-plus"></i> Rolle hinzufügen
       </button>
     </div>
@@ -81,17 +81,24 @@
       <thead>
       <tr>
         <th>Name</th>
+        <th>Gewicht</th>
         <th>Aktionen</th>
       </tr>
       </thead>
       <tbody>
       <tr th:each="rolle : ${rollen}">
         <td th:text="${rolle.name}"></td>
+        <td th:text="${rolle.weight}"></td>
         <td>
-          <button class="btn btn-primary btn-sm" th:onclick="'editRolle(' + ${rolle.id} + ')'">
+          <!-- Bearbeiten nur, wenn Benutzer WRITE-Rechte hat, Gewicht kleiner ist und nicht die eigene Rolle -->
+          <button class="btn btn-primary btn-sm"
+                  th:onclick="'editRolle(' + ${rolle.id} + ')'">
             <i class="fas fa-edit"></i> Bearbeiten
           </button>
-          <button class="btn btn-danger btn-sm" th:onclick="'deleteRolle(' + ${rolle.id} + ')'">
+
+          <!-- Löschen mit denselben Einschränkungen wie für Bearbeiten -->
+          <button class="btn btn-danger btn-sm"
+                  th:onclick="'deleteRolle(' + ${rolle.id} + ')'">
             <i class="fas fa-trash"></i> Löschen
           </button>
         </td>
@@ -107,22 +114,36 @@
 
 <script>
   async function deleteRolle(rolleId) {
-    if (confirm('Möchten Sie die Rolle mit ID ' + rolleId + ' wirklich löschen?')) {
-      try {
-        const response = await fetch(`/api/rolle/delete/${rolleId}`, { method: 'DELETE' });
-        if (response.ok) {
-          alert('Rolle erfolgreich gelöscht!');
-          location.reload();
-        } else {
-          const errorText = await response.text();
-          alert('Fehler beim Löschen: ' + errorText);
-        }
-      } catch (error) {
-        console.error('Fehler:', error);
-        alert('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
+    if (!confirm('Möchten Sie die Rolle mit ID ' + rolleId + ' wirklich löschen?')) {
+      return;
+    }
+
+    // Button deaktivieren (optional)
+    const deleteButton = document.querySelector(`[data-id="${rolleId}"]`);
+    if (deleteButton) deleteButton.disabled = true;
+
+    try {
+      const response = await fetch(`/api/permissions/delete/rolle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roleid: rolleId })
+      });
+
+      if (response.ok) {
+        alert('Rolle erfolgreich gelöscht!');
+        location.reload();
+      } else {
+        const errorText = await response.text();
+        alert('Fehler beim Löschen: ' + errorText);
       }
+    } catch (error) {
+      console.error('Fehler:', error);
+      alert('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
+    } finally {
+      if (deleteButton) deleteButton.disabled = false;
     }
   }
+
 
   function editRolle(rolleId) {
     window.location.href = '/editRolle/' + rolleId;

@@ -1,208 +1,271 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nachrichtenübersicht</title>
+    <title>Fütterungsplan - Rheiner Zoo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
+            background-color: #f1f7f3;
             margin: 0;
             padding: 0;
         }
-
         .container {
-            margin: 40px auto;
+            margin: 20px auto;
             padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
+            max-width: 1200px;
             background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
-
         h1 {
-            font-size: 24px;
-            margin-bottom: 20px;
+            text-align: center;
+            color: #2a7f3d;
+            font-size: 26px;
+            font-weight: bold;
         }
-
-        p {
+        .week-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #2a7f3d;
+            color: white;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .week-navigation button {
+            background-color: white;
+            color: #2a7f3d;
+            border: none;
+            padding: 10px 15px;
             font-size: 16px;
-            margin-bottom: 20px;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: bold;
+            transition: 0.3s ease;
         }
-
-        .logout-btn {
-            display: inline-block;
-            background-color: #d9534f;
+        .week-header {
+            display: grid;
+            grid-template-columns: 100px repeat(7, 1fr);
+            background-color: #4a90e2;
+            padding: 12px;
+            font-weight: bold;
+            text-align: center;
+            border-radius: 8px;
             color: white;
             font-size: 16px;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            text-decoration: none;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
         }
-
-        .logout-btn:hover {
-            background-color: #c9302c;
-        }
-
-        .alert, .confirm-dialog {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 5px;
-            font-size: 14px;
-            display: none;
+        .time-grid {
+            display: grid;
+            grid-template-columns: 100px repeat(7, 1fr);
+            width: 100%;
+            gap: 5px;
+            padding: 15px 0;
             position: relative;
+        }
+        .time-label {
+            background-color: #3b7a57;
+            color: white;
             text-align: center;
+            padding: 10px;
+            font-size: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            /* Für eine konsistente Höhe der Zeilen */
+            min-height: 50px;
         }
-
-        .alert.success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .alert.error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .alert.info {
-            background-color: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-        }
-
-        .alert.warning {
-            background-color: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeeba;
-        }
-
-        .alert .close-btn, .confirm-dialog .close-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            font-size: 18px;
-            line-height: 1;
-            cursor: pointer;
-            background: none;
-            border: none;
-            color: inherit;
-        }
-
-        .alert .close-btn:hover, .confirm-dialog .close-btn:hover {
-            opacity: 0.8;
-        }
-
-        .button-container {
-            margin-top: 20px;
-            text-align: center;
-        }
-
-        .confirm-dialog {
-            background-color: #f8f9fa;
-            color: #343a40;
-            border: 1px solid #ced4da;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .confirm-dialog button {
-            margin: 10px 5px;
-            padding: 10px 20px;
-            border: none;
+        .time-cell {
+            border: 1px solid #ddd;
             border-radius: 5px;
+            text-align: center;
+            background: rgba(59, 122, 87, 0.1);
             font-size: 14px;
-            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 5px;
+            min-height: 50px;
         }
-
-        .confirm-dialog .confirm-btn {
-            background-color: #28a745;
+        .event {
+            background-color: #2a7f3d;
             color: white;
+            padding: 6px;
+            border-radius: 6px;
+            font-size: 14px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            margin: 3px 0;
+            width: 100%;
         }
-
-        .confirm-dialog .cancel-btn {
-            background-color: #dc3545;
-            color: white;
+        /* Roter Balken für die aktuelle Zeit */
+        .current-time-line {
+            position: absolute;
+            width: 100%;
+            height: 3px;
+            background-color: red;
+            z-index: 10;
+            transition: top 1s ease;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
+
 <div class="container">
-    <h1>Willkommen, <span th:text="${username}">User</span>!</h1>
-    <p th:if="${authorities != null}">
-        Deine Rechte: <span th:text="${authorities}"></span>
-    </p>
+    <h1>🐾 Fütterungsplan - Rheiner Zoo</h1>
 
-    <!-- Alert Box -->
-    <div id="alertBox" class="alert">
-        <button class="close-btn" onclick="hideAlert()">×</button>
-        <span id="alertMessage"></span>
+    <div class="week-navigation">
+        <button onclick="changeWeek(-1)">⬅ Vorherige Woche</button>
+        <h2 id="weekInfo">KW 6 (03.02.2025 - 09.02.2025)</h2>
+        <button onclick="changeWeek(1)">Nächste Woche ➡</button>
     </div>
 
-    <!-- Confirm Dialog -->
-    <div id="confirmDialog" class="confirm-dialog">
-        <p id="confirmMessage">Möchten Sie fortfahren?</p>
-        <button class="confirm-btn" onclick="confirmAction()">Ja</button>
-        <button class="cancel-btn" onclick="cancelAction()">Nein</button>
+    <button onclick="exportToCalendar()" class="btn btn-success mb-3">📅 Exportieren als Kalender</button>
+
+    <div class="week-header" id="weekdays">
+        <div class="time-label">Zeit</div>
     </div>
 
-    <!-- Buttons -->
-    <div class="button-container">
-        <button onclick="showAlert('Daten erfolgreich gespeichert!', 'success')" class="logout-btn">Erfolg</button>
-        <button onclick="showAlert('Ein Fehler ist aufgetreten!', 'error')" class="logout-btn" style="background-color: #d9534f;">Fehler</button>
-        <button onclick="showAlert('Dies ist eine Information.', 'info')" class="logout-btn" style="background-color: #5bc0de;">Info</button>
-        <button onclick="showConfirm('Sind Sie sicher, dass Sie diese Aktion durchführen möchten?')" class="logout-btn" style="background-color: #f0ad4e;">Bestätigen</button>
-    </div>
-
-    <!-- Abmeldebutton -->
-    <div class="button-container">
-        <a th:href="@{/logout}" class="logout-btn">Abmelden</a>
+    <div class="time-grid" id="timeGrid">
+        <!-- Der rote Zeitbalken wird hier absolut positioniert -->
+        <div class="current-time-line" id="currentTimeLine"></div>
     </div>
 </div>
 
 <script>
-    function showAlert(message, type = 'info') {
-        const alertBox = document.getElementById('alertBox');
-        const alertMessage = document.getElementById('alertMessage');
+    let currentDate = new Date();
+    let currentWeekStart = getMonday(new Date());
 
-        alertMessage.innerText = message;
-        alertBox.className = 'alert';
-        alertBox.classList.add(type);
-        alertBox.style.display = 'block';
+    // Funktion, um den Montag der aktuellen Woche zu ermitteln
+    function getMonday(date) {
+        const day = date.getDay();
+        const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+        return new Date(date.setDate(diff));
     }
 
-    function hideAlert() {
-        const alertBox = document.getElementById('alertBox');
-        alertBox.style.display = 'none';
+    // Funktion zur Berechnung der Kalenderwoche
+    function getWeekNumber(date) {
+        const tempDate = new Date(date.getTime());
+        tempDate.setHours(0, 0, 0, 0);
+        tempDate.setDate(tempDate.getDate() + 3 - ((tempDate.getDay() + 6) % 7));
+        const firstThursday = new Date(tempDate.getFullYear(), 0, 4);
+        firstThursday.setDate(firstThursday.getDate() + 3 - ((firstThursday.getDay() + 6) % 7));
+        const weekNumber = 1 + Math.round(((tempDate - firstThursday) / 86400000 - 3 + ((firstThursday.getDay() + 6) % 7)) / 7);
+        return weekNumber;
     }
 
-    function showConfirm(message) {
-        const confirmDialog = document.getElementById('confirmDialog');
-        const confirmMessage = document.getElementById('confirmMessage');
-
-        confirmMessage.innerText = message;
-        confirmDialog.style.display = 'block';
+    function changeWeek(offset) {
+        currentWeekStart.setDate(currentWeekStart.getDate() + offset * 7);
+        updateWeek();
     }
 
-    function confirmAction() {
-        hideConfirm();
-        showAlert('Aktion wurde bestätigt!', 'success');
+    function updateWeek() {
+        let weekStartDate = new Date(currentWeekStart);
+        let weekEndDate = new Date(weekStartDate);
+        weekEndDate.setDate(weekEndDate.getDate() + 6);
+
+        document.getElementById("weekInfo").textContent =
+            `KW ${getWeekNumber(currentWeekStart)} (${weekStartDate.toLocaleDateString("de-DE")} - ${weekEndDate.toLocaleDateString("de-DE")})`;
+
+        updateSchedule();
     }
 
-    function cancelAction() {
-        hideConfirm();
-        showAlert('Aktion wurde abgebrochen.', 'warning');
+    function updateSchedule() {
+        // Setze den Header für die Wochentage (optional erweiterbar)
+        const weekdaysContainer = document.getElementById("weekdays");
+        weekdaysContainer.innerHTML = '<div class="time-label">Zeit</div>';
+
+        // Zeitraster zurücksetzen; der rote Balken wird direkt neu eingefügt
+        const timeGrid = document.getElementById("timeGrid");
+        timeGrid.innerHTML = '<div class="current-time-line" id="currentTimeLine"></div>';
+
+        // Beispielhafte Fütterungszeiten
+        const feedingTimes = {
+            0: { 9: "Löwen 🦁 Fleisch", 12: "Tiger 🐅 Huhn" },
+            1: { 14: "Elefanten 🐘 Früchte", 17: "Pinguine 🐧 Fisch" },
+            2: { 11: "Giraffen 🦒 Blätter", 15: "Krokodile 🐊 Fleisch" },
+            3: { 13: "Flamingos 🦩 Shrimps", 16: "Robben 🦭 Fisch" },
+            4: { 10: "Bären 🐻 Honig", 14: "Gorillas 🦍 Bananen" },
+            5: { 12: "Affen 🐵 Nüsse", 18: "Pandas 🐼 Bambus" },
+            6: { 9: "Kängurus 🦘 Gras", 14: "Erdmännchen 🦦 Insekten", 19: "Wölfe 🐺 Fleisch" }
+        };
+
+        // Erzeuge das Raster für die Stunden (6:00 bis 19:00)
+        for (let hour = 6; hour <= 19; hour++) {
+            // Erste Spalte: Zeitangabe
+            let timeLabel = document.createElement("div");
+            timeLabel.classList.add("time-label");
+            timeLabel.textContent = `${hour}:00`;
+            timeGrid.appendChild(timeLabel);
+
+            // Für jeden Wochentag (Mo bis So)
+            for (let day = 0; day < 7; day++) {
+                let timeCell = document.createElement("div");
+                timeCell.classList.add("time-cell");
+
+                // Falls für den jeweiligen Tag und die Stunde eine Fütterung definiert ist:
+                if (feedingTimes[day] && feedingTimes[day][hour]) {
+                    let eventDiv = document.createElement("div");
+                    eventDiv.classList.add("event");
+                    eventDiv.innerHTML = feedingTimes[day][hour];
+                    timeCell.appendChild(eventDiv);
+                }
+
+                timeGrid.appendChild(timeCell);
+            }
+        }
+
+        // Nach dem Aufbau des Rasters wird der rote Zeitbalken positioniert
+        updateCurrentTimeLine();
     }
 
-    function hideConfirm() {
-        const confirmDialog = document.getElementById('confirmDialog');
-        confirmDialog.style.display = 'none';
+    // Funktion zur Aktualisierung des roten Balkens entsprechend der aktuellen Uhrzeit
+    function updateCurrentTimeLine() {
+        const now = new Date();
+        const redLine = document.getElementById("currentTimeLine");
+        if (!redLine) return;
+
+        // Bestimme den aktuell angezeigten Zeitraum (Montag bis Sonntag der aktuellen Woche)
+        const displayedMonday = new Date(currentWeekStart);
+        const displayedSunday = new Date(currentWeekStart);
+        displayedSunday.setDate(displayedSunday.getDate() + 6);
+
+        // Falls die aktuelle Zeit nicht in der angezeigten Woche liegt, den Balken ausblenden
+        if (now < displayedMonday || now > displayedSunday) {
+            redLine.style.display = "none";
+            return;
+        } else {
+            redLine.style.display = "block";
+        }
+
+        // Berechne den vertikalen Versatz basierend auf der Zeit (Zeitplan von 6:00 bis 19:00)
+        let currentHour = now.getHours() + now.getMinutes() / 60;
+        if (currentHour < 6) currentHour = 6;
+        if (currentHour > 19) currentHour = 19;
+
+        // Ermittle die Höhe einer Zeile anhand eines Time-Label-Elements
+        const timeGrid = document.getElementById("timeGrid");
+        const timeLabels = timeGrid.querySelectorAll('.time-label');
+        let rowHeight = timeLabels.length > 0 ? timeLabels[0].offsetHeight : 50;
+        const offset = (currentHour - 6) * rowHeight;
+
+        redLine.style.top = offset + "px";
     }
+
+    // Aktualisiere den roten Balken jede Minute (1000 * 60 ms)
+    setInterval(updateCurrentTimeLine, 60000);
+
+    // Initiale Aufrufe
+    updateWeek();
+    updateCurrentTimeLine();
+
+    // Funktion exportToCalendar() kannst du hier noch ergänzen, falls benötigt.
 </script>
 </body>
 </html>

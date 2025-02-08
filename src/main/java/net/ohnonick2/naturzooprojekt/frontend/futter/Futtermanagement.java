@@ -24,7 +24,7 @@ public class Futtermanagement {
         return "autharea/futter/futterverwaltung";
     }
 
-    @GetMapping("editFutter/{id}")
+    @GetMapping("/editFutter/{id}")
     public String editFutter(Model model, @PathVariable Long id){
 
         model.addAttribute("futter", futterRepositority.findById(id).get());
@@ -33,7 +33,7 @@ public class Futtermanagement {
         return "autharea/futter/editfutterverwaltung";
     }
 
-    @GetMapping("addFutter")
+    @GetMapping("/addFutter")
     public String addFutter(Model model){
 
         model.addAttribute("lieferanten", lieferantRepository.findAll());

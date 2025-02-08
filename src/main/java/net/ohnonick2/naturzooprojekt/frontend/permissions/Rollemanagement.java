@@ -1,5 +1,7 @@
 package net.ohnonick2.naturzooprojekt.frontend.permissions;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import net.ohnonick2.naturzooprojekt.db.permission.Permission;
 import net.ohnonick2.naturzooprojekt.db.permission.PermissionRolle;
 import net.ohnonick2.naturzooprojekt.db.permission.Rolle;
@@ -7,11 +9,18 @@ import net.ohnonick2.naturzooprojekt.db.permission.RolleUser;
 import net.ohnonick2.naturzooprojekt.db.user.Pfleger;
 import net.ohnonick2.naturzooprojekt.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Controller
@@ -34,76 +43,96 @@ public class Rollemanagement {
 
 
 
+
+
+
+
     @GetMapping("/rollen")
     public String rolleManagement(Model model) {
+        // Aktuellen Benutzer ermitteln
+        String json = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+        JsonObject jsonObject = JsonParser.parseString(json).getAsJsonObject();
+        Long userId = jsonObject.get("id").getAsLong();
 
-        List<Rolle> rollen = rolleRepository.findAll();
-        rollen.removeIf(rolle -> rolle.getName().equalsIgnoreCase("Superadmin"));
+        // Benutzer-Validierung
+        Pfleger pfleger = pflegerRepository.findPflegerById(userId);
+        if (pfleger == null) {
+            return "redirect:/login";
+        }
 
-        rollen.sort((rolle1, rolle2) -> {
-            return Integer.compare(rolle1.getWeight(), rolle2.getWeight());
-        });
+        // Rollen abrufen und sortieren
+        List<Rolle> rolleList = rolleRepository.findAll();
+        rolleList.removeIf(rolle -> "Superadmin".equalsIgnoreCase(rolle.getName())); // Entferne Superadmin
+
+        rolleList.sort(Comparator.comparing(Rolle::getWeight));
+        model.addAttribute("rollen", rolleList);
+
+        // Aktuelle Benutzerrolle und Gewicht
+        RolleUser rolleUser = rolleUserRepository.findByUserId(userId);
+        model.addAttribute("currentUserWeight", rolleUser.getRolle().getWeight());
+        model.addAttribute("currentUserId", userId);
+
+        // Berechtigungen der aktuellen Rolle
+        List<PermissionRolle> permissionRolleList = permissionRolleRepository.findByRolle(rolleUser.getRolle());
+        model.addAttribute("hasWritePermission", permissionRolleList.stream().anyMatch(p -> "WRITE".equalsIgnoreCase(p.getPermission().getPermission())));
 
 
 
-        model.addAttribute("rollen", rollen);
+
         return "autharea/rollen/rollenmanagement";
     }
 
+
     @GetMapping("/editRolle/{id}")
-    public String edotRolle(@PathVariable Long id, Model model) {
+    public String editRolle(@PathVariable Long id, Model model) {
         Rolle rolle = rolleRepository.findRolleById(id);
         List<PermissionRolle> permissionRolleList = permissionRolleRepository.findByRolle(rolle);
 
-
-
-        permissionRolleList.removeIf(permissionRolle -> {
-            return permissionRolle.getPermission().getPermission().equalsIgnoreCase("*");
-        });
+        permissionRolleList.removeIf(permissionRolle ->
+                permissionRolle.getPermission().getPermission().equalsIgnoreCase("*")
+        );
 
         List<Permission> permissions = permissionRepository.findAll();
-
         Permission allPermission = permissionRepository.findPermissionByPermission("*");
-        if (allPermission != null) {
-            permissions.remove(allPermission);
-        }
+        if (allPermission != null) permissions.remove(allPermission);
 
-        permissions.removeIf(permission -> {
-            for (PermissionRolle permissionRolle : permissionRolleList) {
-                if (permission.getId().equals(permissionRolle.getPermission().getId())) {
-                    return true;
-                }
-            }
-            return false;
-        });
+        permissions.removeIf(permission -> permissionRolleList.stream()
+                .anyMatch(permissionRolle -> permission.getId().equals(permissionRolle.getPermission().getId()))
+        );
 
-        //gebe nur die User zurück die die Rolle haben
         List<RolleUser> rolleUserList = rolleUserRepository.findByRolleId(rolle.getId());
-        List<Pfleger> availableUsers = pflegerRepository.findAll();
+        List<Pfleger> availableUsers = new ArrayList<>(pflegerRepository.findAll());
 
-        availableUsers.removeIf(pfleger -> {
-            for (RolleUser rolleUser : rolleUserList) {
-
-                if (rolleUser.getRolle().name.equalsIgnoreCase("Superadmin")) {
-                    return false;
-                }
-
-                if (pfleger.getId().equals(rolleUser.getUser().getId())) {
-                    return true;
-                }
-            }
-            return false;
-        });
-
-
+        // Entferne Pfleger, die bereits in einer Rolle sind
+        availableUsers.removeIf(pfleger -> rolleUserRepository.existsByUserId(pfleger.getId()));
 
         model.addAttribute("rolle", rolle);
         model.addAttribute("permissionRolleList", permissionRolleList);
         model.addAttribute("permissions", permissions);
         model.addAttribute("rolleUserList", rolleUserList);
         model.addAttribute("availableUsers", availableUsers);
+
         return "autharea/rollen/editrollenmanagement";
     }
+
+
+    @GetMapping("/addRolle")
+    public String addRolle(Model model) {
+
+
+        String json = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+        JsonObject jsonObject = JsonParser.parseString(json).getAsJsonObject();
+        Long userId = jsonObject.get("id").getAsLong();
+
+        RolleUser rolleUser = rolleUserRepository.findByUserId(userId);
+
+
+        model.addAttribute("currentUserWeight", rolleUser.getRolle().getWeight());
+
+
+        return "autharea/rollen/addrollenmanagement";
+    }
+
 
 
 

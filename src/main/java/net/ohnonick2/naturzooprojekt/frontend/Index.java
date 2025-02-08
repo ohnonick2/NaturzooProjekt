@@ -3,6 +3,10 @@ package net.ohnonick2.naturzooprojekt.frontend;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import jakarta.servlet.http.HttpServletRequest;
+import net.ohnonick2.naturzooprojekt.db.futter.FutterZeit;
+import net.ohnonick2.naturzooprojekt.repository.FutterZeitRepository;
+import net.ohnonick2.naturzooprojekt.repository.WochenTagRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.web.WebAttributes;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -12,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.GrantedAuthority;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Controller
@@ -42,8 +47,18 @@ public class Index {
         return "redirect:/login";
     }
 
+    @Autowired
+    private FutterZeitRepository futterZeitRepository;
+    @Autowired
+    private WochenTagRepository wochenTagRepository;
+
     @GetMapping("/")
-    public String showFoodPlan() {
+    public String showFoodPlan(Model model) {
+        List<FutterZeit> futterZeiten = futterZeitRepository.findAll();
+        model.addAttribute("futterZeiten", futterZeiten);
+
+        model.addAttribute("wochentage", wochenTagRepository.findAll());
+
         return "index";
     }
 

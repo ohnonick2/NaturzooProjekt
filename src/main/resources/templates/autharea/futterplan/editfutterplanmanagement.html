@@ -1,108 +1,121 @@
 <!DOCTYPE html>
-<html lang="de">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Futterplan bearbeiten</title>
+  <title>Futterplan Verwaltung</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f6f9;
+      font-family: 'Roboto', sans-serif;
+      background: #f0f2f5;
+      color: #333;
+    }
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 25px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    h1 {
+      text-align: center;
+      color: #1f4e3e;
+      font-weight: bold;
+    }
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #1f4e3e;
+      margin-bottom: 15px;
+    }
+    .btn-primary, .btn-danger {
+      width: auto;
+    }
+    .card {
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       padding: 20px;
+      background: #f9f9f9;
+    }
+    .card-header {
+      background-color: #1f4e3e;
+      color: #fff;
+      font-weight: bold;
+      border-radius: 8px 8px 0 0;
     }
   </style>
 </head>
 <body>
+<div class="container">
+  <h1><i class="fas fa-seedling"></i> Futterplan Verwaltung</h1>
 
-<h1>Futterplan bearbeiten</h1>
+  <section class="mb-4">
+    <div class="card">
+      <div class="card-header">Futter / Vitamine</div>
+      <div class="card-body">
+        <label class="section-title">Verfügbare Futter/Vitamine</label>
+        <div class="input-group mb-3">
+          <select class="form-select" id="futter-dropdown" th:field="*{futterplan.futterListe}">
+            <option th:each="futter : ${verfügbareFutterList}" th:value="${futter.id}" th:text="${futter.name}"></option>
+          </select>
+          <button class="btn btn-danger" onclick="deleteSelected('futter-dropdown', 'futter-list')"><i class="fas fa-trash"></i></button>
+        </div>
+        <label class="section-title">Neues Futter/Vitamin hinzufügen</label>
+        <div class="input-group mb-3">
+          <input type="text" id="futter-input" class="form-control" placeholder="Neues Futter/Vitamin...">
+          <button class="btn btn-primary" onclick="addFutter()"><i class="fas fa-plus"></i></button>
+        </div>
+        <input type="text" id="futter-search" class="form-control" placeholder="Suchen...">
+        <ul id="futter-list" class="list-group mt-2">
+          <li class="list-group-item" th:each="futter : ${aktuelleFutterList}" th:text="${futter.name}"></li>
+        </ul>
+      </div>
+    </div>
+  </section>
 
-<form id="editFutterplanForm">
-  <!-- Futterplan ID als verstecktes Feld -->
-  <input type="hidden" id="id" name="id" th:value="${futterplan.id}" required>
-
-  <div class="mb-3">
-    <label for="name" class="form-label">Neuer Name des Futterplans:</label>
-    <input type="text" class="form-control" id="name" name="name" th:value="${futterplan.name}" required>
-  </div>
-
-  <!-- Futtermittel -->
-  <div class="mb-3">
-    <label for="futter" class="form-label">Futtermittel:</label>
-    <select multiple class="form-control" id="futter" name="futter">
-      <option th:each="futter : ${verfügbareFutterList}" th:value="${futter.id}" th:text="${futter.name}"></option>
-    </select>
-  </div>
-
-  <!-- Mengen -->
-  <div class="mb-3">
-    <label for="mengen" class="form-label">Menge für Futtermittel:</label>
-    <input type="text" class="form-control" id="mengen" name="mengen" placeholder="Zahlen für Mengen eingeben (Komma getrennt)">
-  </div>
-
-  <!-- Wochentage -->
-  <div class="mb-3">
-    <label for="wochentage" class="form-label">Wochentage:</label>
-    <select multiple class="form-control" id="wochentage" name="wochentage">
-      <option th:each="wochentag : ${wochentagList}" th:value="${wochentag.id}" th:text="${wochentag.name}"></option>
-    </select>
-  </div>
-
-  <!-- Futterzeiten -->
-  <div class="mb-3">
-    <label for="futterzeiten" class="form-label">Futterzeiten:</label>
-    <select multiple class="form-control" id="futterzeiten" name="futterzeiten">
-      <option th:each="futterzeit : ${futterzeitenList}" th:value="${futterzeit.getFutterplan().id}" th:text="${futterzeit.getFutterZeit().uhrzeit}"></option>
-    </select>
-  </div>
-
-  <button type="submit" class="btn btn-primary">Futterplan bearbeiten</button>
-</form>
-
-<div id="responseMessage" class="mt-3"></div>
+  <section>
+    <div class="card">
+      <div class="card-header">Futtertag - Uhrzeiten</div>
+      <div class="card-body">
+        <label class="section-title">Verfügbare Uhrzeiten</label>
+        <div class="input-group mb-3">
+          <select class="form-select" id="uhrzeit-dropdown" th:field="*{futterzeitenList}">
+            <option th:each="zeit : ${futterzeitenList}" th:value="${zeit.id}" th:text="${zeit.uhrzeit}"></option>
+          </select>
+          <button class="btn btn-danger" onclick="deleteSelected('uhrzeit-dropdown', 'uhrzeiten-list')"><i class="fas fa-trash"></i></button>
+        </div>
+        <label class="section-title">Neue Uhrzeit hinzufügen</label>
+        <div class="input-group mb-3">
+          <input type="time" id="uhrzeit-input" class="form-control">
+          <button class="btn btn-primary" onclick="addUhrzeit()"><i class="fas fa-plus"></i></button>
+        </div>
+        <input type="text" id="uhrzeit-search" class="form-control" placeholder="Suchen...">
+        <ul id="uhrzeiten-list" class="list-group mt-2">
+          <li class="list-group-item" th:each="zeit : ${futterzeitenList}" th:text="${zeit.uhrzeit}"></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</div>
 
 <script>
-  document.getElementById('editFutterplanForm').addEventListener('submit', function(event) {
-    event.preventDefault();
-
-    const id = document.getElementById('id').value;
-    const name = document.getElementById('name').value;
-    const futter = Array.from(document.getElementById('futter').selectedOptions).map(option => option.value);
-    const mengen = document.getElementById('mengen').value.split(',').map(menge => menge.trim());
-    const wochentage = Array.from(document.getElementById('wochentage').selectedOptions).map(option => option.value);
-    const futterzeiten = Array.from(document.getElementById('futterzeiten').selectedOptions).map(option => option.value);
-
-    // Zuordnen von Futtermitteln zu Mengen
-    const futterWithMengen = futter.map((futterId, index) => ({
-      futterId: futterId,
-      menge: mengen[index] || 0  // Wenn keine Menge angegeben, auf 0 setzen
-    }));
-
-    // Send request to backend to save the updated plan
-    fetch('/api/futterplan/edit', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        id: id,
-        name: name,
-        futter: futterWithMengen,
-        wochentage: wochentage,
-        futterzeiten: futterzeiten
-      })
-    })
-            .then(response => response.json())
-            .then(data => {
-              // Show a success message
-              document.getElementById('responseMessage').innerText = data.message || 'Futterplan erfolgreich bearbeitet!';
-            })
-            .catch(error => {
-              // Handle error
-              document.getElementById('responseMessage').innerText = 'Fehler: ' + error;
-            });
-  });
+  function deleteSelected(dropdownId, listId) {
+    const dropdown = document.getElementById(dropdownId);
+    const selectedValue = dropdown.value;
+    if (selectedValue) {
+      document.querySelectorAll(`#${listId} .list-group-item`).forEach(li => {
+        if (li.textContent.includes(selectedValue)) {
+          li.remove();
+        }
+      });
+      dropdown.remove(dropdown.selectedIndex);
+    }
+  }
 </script>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

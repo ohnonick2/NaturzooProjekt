@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rolle hinzufügen</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    body {
+      background-image: url('/images/background.png');
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f9;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+
+    .main-content {
+      margin-left: 250px;
+      padding: 20px;
+      transition: margin-left 0.3s ease;
+    }
+
+    .main-content.collapsed {
+      margin-left: 70px;
+    }
+
+    .card {
+      border: none;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+      padding: 20px;
+    }
+
+    .header {
+      background-color: #1f4e3e;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      border-radius: 8px;
+    }
+
+    .btn-primary {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .btn-secondary {
+      background-color: #6c757d;
+      color: white;
+    }
+
+    .form-error {
+      color: red;
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+
+<body>
+<!-- Sidebar -->
+<div th:insert="~{vorlagen/sidebar :: sidebar}"></div>
+
+<!-- Main Content -->
+<div class="main-content" id="main-content">
+  <!-- Header -->
+  <div class="header">
+    <h2>Rolle hinzufügen</h2>
+  </div>
+
+  <!-- Add Rolle Section -->
+  <div class="card">
+    <h4>Fügen Sie eine neue Rolle hinzu</h4>
+
+    <form id="addRolleForm" onsubmit="submitRolleForm(event)">
+      <!-- Rollenname -->
+      <div class="mb-3">
+        <label for="rolename" class="form-label">Rollenname</label>
+        <input type="text" class="form-control" id="rolename" name="rolename" placeholder="Name der Rolle" required/>
+        <div id="roleError" class="form-error"></div>
+      </div>
+
+      <!-- Gewicht -->
+      <div class="mb-3">
+        <label for="roleweight" class="form-label">Gewichtung (muss unter Ihrer Gewichtung liegen)</label>
+        <input type="number" class="form-control" id="roleweight" name="roleweight"
+               th:attr="max=${currentUserWeight + 1}"
+               placeholder="Gewichtung der Rolle" required/>
+        <div id="weightError" class="form-error"></div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="mt-4">
+        <button type="button" class="btn btn-secondary" onclick="goBack()">Abbrechen</button>
+        <button type="submit" class="btn btn-primary" id="submitButton">Hinzufügen</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer th:insert="~{vorlagen/footer :: footer}"></footer>
+
+<script>
+  function goBack() {
+    window.history.back();
+  }
+
+  async function submitRolleForm(event) {
+    event.preventDefault();
+
+    // Eingabefelder & Button
+    const roleField = document.getElementById('rolename');
+    const weightField = document.getElementById('roleweight');
+    const submitButton = document.getElementById('submitButton');
+
+    // Fehleranzeigen zurücksetzen
+    document.getElementById('roleError').textContent = '';
+    document.getElementById('weightError').textContent = '';
+
+    // Werte abrufen
+    const roleName = roleField.value;
+    const roleWeight = parseInt(weightField.value, 10);
+    const minWeight = parseInt(weightField.getAttribute('min'), 10); // Gewicht des aktuellen Nutzers +1
+
+    // **Gewicht validieren – Neue Rolle muss größer sein**
+    if (roleWeight <= minWeight) {
+      document.getElementById('weightError').textContent = `Das Gewicht muss größer als ${minWeight} sein.`;
+      return;
+    }
+
+    // Button deaktivieren
+    submitButton.disabled = true;
+
+    try {
+      const payload = { rolename: roleName, weight: roleWeight };
+
+      const response = await fetch('/api/permissions/add/rolle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        alert('Rolle erfolgreich hinzugefügt!');
+        window.location.href = '/rollen';
+      } else {
+        const errorText = await response.text();
+        if (errorText.includes("weight")) {
+          document.getElementById('weightError').textContent = errorText;
+        } else {
+          document.getElementById('roleError').textContent = errorText;
+        }
+      }
+    } catch (error) {
+      console.error('Fehler:', error);
+      alert('Es ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.');
+    } finally {
+      submitButton.disabled = false;
+    }
+  }
+</script>
+</body>
+</html>

@@ -87,8 +87,6 @@ public class WebSecurityConfig implements WebMvcConfigurer {
                 .formLogin(formLogin -> formLogin
                         .loginPage("/login")
                         .failureHandler((request, response, exception) -> {
-
-
                             request.getSession().setAttribute("error", "Benutzernamen oder Passwort falsch oder Benutzer gesperrt");
                             response.sendRedirect("/login?error=error");
                         })
