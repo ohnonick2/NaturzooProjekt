@@ -37,7 +37,7 @@ public class TierManager {
     private RevierRepository revierRepository;
 
     @Autowired
-    private RevierTierRespository revierTierRespository;
+    private RevierTierRepository revierTierRespository;
 
     @PostMapping("/add")
     public ResponseEntity<String> addTier(@RequestBody String body) {
@@ -61,11 +61,21 @@ public class TierManager {
             return ResponseEntity.badRequest().build();
         }
 
-        revierTierRespository.save(new RevierTier(revier1, tier));
+        boolean isAbgegeben = jsonObject.get("isAbgegeben").getAsBoolean();
+        tier.setAbgegeben(isAbgegeben);
 
+        if (isAbgegeben) {
+            LocalDate abgabeDatum = jsonObject.has("abgabeDatum") && !jsonObject.get("abgabeDatum").isJsonNull()
+                    ? LocalDate.parse(jsonObject.get("abgabeDatum").getAsString())
+                    : LocalDate.now();  // Falls kein Datum übergeben wird, aktuelles Datum setzen
 
+            tier.setAbgabeDatum(abgabeDatum);
+        } else {
+            tier.setAbgabeDatum(null);  // Falls das Tier nicht abgegeben ist, Datum entfernen
+        }
 
         tierrespository.save(tier);
+        revierTierRespository.save(new RevierTier(revier1, tier));
         return ResponseEntity.ok().build();
     }
 
@@ -86,27 +96,53 @@ public class TierManager {
     @PostMapping("/edit")
     public ResponseEntity<String> updateTier(@RequestBody String body) {
         if (body == null || body.isEmpty() || !body.startsWith("{") || !body.endsWith("}")) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body("Ungültige JSON-Daten.");
         }
-        JsonObject jsonObject = new JsonParser().parse(body).getAsJsonObject();
+
+        JsonObject jsonObject = JsonParser.parseString(body).getAsJsonObject();
+
         long id = jsonObject.get("id").getAsLong();
         String name = jsonObject.get("name").getAsString();
         LocalDate geburtsdatum = LocalDate.parse(jsonObject.get("geburtsdatum").getAsString());
-        LocalDate sterbedatum = jsonObject.get("sterbedatum") == null ? null : LocalDate.parse(jsonObject.get("sterbedatum").getAsString());
+        LocalDate sterbedatum = jsonObject.has("sterbedatum") && !jsonObject.get("sterbedatum").isJsonNull()
+                ? LocalDate.parse(jsonObject.get("sterbedatum").getAsString())
+                : null;
+
         TierGeschlecht geschlecht = TierGeschlecht.valueOf(jsonObject.get("geschlecht").getAsString());
-        TierArt tierArt = tierartrepository.findById(jsonObject.get("tierArt").getAsLong()).get();
-        if (id == 0 || name == null || geburtsdatum == null || geschlecht == null || tierArt == null) {
-            return ResponseEntity.badRequest().build();
+        TierArt tierArt = tierartrepository.findById(jsonObject.get("tierArt").getAsLong()).orElse(null);
+
+        if (name == null || geburtsdatum == null || geschlecht == null || tierArt == null) {
+            return ResponseEntity.badRequest().body("Fehlende oder ungültige Daten.");
         }
-        Tier tier = tierrespository.findById(id).get();
+
+        Tier tier = tierrespository.findById(id);
+        if (tier == null) {
+            return ResponseEntity.badRequest().body("Tier nicht gefunden.");
+        }
+
         tier.setName(name);
         tier.setGeburtsdatum(geburtsdatum);
         tier.setSterbedatum(sterbedatum);
         tier.setGeschlecht(geschlecht);
         tier.setTierArt(tierArt);
+
+        boolean isAbgegeben = jsonObject.get("isAbgegeben").getAsBoolean();
+        tier.setAbgegeben(isAbgegeben);
+
+        if (isAbgegeben) {
+            LocalDate abgabeDatum = jsonObject.has("abgabeDatum") && !jsonObject.get("abgabeDatum").isJsonNull()
+                    ? LocalDate.parse(jsonObject.get("abgabeDatum").getAsString())
+                    : LocalDate.now();  // Falls kein Datum übergeben wird, aktuelles Datum setzen
+
+            tier.setAbgabeDatum(abgabeDatum);
+        } else {
+            tier.setAbgabeDatum(null);  // Falls das Tier nicht abgegeben ist, Datum entfernen
+        }
+
         tierrespository.save(tier);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok("Tier erfolgreich aktualisiert.");
     }
+
 
 
 }

@@ -74,7 +74,7 @@ public class WebSecurityConfig implements WebMvcConfigurer {
                 .csrf(csrf -> csrf.ignoringRequestMatchers("/login", "/logout", "/static/**" , "/api/public/**" ,"/api/**"))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login", "/images/{filename}" , "/" , "/api/food/getFutterplan" , "/").permitAll()
-                        .requestMatchers("/usermanagement").hasAnyAuthority("USER_MANAGEMENT_READ" , "USER_MANAGEMENT_WRITE" , "*")
+                        .requestMatchers("/usermanagement").hasAnyAuthority("USER_MANAGEMENT_READ" , "*")
                         .requestMatchers("/editUser/").hasAnyAuthority("USER_MANAGEMENT_WRITE" , "*")
                         .requestMatchers("/editUser/**").hasAnyAuthority("USER_MANAGEMENT_WRITE" , "*")
                         .requestMatchers("/addUser").hasAnyAuthority("USER_MANAGEMENT_WRITE" , "*")

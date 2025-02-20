@@ -71,7 +71,6 @@ public class FutterplanManager {
         return ResponseEntity.ok("Futterplan with ID " + futterplanId + " deleted successfully.");
     }
 
-
     @PostMapping(value = "/addFeedingTime")
     public ResponseEntity<String> addFeedingTime(@RequestBody String body) {
         JsonObject json = JsonParser.parseString(body).getAsJsonObject();
@@ -107,4 +106,69 @@ public class FutterplanManager {
 
         return ResponseEntity.ok("Feeding time added successfully.");
     }
+
+    @PostMapping(value = "/deleteFeedingTime")
+    public ResponseEntity<String> deleteFeedingTime(@RequestBody String body) {
+        JsonObject json = JsonParser.parseString(body).getAsJsonObject();
+
+        if (json == null || !json.has("futterplanId") || !json.has("time")) {
+            return ResponseEntity.badRequest().body("Invalid JSON or missing required fields.");
+        }
+
+        Long futterplanId = json.get("futterplanId").getAsLong();
+        String feedingTime = json.get("time").getAsString();
+
+        FutterZeit futterZeit = futterZeitRepository.findFutterZeitByuhrzeit(feedingTime);
+        if (futterZeit == null) {
+            return ResponseEntity.badRequest().body("Feeding time with time " + feedingTime + " not found.");
+        }
+
+        FutterPlan futterPlan = futterPlanRepository.findById(futterplanId).orElse(null);
+        if (futterPlan == null) {
+            return ResponseEntity.badRequest().body("Futterplan with ID " + futterplanId + " not found.");
+        }
+
+        List<FutterPlanFutterZeit> futterPlanFutterZeit = futterPlanFutterZeitRepository.findByFutterplanId(futterPlan.getId());
+        if (futterPlanFutterZeit == null) {
+            return ResponseEntity.badRequest().body("Feeding time with time " + feedingTime + " not found in Futterplan with ID " + futterplanId + ".");
+        }
+
+        for (FutterPlanFutterZeit planFutterZeit : futterPlanFutterZeit) {
+            if (planFutterZeit.getFutterZeit().getUhrzeit().equals(feedingTime)) {
+                futterPlanFutterZeitRepository.delete(planFutterZeit);
+            }
+        }
+
+        return ResponseEntity.ok("Feeding time with time " + feedingTime + " deleted successfully.");
+    }
+
+    @PostMapping(value = "/addFeeding")
+    public ResponseEntity<String> addFeeding(@RequestBody String body) {
+        JsonObject json = JsonParser.parseString(body).getAsJsonObject();
+
+        if (json == null || !json.has("futterplanId") || !json.has("futterId") || !json.has("menge")) {
+            return ResponseEntity.badRequest().body("Invalid JSON or missing required fields.");
+        }
+
+        Long futterplanId = json.get("futterplanId").getAsLong();
+        Long futterId = json.get("futterId").getAsLong();
+        int menge = json.get("menge").getAsInt();
+
+        FutterPlan futterPlan = futterPlanRepository.findById(futterplanId).orElse(null);
+        if (futterPlan == null) {
+            return ResponseEntity.badRequest().body("Futterplan with ID " + futterplanId + " not found.");
+        }
+
+        Futter futter = futterRepository.findById(futterId).orElse(null);
+        if (futter == null) {
+            return ResponseEntity.badRequest().body("Futter with ID " + futterId + " not found.");
+        }
+
+        FutterplanFutter futterplanFutter = new FutterplanFutter(futterPlan, futter, menge);
+        futterplanFutterRepository.save(futterplanFutter);
+
+        return ResponseEntity.ok("Feeding added successfully.");
+    }
+
+
 }

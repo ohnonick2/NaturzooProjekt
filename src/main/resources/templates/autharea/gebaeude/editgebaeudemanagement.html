@@ -12,8 +12,6 @@
         body {
             font-family: Arial, sans-serif;
             background-image: url('/images/background.png');
-            margin: 0;
-            padding: 0;
             background-color: #f4f6f9;
             overflow-x: hidden;
         }
@@ -24,14 +22,9 @@
             transition: margin-left 0.3s ease;
         }
 
-        .main-content.collapsed {
-            margin-left: 70px;
-        }
-
         .card {
             border: none;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
             padding: 20px;
         }
 
@@ -42,160 +35,72 @@
             text-align: center;
             border-radius: 8px;
         }
-
-        .header-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .btn-primary {
-            background-color: #007bff;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 5px;
-        }
-
-        .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 5px;
-        }
-
-        .alert {
-            margin-top: 15px;
-        }
     </style>
 </head>
 
 <body>
-<!-- Sidebar -->
 <div th:insert="~{vorlagen/sidebar :: sidebar}"></div>
 
 <!-- Main Content -->
 <div class="main-content" id="main-content">
-    <!-- Header -->
     <div class="header">
         <h2>Gebäude bearbeiten</h2>
     </div>
 
-    <!-- Building Edit Section -->
     <div class="card">
         <h4>Bearbeiten Sie das ausgewählte Gebäude</h4>
 
-        <!-- Allgemeine Fehlermeldung -->
         <div id="serverError" class="alert alert-danger" role="alert" style="display: none;">
-            Es ist ein Fehler beim Speichern aufgetreten.
+            Fehler beim Speichern aufgetreten.
         </div>
 
-        <!-- Edit Form -->
-        <form th:action="@{'/saveFutterplan/' + ${futterplan.id}}" method="post">
-            <label for="name">Futterplan Name:</label>
-            <input type="text" id="name" name="name" th:value="${futterplan.name}" required>
+        <form id="editGebaeudeForm" th:action="@{'/api/gebaeude/edit'}" method="post">
+            <input type="hidden" id="gebaeudeId" name="id" th:value="${gebaeude?.id ?: 0}">
 
-            <!-- Aktuelle Futtermittel -->
-            <div class="current-items">
-                <h3>Aktuelle Futtermittel</h3>
-                <ul>
-                    <li th:each="futter : ${futterList}">
-                        <span th:text="${futter.name}"></span>
-                        <button type="button" onclick="'removeFutter([[${futter.id}]]'")>Entfernen</button>
-                    </li>
-                </ul>
-            </div>
+            <label for="name">Gebäude Name:</label>
+            <input type="text" id="name" name="name" th:value="${gebaeude?.name}" class="form-control" required>
 
-            <!-- Dropdown zum Hinzufügen -->
-            <label for="addFutter">Futter hinzufügen:</label>
-            <select id="addFutter" name="addFutter">
-                <option th:each="futter : ${futterList}" th:value="${futter.id}" th:text="${futter.name}"></option>
-            </select>
-            <button type="button" onclick="addFutter()">Hinzufügen</button>
+            <label for="beschreibung">Beschreibung:</label>
+            <textarea id="beschreibung" name="beschreibung" class="form-control" maxlength="255" required
+                      th:text="${gebaeude?.beschreibung}"></textarea>
+
+            <label for="maximaleKapazitaet">Maximale Kapazität:</label>
+            <input type="number" id="maximaleKapazitaet" name="maximaleKapazitaet" class="form-control"
+                   th:value="${gebaeude?.maximaleKapazitaet}" required>
+
+            <button type="submit" class="btn btn-primary mt-3">Speichern</button>
         </form>
     </div>
 </div>
 
-<!-- Footer -->
-<footer th:insert="~{vorlagen/footer :: footer}"></footer>
-
 <script>
-    // Smooth fade-in effect
-    document.addEventListener('DOMContentLoaded', () => {
-        const mainContent = document.getElementById('main-content');
-        mainContent.classList.add('visible');
-    });
-
-    function validateBeschreibung() {
-        const beschreibung = document.getElementById('beschreibung');
-        const errorBeschreibung = document.getElementById('errorBeschreibung');
-
-        if (beschreibung.value.length > 255) {
-            beschreibung.classList.add('is-invalid');
-            errorBeschreibung.style.display = 'block';
-        } else {
-            beschreibung.classList.remove('is-invalid');
-            errorBeschreibung.style.display = 'none';
-        }
-    }
-
-    document.getElementById('editGebaeudeForm').addEventListener('submit', function (e) {
+    document.getElementById('editGebaeudeForm').addEventListener('submit', async function (e) {
         e.preventDefault();
-
-        const beschreibung = document.getElementById('beschreibung');
-        const errorBeschreibung = document.getElementById('errorBeschreibung');
-
-        // Validate Beschreibung length
-        if (beschreibung.value.length > 255) {
-            beschreibung.classList.add('is-invalid');
-            errorBeschreibung.textContent = "Die Beschreibung darf maximal 255 Zeichen lang sein.";
-            errorBeschreibung.style.display = 'block';
-            return;
-        } else {
-            beschreibung.classList.remove('is-invalid');
-            errorBeschreibung.style.display = 'none';
-        }
 
         const payload = {
             id: document.getElementById('gebaeudeId').value,
             name: document.getElementById('name').value,
-            beschreibung: beschreibung.value,
+            beschreibung: document.getElementById('beschreibung').value,
             maximaleKapazitaet: document.getElementById('maximaleKapazitaet').value
         };
 
-        fetch('/api/gebaeude/edit', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-        })
-            .then(response => {
-                if (response.ok) {
-                    window.location.href = "/gebaeudemanagement";
-                } else {
-                    return response.text().then(text => {
-                        const serverError = document.getElementById('serverError');
-                        serverError.textContent = 'Fehler beim Speichern: ' + text;
-                        serverError.style.display = 'block';
-                    });
-                }
-            })
-            .catch(error => {
-                const serverError = document.getElementById('serverError');
-                serverError.textContent = 'Ein unerwarteter Fehler ist aufgetreten: ' + error;
-                serverError.style.display = 'block';
+        try {
+            const response = await fetch('/api/gebaeude/edit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
             });
+
+            if (response.ok) {
+                window.location.href = "/gebaeudemanagement";
+            } else {
+                document.getElementById('serverError').style.display = 'block';
+            }
+        } catch (error) {
+            document.getElementById('serverError').textContent = 'Fehler: ' + error;
+            document.getElementById('serverError').style.display = 'block';
+        }
     });
-
-
-    function goBack() {
-        window.history.back();
-    }
-
-    function toggleSidebar() {
-        document.getElementById('sidebar').classList.toggle('collapsed');
-        document.getElementById('main-content').classList.toggle('collapsed');
-    }
-
 </script>
 </body>
 </html>

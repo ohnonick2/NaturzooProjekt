@@ -1,121 +1,208 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="de">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Futterplan Verwaltung</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+  <!-- Icons & Fonts -->
+  <div th:insert="~{vorlagen/icon :: icon}"></div>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
+
   <style>
     body {
-      font-family: 'Roboto', sans-serif;
-      background: #f0f2f5;
-      color: #333;
+      font-family: 'Poppins', sans-serif;
+      background: url('/images/background.png') no-repeat center center fixed;
+      background-size: cover;
+      background-color: #e5e8e8;
     }
-    .container {
-      max-width: 900px;
-      margin: 40px auto;
-      padding: 25px;
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    .main-content {
+      margin-left: 250px;
+      padding: 30px;
+      transition: margin-left 0.3s ease-in-out;
     }
-    h1 {
+    .header {
+      background-color: #2d3e3a;
+      color: #fff;
+      padding: 20px;
       text-align: center;
-      color: #1f4e3e;
-      font-weight: bold;
-    }
-    .section-title {
-      font-size: 1.5rem;
-      font-weight: bold;
-      color: #1f4e3e;
-      margin-bottom: 15px;
-    }
-    .btn-primary, .btn-danger {
-      width: auto;
+      border-radius: 8px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     }
     .card {
-      border: none;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      padding: 20px;
-      background: #f9f9f9;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+      background-color: #ffffff;
     }
     .card-header {
-      background-color: #1f4e3e;
+      background-color: #4a7c56;
       color: #fff;
+      padding: 15px;
       font-weight: bold;
-      border-radius: 8px 8px 0 0;
+    }
+    .nav-tabs .nav-link {
+      color: #4a7c56;
+      font-weight: 500;
+    }
+    .nav-tabs .nav-link.active {
+      background-color: #4a7c56;
+      color: #fff;
+    }
+    .btn-primary {
+      background-color: #4a7c56;
+      border-color: #4a7c56;
+    }
+    .btn-primary:hover {
+      background-color: #3a6343;
+    }
+    .btn-danger {
+      background-color: #dc3545;
     }
   </style>
 </head>
+
 <body>
-<div class="container">
-  <h1><i class="fas fa-seedling"></i> Futterplan Verwaltung</h1>
 
-  <section class="mb-4">
-    <div class="card">
-      <div class="card-header">Futter / Vitamine</div>
-      <div class="card-body">
-        <label class="section-title">Verfügbare Futter/Vitamine</label>
-        <div class="input-group mb-3">
-          <select class="form-select" id="futter-dropdown" th:field="*{futterplan.futterListe}">
-            <option th:each="futter : ${verfügbareFutterList}" th:value="${futter.id}" th:text="${futter.name}"></option>
-          </select>
-          <button class="btn btn-danger" onclick="deleteSelected('futter-dropdown', 'futter-list')"><i class="fas fa-trash"></i></button>
-        </div>
-        <label class="section-title">Neues Futter/Vitamin hinzufügen</label>
-        <div class="input-group mb-3">
-          <input type="text" id="futter-input" class="form-control" placeholder="Neues Futter/Vitamin...">
-          <button class="btn btn-primary" onclick="addFutter()"><i class="fas fa-plus"></i></button>
-        </div>
-        <input type="text" id="futter-search" class="form-control" placeholder="Suchen...">
-        <ul id="futter-list" class="list-group mt-2">
-          <li class="list-group-item" th:each="futter : ${aktuelleFutterList}" th:text="${futter.name}"></li>
-        </ul>
-      </div>
-    </div>
-  </section>
+<!-- Sidebar -->
+<div th:insert="~{vorlagen/sidebar :: sidebar}"></div>
 
-  <section>
-    <div class="card">
-      <div class="card-header">Futtertag - Uhrzeiten</div>
-      <div class="card-body">
-        <label class="section-title">Verfügbare Uhrzeiten</label>
-        <div class="input-group mb-3">
-          <select class="form-select" id="uhrzeit-dropdown" th:field="*{futterzeitenList}">
-            <option th:each="zeit : ${futterzeitenList}" th:value="${zeit.id}" th:text="${zeit.uhrzeit}"></option>
-          </select>
-          <button class="btn btn-danger" onclick="deleteSelected('uhrzeit-dropdown', 'uhrzeiten-list')"><i class="fas fa-trash"></i></button>
+<!-- Main Content -->
+<div class="main-content">
+  <div class="header">
+    <h2>Futterplan Verwaltung</h2>
+  </div>
+
+  <div class="container">
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs">
+      <li class="nav-item">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#futter">Futter / Vitamine</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#uhrzeiten">Futtertag - Uhrzeiten</button>
+      </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content mt-4">
+      <!-- Tab: Futter / Vitamine -->
+      <div class="tab-pane fade show active" id="futter">
+        <div class="card">
+          <div class="card-header">Futter / Vitamine</div>
+          <div class="card-body">
+            <!-- Verfügbare Futter/Vitamine -->
+            <div class="mb-3">
+              <label class="form-label">Verfügbare Futter/Vitamine</label>
+              <div class="input-group">
+                <select class="form-select" id="futter-dropdown">
+                  <option th:each="futter : ${verfügbareFutterList}" th:value="${futter.id}" th:text="${futter.name}"></option>
+                </select>
+                <button class="btn btn-primary" type="button" onclick="addFutter()">
+                  <i class="fas fa-plus"></i>
+                </button>
+              </div>
+            </div>
+
+            <hr>
+
+            <!-- Futter aus Plan entfernen -->
+            <div class="mb-3">
+              <label class="form-label">Futter im Plan</label>
+              <div class="input-group">
+                <select class="form-select" id="futterplan-dropdown">
+                  <option th:each="futter : ${futterplanFutterList}" th:value="${futter.id}" th:text="${futter.name}"></option>
+                </select>
+                <button class="btn btn-danger" type="button" onclick="deleteFutter()">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-        <label class="section-title">Neue Uhrzeit hinzufügen</label>
-        <div class="input-group mb-3">
-          <input type="time" id="uhrzeit-input" class="form-control">
-          <button class="btn btn-primary" onclick="addUhrzeit()"><i class="fas fa-plus"></i></button>
-        </div>
-        <input type="text" id="uhrzeit-search" class="form-control" placeholder="Suchen...">
-        <ul id="uhrzeiten-list" class="list-group mt-2">
-          <li class="list-group-item" th:each="zeit : ${futterzeitenList}" th:text="${zeit.uhrzeit}"></li>
-        </ul>
       </div>
+
+      <!-- Tab: Futtertag - Uhrzeiten -->
+      <div class="tab-pane fade" id="uhrzeiten">
+        <div class="card">
+          <div class="card-header">Futtertag - Uhrzeiten</div>
+          <div class="card-body">
+            <!-- Neue Uhrzeit hinzufügen -->
+            <div class="mb-3">
+              <label class="form-label">Neue Uhrzeit hinzufügen</label>
+              <div class="input-group">
+                <input type="time" id="uhrzeit-input" class="form-control" required />
+                <button class="btn btn-primary" type="button" onclick="addUhrzeit()">
+                  <i class="fas fa-plus"></i>
+                </button>
+              </div>
+            </div>
+
+            <hr>
+
+            <!-- Verfügbare Uhrzeiten -->
+            <div class="mb-3">
+              <label class="form-label">Verfügbare Uhrzeiten</label>
+              <div class="input-group">
+                <select class="form-select" id="uhrzeit-dropdown">
+                  <option th:each="zeit : ${futterzeitenList}" th:value="${zeit.getFutterZeit().getId()}" th:text="${zeit.getFutterZeit().getId()}"></option>
+                </select>
+                <button class="btn btn-danger" type="button" onclick="deleteUhrzeit()">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
-  </section>
+  </div>
 </div>
 
+<!-- Footer -->
+<footer th:insert="~{vorlagen/footer :: footer}"></footer>
+
+<!-- JavaScript für API Calls -->
 <script>
-  function deleteSelected(dropdownId, listId) {
-    const dropdown = document.getElementById(dropdownId);
-    const selectedValue = dropdown.value;
-    if (selectedValue) {
-      document.querySelectorAll(`#${listId} .list-group-item`).forEach(li => {
-        if (li.textContent.includes(selectedValue)) {
-          li.remove();
-        }
-      });
-      dropdown.remove(dropdown.selectedIndex);
-    }
+  async function addFutter() {
+    const futterId = document.getElementById("futter-dropdown").value;
+    await fetch('/api/futterplan/addFeeding', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ futterplanId: 1, futterId: futterId, menge: 1 })
+    });
+    location.reload();
+  }
+
+  async function deleteFutter() {
+    const futterId = document.getElementById("futterplan-dropdown").value;
+    await fetch(`/api/futterplan/deleteFeeding?futterplanId=1&futterId=${futterId}`, { method: 'DELETE' });
+    location.reload();
+  }
+
+  async function addUhrzeit() {
+    const time = document.getElementById("uhrzeit-input").value;
+    await fetch('/api/futterplan/addFeedingTime', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ futterplanId: 1, time: time })
+    });
+    location.reload();
+  }
+
+  async function deleteUhrzeit() {
+    const time = document.getElementById("uhrzeit-dropdown").value;
+    await fetch(`/api/futterplan/deleteFeedingTime?futterplanId=1&time=${time}`, { method: 'DELETE' });
+    location.reload();
   }
 </script>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

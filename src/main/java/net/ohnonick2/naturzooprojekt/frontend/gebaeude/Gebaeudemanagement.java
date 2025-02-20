@@ -1,5 +1,6 @@
 package net.ohnonick2.naturzooprojekt.frontend.gebaeude;
 
+import net.ohnonick2.naturzooprojekt.db.gebaeude.Gebaeude;
 import net.ohnonick2.naturzooprojekt.repository.AktivitaetRepository;
 import net.ohnonick2.naturzooprojekt.repository.GebaeudeRepository;
 import net.ohnonick2.naturzooprojekt.service.AktivitaetService;
@@ -35,10 +36,14 @@ public class Gebaeudemanagement {
 
     @GetMapping("/editGebaeude/{id}")
     public String editGebaeude(@PathVariable Long id, Model model) {
-
-        model.addAttribute("gebaeude", gebaeudeRepository.findById(id).get());
+        Gebaeude gebaeude = gebaeudeRepository.findById(id).orElse(null);
+        if (gebaeude == null) {
+            return "redirect:/gebaeudemanagement"; // Weiterleitung, falls ID nicht existiert
+        }
+        model.addAttribute("gebaeude", gebaeude);
         return "autharea/gebaeude/editgebaeudemanagement";
     }
+
 
 
 

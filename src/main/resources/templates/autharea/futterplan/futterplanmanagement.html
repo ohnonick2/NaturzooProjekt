@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Futterplan-Management</title>
-    <div th:insert="~{vorlagen/icon :: icon}"></div>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -23,24 +22,19 @@
             transition: margin-left 0.3s ease;
         }
 
-        .main-content.collapsed {
-            margin-left: 70px;
-        }
-
         .card {
             border: none;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
-            border-radius: 8px;
+            padding: 20px;
         }
 
         .header {
-            background-color: #007bff;
+            background-color: #1f4e3e;
             color: white;
             padding: 15px;
             text-align: center;
             border-radius: 8px;
-            font-weight: bold;
         }
 
         .header-row {
@@ -51,43 +45,20 @@
         }
 
         .btn-success {
-            background-color: #28a745;
-            color: white;
-            font-weight: bold;
-        }
-
-        .btn-success:hover {
             background-color: #218838;
-        }
-
-        .btn-primary {
-            background-color: #007bff;
             color: white;
         }
 
-        .btn-danger {
-            background-color: #dc3545;
-            color: white;
+        .search-container input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 15px;
         }
 
-        .btn i {
-            margin-right: 5px;
-        }
-
-        table {
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .table thead {
-            background-color: #007bff;
-            color: white;
-            text-align: center;
-        }
-
-        .table td, .table th {
-            text-align: center;
-            vertical-align: middle;
+        table tbody td {
+            word-break: break-word;
         }
 
         .loading {
@@ -101,6 +72,9 @@
             color: #007bff;
         }
 
+        .alert-warning {
+            margin-top: 20px;
+        }
     </style>
 </head>
 
@@ -110,7 +84,6 @@
 
 <!-- Main Content -->
 <div class="main-content" id="main-content">
-    <!-- Header -->
     <div class="header">
         <h2>Futterplan-Management</h2>
     </div>
@@ -124,6 +97,11 @@
             </button>
         </div>
 
+        <!-- Search Bar -->
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Suchen Sie nach Name..." onkeyup="filterTable()">
+        </div>
+
         <!-- Ladeanimation -->
         <div class="loading" id="loading">
             <i class="fas fa-spinner fa-spin"></i> Daten werden geladen...
@@ -132,7 +110,7 @@
         <!-- Futterplan List -->
         <div th:if="${futterplanList.size() > 0}">
             <div class="table-responsive">
-                <table class="table table-hover table-bordered">
+                <table class="table table-striped" id="futterplanTable">
                     <thead>
                     <tr>
                         <th>ID</th>
@@ -173,9 +151,6 @@
     </div>
 </div>
 
-<!-- Footer -->
-<footer th:insert="~{vorlagen/footer :: footer}"></footer>
-
 <script>
     function addFutterplan() {
         window.location.href = '/addFutterplan';
@@ -213,9 +188,14 @@
         }
     }
 
-    function toggleSidebar() {
-        document.getElementById('sidebar').classList.toggle('collapsed');
-        document.getElementById('main-content').classList.toggle('collapsed');
+    function filterTable() {
+        const input = document.getElementById('searchInput').value.toLowerCase();
+        const rows = document.querySelectorAll('#futterplanTable tbody tr');
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            const matches = Array.from(cells).some(cell => cell.innerText.toLowerCase().includes(input));
+            row.style.display = matches ? '' : 'none';
+        });
     }
 </script>
 </body>

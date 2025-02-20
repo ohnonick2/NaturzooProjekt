@@ -30,6 +30,8 @@ public class Pfleger {
     @ManyToOne
     private Ort ort;
 
+    @Lob
+    private byte[] bild = null;
     public Pfleger() {
     }
 
@@ -133,5 +135,14 @@ public class Pfleger {
 
     public LocalDate getGeburtsdatum() {
         return geburtsdatum;
+    }
+
+    public byte[] getBild() {
+        return bild;
+    }
+
+
+    public void setProfilbild(byte[] imageBytes) {
+        this.bild = imageBytes;
     }
 }

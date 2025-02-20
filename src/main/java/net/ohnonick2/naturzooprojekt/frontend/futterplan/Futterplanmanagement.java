@@ -104,35 +104,62 @@ public class Futterplanmanagement {
 
 
 
-    @GetMapping("/edit/{id}")
+    @GetMapping("/editFutterplan/{id}")
     public String editFutterplan(@PathVariable Long id, Model model) {
-        FutterPlan futterPlan = futterPlanRepository.findById(id).orElse(null);
-        if (futterPlan == null) {
-            return "redirect:/futterplan";
-        }
+        return futterPlanRepository.findById(id)
+                .map(futterPlan -> {
+                    // Futter und Mengen abrufen
+                    List<FutterplanFutter> futterListForPlan = futterplanFutterRepository.findByFutterplanId(futterPlan.getId());
 
-        // Futterplan-Details
-        List<FutterplanFutter> futterListForPlan = futterplanFutterRepository.findByFutterplanId(futterPlan.getId());
-        List<Futter> aktuelleFutterList = futterListForPlan.stream()
-                .map(FutterplanFutter::getFutter).collect(Collectors.toList());
+                    Map<Long, Integer> futterMengenMap = futterListForPlan.stream()
+                            .collect(Collectors.toMap(f -> f.getFutter().getId(), FutterplanFutter::getMenge));
 
-        // Mengen-Map für Futtermittel
-        Map<Long, Integer> futterMengenMap = futterListForPlan.stream()
-                .collect(Collectors.toMap(f -> f.getFutter().getId(), FutterplanFutter::getMenge));
+                    List<String> futterList = futterListForPlan.stream()
+                            .map(f -> f.getFutter().getName())
+                            .collect(Collectors.toList());
 
-        // Wochentage & Futterzeiten
-        List<Wochentag> wochentageList = wochenTagRepository.findAll();
-        List<FutterPlanFutterZeit> futterzeitenList = futterPlanFutterZeitRepository.findByFutterplanId(futterPlan.getId());
+                    List<String> mengeList = futterListForPlan.stream()
+                            .map(f -> String.valueOf(f.getMenge()))
+                            .collect(Collectors.toList());
 
-        model.addAttribute("futterplan", futterPlan);
-        model.addAttribute("aktuelleFutterList", aktuelleFutterList);
-        model.addAttribute("futterMengenMap", futterMengenMap);
-        model.addAttribute("wochentagList", wochentageList);
-        model.addAttribute("futterzeitenList", futterzeitenList);
-        model.addAttribute("verfügbareFutterList", futterRepository.findAll());
+                    // Futterzeiten abrufen
+                    List<String> futterzeitenList = futterPlanFutterZeitRepository.findByFutterplanId(futterPlan.getId()).stream()
+                            .map(futterPlanFutterZeit -> futterPlanFutterZeit.getFutterZeit().getUhrzeit().toString())
+                            .collect(Collectors.toList());
 
-        return "autharea/futterplan/editfutterplanmanagement";
+                    // Wochentage abrufen
+                    String wochentage = futterPlanWochentagRepository.findByFutterplan(futterPlan).stream()
+                            .map(FutterPlanWochentag::getWochentag)
+                            .map(Wochentag::getName)
+                            .collect(Collectors.joining(", "));
+
+                    // DTO für den editierten Futterplan erstellen
+                    FutterplanDTO futterplanDTO = new FutterplanDTO(
+                            futterPlan.getId(),
+                            futterPlan.getName(),
+                            futterList.isEmpty() ? "-" : String.join(", ", futterList),
+                            "-",
+                            mengeList.isEmpty() ? "-" : String.join(", ", mengeList),
+                            futterzeitenList.isEmpty() ? "-" : String.join(", ", futterzeitenList)
+                    );
+                    futterplanDTO.setWochentage(wochentage.isEmpty() ? "-" : wochentage);
+
+                    // Attribute für das Model setzen
+                    model.addAttribute("futterplanDTO", futterplanDTO);
+                    model.addAttribute("futterplan", futterPlan);
+                    model.addAttribute("aktuelleFutterList", futterListForPlan);
+                    model.addAttribute("futterMengenMap", futterMengenMap);
+                    model.addAttribute("wochentagList", wochenTagRepository.findAll());
+                    model.addAttribute("futterzeitenList", futterPlanFutterZeitRepository.findByFutterplanId(futterPlan.getId()));
+                    model.addAttribute("verfügbareFutterList", futterRepository.findAll());
+
+                    return "autharea/futterplan/editfutterplanmanagement";
+                })
+                .orElse("redirect:/futterplan"); // Falls nicht gefunden, zur Übersicht weiterleiten
     }
+
+
+
 
 
     @GetMapping("/addFutterplan")

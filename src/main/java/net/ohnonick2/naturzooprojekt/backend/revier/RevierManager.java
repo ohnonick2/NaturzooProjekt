@@ -3,12 +3,11 @@ package net.ohnonick2.naturzooprojekt.backend.revier;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.ohnonick2.naturzooprojekt.db.revier.Revier;
-
 import net.ohnonick2.naturzooprojekt.db.revier.RevierPfleger;
+import net.ohnonick2.naturzooprojekt.db.revier.RevierTier;
+import net.ohnonick2.naturzooprojekt.db.tier.Tier;
 import net.ohnonick2.naturzooprojekt.db.user.Pfleger;
-import net.ohnonick2.naturzooprojekt.repository.Pflegerrepository;
-import net.ohnonick2.naturzooprojekt.repository.RevierPflegerRepository;
-import net.ohnonick2.naturzooprojekt.repository.RevierRepository;
+import net.ohnonick2.naturzooprojekt.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,21 +26,17 @@ public class RevierManager {
     private RevierPflegerRepository revierPflegerRepository;
 
     @Autowired
+    private RevierTierRepository revierTierRepository;
+
+    @Autowired
     private Pflegerrepository pflegerRepository;
 
-    @PostMapping("/add")
-    public ResponseEntity<String> addRevier(@RequestBody Revier newRevier) {
-        try {
-            revierRepository.save(newRevier);
-            return ResponseEntity.ok("Revier erfolgreich hinzugefügt!");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Fehler beim Hinzufügen des Reviers: " + e.getMessage());
-        }
-    }
+    @Autowired
+    private Tierrespository tierRepository;
 
+    // Revier bearbeiten
     @PostMapping("/edit")
     public ResponseEntity<String> updateRevier(@RequestBody String body) {
-        System.out.println("Received Body: " + body); // Debug-Ausgabe
         JsonObject jsonObject = JsonParser.parseString(body).getAsJsonObject();
         Long id = jsonObject.get("id").getAsLong();
         String name = jsonObject.get("name").getAsString();
@@ -57,42 +52,39 @@ public class RevierManager {
         }
     }
 
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<String> deleteRevier(@PathVariable Long id) {
-        Optional<Revier> revierOptional = revierRepository.findById(id);
-        if (revierOptional.isPresent()) {
-            Revier revier = revierOptional.get();
-
-
-            revierPflegerRepository.findAllByRevier(revier).forEach(revierPfleger -> revierPflegerRepository.delete(revierPfleger));
-            revierRepository.delete(revier);
-            return ResponseEntity.ok("Revier erfolgreich gelöscht!");
-        } else {
-            return ResponseEntity.badRequest().body("Revier nicht gefunden!");
-        }
-
-
-
-
-    }
-
-    @PostMapping("/removePfleger")
-    public ResponseEntity<String> removePfleger(@RequestBody String body) {
-        System.out.println("TTTReceived Body: " + body); // Debug-Ausgabe
+    // Pfleger zum Revier hinzufügen
+    @PostMapping("/addPfleger")
+    public ResponseEntity<String> addPfleger(@RequestBody String body) {
         JsonObject jsonObject = JsonParser.parseString(body).getAsJsonObject();
         Long revierId = jsonObject.get("revierId").getAsLong();
         Long pflegerId = jsonObject.get("pflegerId").getAsLong();
 
-        Revier revier = revierRepository.findById(revierId).get();
-        if (revier == null) {
-            return ResponseEntity.badRequest().body("Revier nicht gefunden!");
+        Revier revier = revierRepository.findById(revierId).orElse(null);
+        Pfleger pfleger = pflegerRepository.findById(pflegerId).orElse(null);
+
+        if (revier == null || pfleger == null) {
+            return ResponseEntity.badRequest().body("Revier oder Pfleger nicht gefunden!");
         }
 
-        Pfleger pfleger = pflegerRepository.findById(pflegerId).get();
+        RevierPfleger revierPfleger = new RevierPfleger(revier, pfleger);
+        revierPflegerRepository.save(revierPfleger);
 
-        if (pfleger == null) {
-            return ResponseEntity.badRequest().body("Pfleger nicht gefunden!");
+        return ResponseEntity.ok("Pfleger erfolgreich hinzugefügt!");
+    }
+
+    // Pfleger aus Revier entfernen
+    @PostMapping("/removePfleger")
+    public ResponseEntity<String> removePfleger(@RequestBody String body) {
+        JsonObject jsonObject = JsonParser.parseString(body).getAsJsonObject();
+        Long revierId = jsonObject.get("revierId").getAsLong();
+        Long pflegerId = jsonObject.get("pflegerId").getAsLong();
+
+        Revier revier = revierRepository.findById(revierId).orElse(null);
+        Pfleger pfleger = pflegerRepository.findById(pflegerId).orElse(null);
+        if (revier == null || pfleger == null) {
+            return ResponseEntity.badRequest().body("Revier oder Pfleger nicht gefunden!");
         }
+
 
         RevierPfleger revierPfleger = revierPflegerRepository.findByRevierAndPfleger(revier, pfleger);
         if (revierPfleger == null) {
@@ -101,27 +93,48 @@ public class RevierManager {
 
         revierPflegerRepository.delete(revierPfleger);
         return ResponseEntity.ok("Pfleger erfolgreich entfernt!");
-
     }
 
-    @PostMapping("/addPfleger")
-    public ResponseEntity<String> addPfleger(@RequestBody String body) {
-        System.out.println("TTTTRTeceived Body: " + body); // Debug-Ausgabe
+    // Tier zum Revier hinzufügen
+    @PostMapping("/addTier")
+    public ResponseEntity<String> addTierToRevier(@RequestBody String body) {
         JsonObject jsonObject = JsonParser.parseString(body).getAsJsonObject();
         Long revierId = jsonObject.get("revierId").getAsLong();
-        Long pflegerId = jsonObject.get("pflegerId").getAsLong();
+        Long tierId = jsonObject.get("tierId").getAsLong();
 
-        Revier revier = revierRepository.findById(revierId).get();
-        if (revier == null) {
-            return ResponseEntity.badRequest().body("Revier nicht gefunden!");
+        Revier revier = revierRepository.findById(revierId).orElse(null);
+        Tier tier = tierRepository.findById(tierId).orElse(null);
+
+        if (revier == null || tier == null) {
+            return ResponseEntity.badRequest().body("Revier oder Tier nicht gefunden!");
         }
 
-        Pfleger pfleger = pflegerRepository.findById(pflegerId).
-                orElseThrow(() -> new IllegalArgumentException("Pfleger nicht gefunden!"));
+        RevierTier revierTier = new RevierTier(revier, tier);
+        revierTierRepository.save(revierTier);
 
-        RevierPfleger revierPfleger = new RevierPfleger(revier, pfleger);
-        revierPflegerRepository.save(revierPfleger);
-        return ResponseEntity.ok("Pfleger erfolgreich hinzugefügt!");
+        return ResponseEntity.ok("Tier erfolgreich zum Revier hinzugefügt!");
     }
 
+    // Tier aus Revier entfernen
+    @PostMapping("/removeTier")
+    public ResponseEntity<String> removeTierFromRevier(@RequestBody String body) {
+        JsonObject jsonObject = JsonParser.parseString(body).getAsJsonObject();
+        Long revierId = jsonObject.get("revierId").getAsLong();
+        Long tierId = jsonObject.get("tierId").getAsLong();
+
+        Revier revier = revierRepository.findById(revierId).orElse(null);
+        Tier tier = tierRepository.findById(tierId).orElse(null);
+        if (revier == null || tier == null) {
+            return ResponseEntity.badRequest().body("Revier oder Tier nicht gefunden!");
+        }
+
+
+        RevierTier revierTier = revierTierRepository.findByRevierIdAndTierId(revier, tier);
+        if (revierTier == null) {
+            return ResponseEntity.badRequest().body("Das Tier ist nicht in diesem Revier!");
+        }
+
+        revierTierRepository.delete(revierTier);
+        return ResponseEntity.ok("Tier erfolgreich aus dem Revier entfernt!");
+    }
 }

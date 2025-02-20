@@ -7,20 +7,22 @@
     <div th:insert="~{vorlagen/icon :: icon}"></div>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f8f9fa;
-            background-image: url('/images/background.png');
+            background-color: #f4f6f9;
             margin: 0;
-            padding: 0;
-            overflow-x: hidden;
+            padding: 20px;
         }
 
         .main-content {
-            margin: 0 auto;
-            max-width: 900px;
+            max-width: 1000px;
+            margin: auto;
+            background: white;
+            border-radius: 10px;
             padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
 
         .header {
@@ -29,73 +31,47 @@
             padding: 15px;
             text-align: center;
             border-radius: 8px;
-        }
-
-        .card {
-            border: none;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
         }
 
-        .btn-primary {
+        .btn-custom {
+            min-width: 150px;
+            margin: 5px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th {
             background-color: #1f4e3e;
-            border: none;
+            color: white;
         }
 
-        .btn-primary:hover {
-            background-color: #173b2c;
+        .table td, .table th {
+            padding: 10px;
+            text-align: left;
         }
 
-        .btn-danger {
-            background-color: #d9534f;
-            border: none;
-        }
-
-        .btn-danger:hover {
-            background-color: #c9302c;
-        }
-
-        .btn-success {
-            background-color: #5cb85c;
-            border: none;
-        }
-
-        .btn-success:hover {
-            background-color: #449d44;
-        }
-
-        .btn-secondary {
-            background-color: #6c757d;
-            border: none;
-        }
-
-        .btn-secondary:hover {
-            background-color: #5a6268;
-        }
-
-        table tbody td {
-            word-break: break-word;
-        }
-
-        .caretaker-table th {
-            background-color: #f8f9fa;
+        .btn-danger, .btn-success {
+            min-width: 120px;
         }
     </style>
 </head>
-<div th:insert="~{vorlagen/sidebar :: sidebar}"></div>
+
 <body>
+
+<!-- Sidebar -->
+<div th:insert="~{vorlagen/sidebar :: sidebar}"></div>
+
+<!-- Hauptinhalt -->
 <div class="main-content">
     <div class="header">
         <h2>Revier Bearbeiten</h2>
     </div>
 
-    <!-- Zurück-Button -->
-    <div class="d-flex justify-content-start mb-4">
-        <a href="/revier" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Zurück
-        </a>
-    </div>
-
+    <!-- Revier Formular -->
     <div class="card p-4">
         <form id="editRevierForm" onsubmit="submitForm(event)">
             <div class="mb-3">
@@ -103,28 +79,20 @@
                 <input type="hidden" id="id" name="id" th:value="${revier.id}">
                 <input type="text" class="form-control" id="revierName" name="name" th:value="${revier.name}" required>
             </div>
-            <!-- Speichern-Button -->
-            <div class="d-flex justify-content-end">
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i> Speichern
-                </button>
-            </div>
+            <button type="submit" class="btn btn-primary btn-custom">Speichern</button>
         </form>
 
-        <h4 class="mb-4">Pfleger Verwaltung</h4>
-
-        <!-- Verfügbare Pfleger -->
+        <!-- Pfleger Verwaltung -->
+        <h4 class="mt-4">Pfleger Verwaltung</h4>
         <div class="d-flex mb-3">
-            <select id="availableCaretaker" class="form-control me-2" name="availableCaretaker">
+            <select id="availableCaretaker" class="form-control">
                 <option value="">Bitte wählen...</option>
                 <option th:each="pfleger : ${verfuegbarePfleger}" th:value="${pfleger.id}" th:text="${pfleger.benutzername}"></option>
             </select>
-            <button class="btn btn-success" onclick="addCaretaker()">
-                <i class="fas fa-plus"></i> Hinzufügen
-            </button>
+            <button class="btn btn-success ms-2" onclick="addCaretaker()">Hinzufügen</button>
         </div>
 
-        <table class="table table-striped caretaker-table" id="caretakerTable">
+        <table class="table table-striped">
             <thead>
             <tr>
                 <th>Benutzername</th>
@@ -135,18 +103,40 @@
             </thead>
             <tbody>
             <tr th:each="pfleger : ${revierPflegerList}">
-                <td th:text="${pfleger.getPfleger().benutzername}"></td>
-                <td th:text="${pfleger.getPfleger().vorname}"></td>
-                <td th:text="${pfleger.getPfleger().nachname}"></td>
+                <td th:text="${pfleger.pfleger.benutzername}"></td>
+                <td th:text="${pfleger.pfleger.vorname}"></td>
+                <td th:text="${pfleger.pfleger.nachname}"></td>
                 <td>
-                    <!-- Versteckter Input für die Pfleger-ID -->
-                    <input type="hidden" name="pflegerId" th:value="${pfleger.getPfleger().id}">
-                    <button class="btn btn-danger me-2" onclick="removeCaretaker(this)">
-                        <i class="fas fa-trash-alt"></i> Entfernen
-                    </button>
-                    <button class="btn btn-secondary" disabled>
-                        <i class="fas fa-pencil-alt"></i> Coming Soon
-                    </button>
+                    <button class="btn btn-danger" onclick="removeCaretaker(this, ${pfleger.pfleger.id})">Entfernen</button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- Tierverwaltung -->
+        <h4 class="mt-4">Tiere Verwaltung</h4>
+        <div class="d-flex mb-3">
+            <select id="availableTier" class="form-control">
+                <option value="">Bitte wählen...</option>
+                <option th:each="tier : ${verfuegbareTiere}" th:value="${tier.id}" th:text="${tier.name}"></option>
+            </select>
+            <button class="btn btn-success ms-2" onclick="addTier()">Tier hinzufügen</button>
+        </div>
+
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Art</th>
+                <th>Aktionen</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="tier : ${revierTiere}">
+                <td th:text="${tier.tierId.name}"></td>
+                <td th:text="${tier.tierId.tierArt.name}"></td>
+                <td>
+                    <button class="btn btn-danger" onclick="removeTier(this, ${tier.tierId.id})">Entfernen</button>
                 </td>
             </tr>
             </tbody>
@@ -154,20 +144,17 @@
     </div>
 </div>
 
+<!-- JavaScript -->
 <script>
-    // Revier speichern
     async function submitForm(event) {
         event.preventDefault();
-
         const id = document.getElementById('id').value;
         const name = document.getElementById('revierName').value;
-
-        const payload = { id: parseInt(id, 10), name };
 
         const response = await fetch('/api/revier/edit', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({ id, name })
         });
 
         if (response.ok) {
@@ -178,78 +165,35 @@
         }
     }
 
-    // Pfleger hinzufügen
     async function addCaretaker() {
         const revierId = document.getElementById('id').value;
-        const caretakerSelect = document.getElementById('availableCaretaker');
+        const pflegerId = document.getElementById('availableCaretaker').value;
 
-        if (!caretakerSelect || !caretakerSelect.value) {
+        if (!pflegerId) {
             alert('Bitte wählen Sie einen Pfleger aus!');
             return;
         }
 
-        const pflegerId = caretakerSelect.value;
-
-        const payload = {
-            revierId: parseInt(revierId, 10),
-            pflegerId: parseInt(pflegerId, 10)
-        };
-
-        try {
-            const response = await fetch('/api/revier/addPfleger', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (response.ok) {
-                alert('Pfleger erfolgreich hinzugefügt!');
-                location.reload();
-            } else {
-                const errorMessage = await response.text();
-                alert('Fehler beim Hinzufügen des Pflegers: ' + errorMessage);
-            }
-        } catch (error) {
-            alert('Ein unerwarteter Fehler ist aufgetreten.');
-        }
+        await fetch(`/api/revier/addPfleger`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ revierId, pflegerId })
+        }).then(() => location.reload());
     }
 
-    // Pfleger entfernen
-    async function removeCaretaker(buttonElement) {
-        if (confirm("Möchten Sie diesen Pfleger wirklich entfernen?")) {
-            const row = buttonElement.closest('tr');
-            const revierId = document.getElementById('id').value;
-            const pflegerId = row.querySelector('input[name="pflegerId"]').value;
-
-            const payload = {
-                revierId: parseInt(revierId, 10),
-                pflegerId: parseInt(pflegerId, 10)
-            };
-
-            try {
-                const response = await fetch('/api/revier/removePfleger', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (response.ok) {
-                    alert('Pfleger erfolgreich entfernt!');
-                    row.remove();
-                    window.location.reload();
-                } else {
-                    const errorMessage = await response.text();
-                    alert('Fehler beim Entfernen des Pflegers: ' + errorMessage);
-                }
-            } catch (error) {
-                alert('Ein unerwarteter Fehler ist aufgetreten.');
-            }
-        }
+    async function removeCaretaker(button, pflegerId) {
+        if (!confirm('Möchten Sie diesen Pfleger wirklich entfernen?')) return;
+        await fetch(`/api/revier/removePfleger`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ revierId: document.getElementById('id').value, pflegerId })
+        }).then(() => button.closest('tr').remove());
     }
-    function toggleSidebar() {
-        document.getElementById('sidebar').classList.toggle('collapsed');
-        document.getElementById('main-content').classList.toggle('collapsed');
+
+    async function addTier() {
+       window.location.href = `/addTier/}`;
     }
 </script>
+
 </body>
 </html>

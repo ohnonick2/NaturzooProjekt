@@ -77,7 +77,7 @@ public class NaturzooProjektApplication {
     private WochenTagRepository wochentagRepository;
 
     @Autowired
-    private RevierTierRespository revierTierRespository;
+    private RevierTierRepository revierTierRespository;
 
     @Autowired
     private RevierRepository revierRepository;

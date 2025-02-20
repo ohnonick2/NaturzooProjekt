@@ -24,6 +24,10 @@ public class Tier {
 
     private TierGeschlecht geschlecht;
 
+    @Column(name = "isAbgegeben")
+    private boolean isAbgegeben;
+
+
     @OneToOne
     private TierArt tierArt;
 
@@ -37,6 +41,8 @@ public class Tier {
         this.geschlecht = geschlecht;
         this.tierArt = tierArt;
         this.abgabeDatum = abgabeDatum;
+        this.isAbgegeben = false;
+        this.abgabeDatum = null;
     }
 
     public long getId() {
@@ -93,6 +99,14 @@ public class Tier {
 
     public void setTierArt(TierArt tierArt) {
         this.tierArt = tierArt;
+    }
+
+    public boolean isAbgegeben() {
+        return isAbgegeben;
+    }
+
+    public void setAbgegeben(boolean abgegeben) {
+        isAbgegeben = abgegeben;
     }
 }
 

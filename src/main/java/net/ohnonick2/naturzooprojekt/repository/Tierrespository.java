@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface Tierrespository extends JpaRepository<Tier , Long> {
 
     Tier findByName(String name);
+    Tier findById(long id);
 
 
 

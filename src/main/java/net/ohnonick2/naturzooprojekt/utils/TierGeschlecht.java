@@ -2,15 +2,18 @@ package net.ohnonick2.naturzooprojekt.utils;
 
 public enum TierGeschlecht {
 
-    MAENNLICH(),
-    WEIBLICH();
+    MAENNLICH("Männlich"),
+    WEIBLICH("Weiblich");
 
 
 
-    TierGeschlecht() {
+    TierGeschlecht(String geschlecht) {
 
+        this.geschlecht = geschlecht;
     }
 
+
+    public String geschlecht;
 
 
 }

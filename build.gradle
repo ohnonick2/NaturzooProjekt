@@ -34,6 +34,8 @@ dependencies {
     runtimeOnly 'org.mariadb.jdbc:mariadb-java-client:3.5.1'
     implementation 'mysql:mysql-connector-java:8.0.33'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.jboss.logging:jboss-logging:3.5.3.Final'
+
     //gson for json
 
     compileOnly("org.springframework.boot:spring-boot-devtools")
