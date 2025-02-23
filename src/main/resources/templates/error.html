@@ -1,67 +1,117 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fehler | Rheiner Zoo</title>
   <div th:insert="~{vorlagen/icon :: icon}"></div>
-  <title>Error | Rheiner Zoo</title>
+
+  <!-- Bootstrap und Font Awesome -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
   <style>
+    /* Allgemeine Stile */
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f0f8ff; /* Hellblauer Hintergrund */
-      color: #333;
+      font-family: Arial, sans-serif;
+      background-image: url('/images/background.png');
       margin: 0;
       padding: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
+      background-color: #f4f6f9;
+      overflow-x: hidden;
     }
+
+    /* Sidebar & Hauptinhalt */
+    .main-content {
+      margin-left: 250px;
+      padding: 20px;
+      transition: margin-left 0.3s ease;
+    }
+
+    .main-content.collapsed {
+      margin-left: 70px;
+    }
+
+    /* Fehler-Container mit Sidebar-Verknüpfung */
     .error-container {
       max-width: 600px;
       width: 100%;
       padding: 20px;
-      background: #fff;
-      border: 1px solid #dcdcdc;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      background: white;
+      border: none;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
       border-radius: 10px;
       text-align: center;
+      margin: 40px auto;
+      margin-left: 250px; /* Gleiche Breite wie Sidebar */
+      transition: margin-left 0.3s ease;
       animation: fadeIn 0.5s ease-in-out;
     }
-    h1 {
-      font-size: 2.5em;
-      color: #d9534f; /* Auffälliges Rot für Fehler */
-      margin-bottom: 10px;
+
+    .error-container.collapsed {
+      margin-left: 70px;
     }
+
+    /* Header */
+    .main-header {
+      background-color: #1f4e3e;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Fehler-Animation */
+    .error-icon {
+      font-size: 4em;
+      color: #d9534f;
+      margin-bottom: 15px;
+      display: inline-block;
+      animation: shake 0.5s infinite alternate;
+    }
+
+    /* Blinkendes rotes "X" */
+    .error-x {
+      font-size: 4em;
+      color: #d9534f;
+      font-weight: bold;
+      animation: blink 1s infinite alternate;
+    }
+
+    /* Überschrift */
+    h1 {
+      font-size: 2.2em;
+      color: #d9534f;
+      font-weight: bold;
+      animation: shake 0.5s infinite alternate;
+    }
+
     p {
       font-size: 1.2em;
-      line-height: 1.6;
       color: #555;
+      margin-bottom: 20px;
     }
-    a {
+
+    /* Fehler-Button */
+    .error-btn {
       display: inline-block;
-      margin-top: 15px;
       padding: 10px 20px;
       font-size: 1em;
-      color: #fff;
+      color: white;
       background-color: #28a745;
       text-decoration: none;
       border-radius: 5px;
       transition: background-color 0.3s ease, transform 0.2s ease;
     }
-    a:hover {
+
+    .error-btn:hover {
       background-color: #218838;
       transform: scale(1.05);
     }
-    .gif-container {
-      margin: 20px auto;
-    }
-    .gif-container img {
-      max-width: 100%;
-      height: auto;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    }
+
+    /* Fade-In Effekt */
     @keyframes fadeIn {
       from {
         opacity: 0;
@@ -72,19 +122,57 @@
         transform: translateY(0);
       }
     }
+
+    /* Wackel-Effekt */
+    @keyframes shake {
+      0% { transform: rotate(-2deg); }
+      100% { transform: rotate(2deg); }
+    }
+
+    /* Blink-Effekt */
+    @keyframes blink {
+      0% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
   </style>
 </head>
-<body>
-<div class="error-container">
-  <h1>Es ist ein Problem aufgetreten</h1>
-  <p>Bitte versuchen Sie es später erneut.</p>
 
-  <!-- GIF eines Tieres -->
-  <div class="gif-container">
-    <img src="https://cdn.dribbble.com/users/285475/screenshots/2083086/dribbble_1.gif" alt="Ein Tier hat sich verlaufen">
+<body>
+
+<!-- Sidebar -->
+<div th:insert="~{vorlagen/sidebar :: sidebar}"></div>
+
+<!-- Hauptinhalt -->
+<div class="main-content" id="main-content">
+  <!-- Header -->
+  <div class="main-header">
+    <h2>Fehler</h2>
   </div>
 
-  <a href="/">Zurück zur Startseite</a>
+  <!-- Fehler-Container (jetzt mit ID für das Skript) -->
+  <div class="error-container" id="error-container">
+    <span class="error-x">✖</span>
+    <h1>Ein Fehler ist aufgetreten</h1>
+    <p>Bitte versuchen Sie es später erneut oder kontaktieren Sie den Support.</p>
+
+    <!-- Animiertes Symbol -->
+    <i class="fas fa-exclamation-triangle error-icon"></i>
+
+    <a href="/" class="error-btn"><i class="fas fa-home"></i> Zurück zur Startseite</a>
+  </div>
 </div>
+
+<!-- Footer -->
+<footer th:insert="~{vorlagen/footer :: footer}"></footer>
+
+<!-- Script für Sidebar -->
+<script>
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('collapsed');
+    document.getElementById('main-content').classList.toggle('collapsed');
+  }
+</script>
+
 </body>
 </html>

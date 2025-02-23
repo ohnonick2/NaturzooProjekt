@@ -1,156 +1,238 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Futterplan hinzufügen</title>
+    <title>Futterplan verwalten</title>
+
     <div th:insert="~{vorlagen/icon :: icon}"></div>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-image: url('/images/background.png');
-            margin: 0;
-            padding: 0;
-            background-color: #f4f6f9;
-            overflow-x: hidden;
-        }
-
-        .main-content {
-            margin-left: 250px;
-            padding: 20px;
-            transition: margin-left 0.3s ease;
-        }
-
-        .main-content.collapsed {
-            margin-left: 70px;
-        }
-
-        .card {
-            border: none;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-            padding: 20px;
-        }
-
-        .header {
-            background-color: #1f4e3e;
-            color: white;
-            padding: 15px;
-            text-align: center;
-            border-radius: 8px;
-        }
-
-        .header-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .btn-primary {
-            background-color: #007bff;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 5px;
-        }
-
-        .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 5px;
-        }
-
-        .alert {
-            margin-top: 15px;
-        }
+        body { font-family: Arial, sans-serif; background-image: url('/images/background.png'); background-color: #f4f6f9; }
+        .main-content { margin-left: 250px; padding: 20px; }
+        .card { border: none; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); padding: 20px; border-radius: 10px; background: white; }
+        .header { background-color: #1f4e3e; color: white; padding: 15px; text-align: center; border-radius: 8px; }
+        .btn-primary { background-color: #4a7c56; border-color: #4a7c56; }
+        .btn-primary:hover { background-color: #3a6343; }
+        .list-group-item { display: flex; justify-content: space-between; align-items: center; }
+        .remove-btn { color: red; cursor: pointer; font-size: 1.2em; }
+        .remove-btn:hover { color: darkred; }
     </style>
 </head>
 
 <body>
+
 <!-- Sidebar -->
 <div th:insert="~{vorlagen/sidebar :: sidebar}"></div>
 
 <!-- Main Content -->
-<div class="main-content" id="main-content">
-    <!-- Header -->
+<div class="main-content">
     <div class="header">
-        <h2>Futterplan hinzufügen</h2>
+        <h2>Neuen Futterplan hinzufügen</h2>
     </div>
 
-    <!-- Add Futterplan Section -->
     <div class="card">
-        <h4>Fügen Sie einen neuen Futterplan hinzu</h4>
+        <!-- Name des Futterplans -->
+        <div class="mb-3">
+            <label for="name" class="form-label">Name des Futterplans</label>
+            <input type="text" class="form-control" id="name" required>
+        </div>
 
-        <form id="addFutterplanForm">
-            <!-- Name -->
-            <div class="mb-3">
-                <label for="name" class="form-label">Name des Futterplans</label>
-                <input type="text" class="form-control" id="name" required />
-                <div id="errorName" class="invalid-feedback">Ein Futterplan mit diesem Namen existiert bereits.</div>
+        <!-- 🍽️ Futter hinzufügen -->
+        <div class="mb-3">
+            <label class="form-label">Futter auswählen</label>
+            <div class="input-group">
+                <select class="form-select" id="futter-dropdown">
+                    <option th:each="futter : ${verfügbareFutterList}" th:value="${futter.id}" th:text="${futter.name}"></option>
+                </select>
+                <input type="number" class="form-control" id="futter-menge" min="1" placeholder="Menge (kg)">
+                <button type="button" class="btn btn-primary" onclick="addFutter()">
+                    <i class="fas fa-plus"></i> Hinzufügen
+                </button>
             </div>
+            <ul id="futter-list" class="list-group mt-2"></ul>
+        </div>
 
-            <!-- Buttons -->
-            <div class="header-row">
-                <button type="button" class="btn btn-secondary" onclick="goBack()">Abbrechen</button>
-                <button type="submit" class="btn btn-primary">Hinzufügen</button>
+        <!-- 🕑 Uhrzeit-Picker -->
+        <div class="mb-3">
+            <label class="form-label">Uhrzeiten hinzufügen (HH:mm)</label>
+            <div class="input-group">
+                <input type="time" class="form-control" id="global-time">
+                <button type="button" class="btn btn-primary" onclick="addGlobalTime()">
+                    <i class="fas fa-plus"></i> Hinzufügen
+                </button>
             </div>
-        </form>
+            <ul id="global-time-list" class="list-group mt-2"></ul>
+        </div>
 
-        <!-- Response Message -->
-        <div id="responseMessage" class="alert alert-info mt-3" style="display: none;"></div>
+
+        <!-- 📆 Wochentage auswählen -->
+        <div class="mb-3">
+            <label class="form-label">Wochentage auswählen</label>
+            <div class="d-flex flex-wrap">
+                <div th:each="wochentag : ${wochentagList}" class="form-check me-3">
+                    <input class="form-check-input wochentag-checkbox" type="checkbox" th:value="${wochentag.id}" id="wochentag-[[${wochentag.id}]]">
+                    <label class="form-check-label" th:text="${wochentag.name}"></label>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between mt-4">
+            <a th:href="@{/futterplan}" class="btn btn-secondary">Abbrechen</a>
+            <button type="button" class="btn btn-primary" onclick="openModal()">Futterplan speichern</button>
+        </div>
     </div>
 </div>
 
-<!-- Footer -->
-<footer th:insert="~{vorlagen/footer :: footer}"></footer>
+<!-- ✅ Modal zur Bestätigung -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Futterplan speichern</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Möchtest du diesen Futterplan speichern?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                <button type="button" class="btn btn-primary" onclick="saveFutterplan()">Speichern</button>
+            </div>
+        </div>
+    </div>
+</div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Smooth fade-in effect
-    document.addEventListener('DOMContentLoaded', () => {
-        const mainContent = document.getElementById('main-content');
-        mainContent.classList.add('visible');
-    });
+    function addGlobalTime() {
+        const input = document.getElementById("global-time");
+        const list = document.getElementById("global-time-list");
+        const timeValue = input.value.trim(); // Zeit holen und Leerzeichen entfernen
 
-    document.getElementById('addFutterplanForm').addEventListener('submit', function (e) {
-        e.preventDefault();
+        // 🔍 Fehlerbehandlung: Überprüfen, ob eine Zeit eingegeben wurde
+        if (!timeValue) {
+            alert("Bitte eine gültige Uhrzeit eingeben.");
+            return;
+        }
 
-        const name = document.getElementById('name').value;
+        // 🔍 Prüfen, ob die Uhrzeit bereits existiert
+        if (Array.from(list.children).some(li => li.dataset.time === timeValue)) {
+            alert("Diese Uhrzeit wurde bereits hinzugefügt.");
+            return;
+        }
 
-        const payload = { name };
+        // ✅ Listenelement für die Uhrzeit erstellen
+        const li = document.createElement("li");
+        li.classList.add("list-group-item");
+        li.dataset.time = timeValue; // Zeit als Attribut speichern
+        li.innerHTML = `<span>${timeValue}</span>
+                    <span class="remove-btn">&times;</span>`;
 
+        // ❌ Entfernen-Funktion hinzufügen
+        li.querySelector(".remove-btn").addEventListener("click", function () {
+            list.removeChild(li);
+        });
+
+        list.appendChild(li);
+        input.value = ""; // 🧹 Eingabefeld leeren
+    }
+
+
+    function addFutter() {
+        const select = document.getElementById('futter-dropdown');
+        const list = document.getElementById('futter-list');
+        const mengeInput = document.getElementById('futter-menge');
+
+        const futterId = select.value;
+        const futterName = select.options[select.selectedIndex].text;
+        const menge = parseInt(mengeInput.value);
+
+        if (!menge || menge <= 0) {
+            alert("Bitte eine gültige Menge eingeben.");
+            return;
+        }
+
+        if (Array.from(list.children).some(li => li.dataset.futterId === futterId)) {
+            alert("Dieses Futter wurde bereits hinzugefügt.");
+            return;
+        }
+
+        const li = document.createElement("li");
+        li.classList.add("list-group-item");
+        li.dataset.futterId = futterId;
+        li.innerHTML = `<span>${futterName} - ${menge} kg</span>
+                        <span class="remove-btn">&times;</span>`;
+
+        li.querySelector(".remove-btn").addEventListener("click", function () {
+            list.removeChild(li);
+        });
+
+        list.appendChild(li);
+        mengeInput.value = "";
+    }
+
+    function openModal() {
+        new bootstrap.Modal(document.getElementById('confirmModal')).show();
+    }
+
+    function saveFutterplan() {
+        const name = document.getElementById("name").value;
+
+        // 🕑 Uhrzeiten erfassen
+        const uhrzeiten = Array.from(document.querySelectorAll("#global-time-list .list-group-item span"))
+            .map(span => span.textContent.trim());
+
+        // 📆 Wochentage erfassen
+        const wochentage = Array.from(document.querySelectorAll(".wochentag-checkbox:checked"))
+            .map(cb => parseInt(cb.value));
+
+        // 🍽️ Futter erfassen
+        const futterList = Array.from(document.querySelectorAll("#futter-list .list-group-item"))
+            .map(li => ({
+                futterId: parseInt(li.dataset.futterId),
+                menge: parseInt(li.dataset.menge) || 1
+            }));
+
+        // 🛑 Fehlerbehandlung: Überprüfen, ob alle Felder ausgefüllt wurden
+        if (!name) {
+            alert("Bitte einen Namen für den Futterplan eingeben.");
+            return;
+        }
+        if (uhrzeiten.length === 0) {
+            alert("Bitte mindestens eine Uhrzeit hinzufügen.");
+            return;
+        }
+        if (wochentage.length === 0) {
+            alert("Bitte mindestens einen Wochentag auswählen.");
+            return;
+        }
+        if (futterList.length === 0) {
+            alert("Bitte mindestens ein Futter hinzufügen.");
+            return;
+        }
+
+        // 📦 JSON-Daten vorbereiten
+        const futterplanData = { name, uhrzeiten, wochentage, futterList };
+
+        console.log("📤 Sende JSON an Backend:", JSON.stringify(futterplanData));
+
+        // 📡 Daten an Backend senden
         fetch('/api/futterplan/add', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(futterplanData)
         })
             .then(response => response.text())
-            .then(message => {
-                const responseMessageDiv = document.getElementById('responseMessage');
-                responseMessageDiv.style.display = 'block';
-                responseMessageDiv.innerText = message;
-                if (message === 'Futterplan hinzugefügt!') {
-                    responseMessageDiv.classList.remove('alert-info');
-                    responseMessageDiv.classList.add('alert-success');
-                } else {
-                    responseMessageDiv.classList.remove('alert-info');
-                    responseMessageDiv.classList.add('alert-danger');
-                }
+            .then(responseText => {
+                alert(responseText);
+                window.location.href = "/futterplan"; // 🔄 Weiterleitung nach Erfolg
             })
-            .catch(() => {
-                const responseMessageDiv = document.getElementById('responseMessage');
-                responseMessageDiv.style.display = 'block';
-                responseMessageDiv.innerText = 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.';
-                responseMessageDiv.classList.remove('alert-info');
-                responseMessageDiv.classList.add('alert-danger');
-            });
-    });
-
-    function goBack() {
-        window.history.back();
+            .catch(error => console.error("Fehler beim Speichern des Futterplans:", error));
     }
+
 </script>
 </body>
 </html>

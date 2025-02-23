@@ -1,84 +1,101 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Benutzereinstellungen</title>
+  <title>Admin Management | Rheiner Zoo</title>
+  <div th:insert="~{vorlagen/icon :: icon}"></div>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
+    /* Allgemeine Stile */
     body {
       font-family: Arial, sans-serif;
+      background-image: url('/images/background.png');
       margin: 0;
       padding: 0;
-      background-color: #f4f4f4;
+      background-color: #f4f6f9;
+      overflow-x: hidden;
     }
-    .container {
-      width: 80%;
-      max-width: 800px;
-      margin: 0 auto;
-      background-color: white;
+
+
+    /* Main Content */
+    .main-content {
+      margin-left: 250px;
       padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      transition: margin-left 0.3s ease;
     }
-    h1 {
-      text-align: center;
-      color: #333;
+
+    .main-content.collapsed {
+      margin-left: 70px;
     }
-    .form-group {
-      margin-bottom: 15px;
-    }
-    label {
-      font-weight: bold;
-      display: block;
-      margin-bottom: 5px;
-    }
-    input[type="file"] {
-      display: block;
-      margin: 0;
-    }
-    button {
-      background-color: #4CAF50;
-      color: white;
-      padding: 10px 20px;
+
+    .card {
       border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      width: 100%;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
     }
-    button:hover {
-      background-color: #45a049;
+
+    /* Header */
+    .main-header {
+      background-color: #1f4e3e;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      border-radius: 8px;
     }
+
+    .loader {
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #1f4e3e;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
   </style>
 </head>
+
 <body>
+<!-- Sidebar -->
+<div th:insert="~{vorlagen/sidebar :: sidebar}"></div>
 
-<div class="container">
-  <h1>Benutzereinstellungen</h1>
+<!-- Main Content -->
+<div class="main-content" id="main-content">
 
-  <form action="/upload" method="POST" enctype="multipart/form-data">
-    <div class="form-group">
-      <label for="profilbild">Wählen Sie ein Profilbild:</label>
-      <input type="file" id="profilbild" name="profilbild" accept="image/*" required>
+  <div class="main-header">
+    <h2>Settings</h2>
+  </div>
+
+
+
+  <div class="card p-4">
+    <div class="card p-1">
+      <p>Diese Seite ist noch in Entwicklung.</p>
     </div>
+  </div>
 
-    <button type="submit">Hochladen</button>
-  </form>
-
-  <h2>Andere Einstellungen</h2>
-  <form>
-    <div class="form-group">
-      <label for="email">E-Mail-Adresse:</label>
-      <input type="email" id="email" name="email" required>
-    </div>
-
-    <div class="form-group">
-      <label for="passwort">Passwort ändern:</label>
-      <input type="password" id="passwort" name="passwort">
-    </div>
-
-    <button type="submit">Einstellungen speichern</button>
-  </form>
 </div>
 
+<!-- Footer -->
+<footer th:insert="~{vorlagen/footer :: footer}"></footer>
+
+
+<!-- Script für Sidebar -->
+<script>
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('collapsed');
+    document.getElementById('main-content').classList.toggle('collapsed');
+  }
+</script>
 </body>
+
 </html>

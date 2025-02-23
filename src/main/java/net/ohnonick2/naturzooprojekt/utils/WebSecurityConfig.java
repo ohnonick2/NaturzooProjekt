@@ -71,15 +71,17 @@ public class WebSecurityConfig implements WebMvcConfigurer {
     @Bean
     public SecurityFilterChain configure(HttpSecurity http) throws Exception {
         http.authenticationProvider(authenticationProvider())
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/login", "/logout", "/static/**" , "/api/public/**" ,"/api/**"))
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/login", "/logout", "/static/**" , "/api/public/**" ,"/api/**" , "/"))
+
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/images/{filename}" , "/" , "/api/food/getFutterplan" , "/").permitAll()
+                        .requestMatchers("/login", "/images/{filename}" , "/" , "/api/food/getFutterplan" , "/index" , "/error").permitAll()
                         .requestMatchers("/usermanagement").hasAnyAuthority("USER_MANAGEMENT_READ" , "*")
                         .requestMatchers("/editUser/").hasAnyAuthority("USER_MANAGEMENT_WRITE" , "*")
                         .requestMatchers("/editUser/**").hasAnyAuthority("USER_MANAGEMENT_WRITE" , "*")
                         .requestMatchers("/addUser").hasAnyAuthority("USER_MANAGEMENT_WRITE" , "*")
                         .requestMatchers("/addUser/**").hasAnyAuthority("USER_MANAGEMENT_WRITE" , "*")
                         .requestMatchers("/deleteUser/**").hasAnyAuthority("USER_MANAGEMENT_WRITE" , "*")
+                        .requestMatchers("/futterplan").hasAnyAuthority("FOOD_PLAN_READ" , "*")
 
 
                         .anyRequest().authenticated()
@@ -105,6 +107,7 @@ public class WebSecurityConfig implements WebMvcConfigurer {
                         .maximumSessions(1) // Nur eine aktive Sitzung pro Benutzer
                         .expiredSessionStrategy(event -> { // Strategie bei Ablauf der Sitzung
                             HttpServletResponse response = event.getResponse();
+
                             response.sendRedirect("/login?error=session"); // Weiterleitung bei abgelaufener Sitzung
                         })
                         .maxSessionsPreventsLogin(true) // Zusätzliche Anmeldungen verhindern

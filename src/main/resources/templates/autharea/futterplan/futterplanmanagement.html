@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Futterplan-Management</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -25,8 +26,9 @@
         .card {
             border: none;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
             padding: 20px;
+            border-radius: 10px;
+            background: white;
         }
 
         .header {
@@ -37,16 +39,17 @@
             border-radius: 8px;
         }
 
-        .header-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
         .btn-success {
             background-color: #218838;
             color: white;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
         }
 
         .search-container input {
@@ -57,8 +60,14 @@
             margin-bottom: 15px;
         }
 
+        .table thead {
+            background-color: #1f4e3e;
+            color: white;
+        }
+
         table tbody td {
             word-break: break-word;
+            text-align: center;
         }
 
         .loading {
@@ -79,6 +88,7 @@
 </head>
 
 <body>
+
 <!-- Sidebar -->
 <div th:insert="~{vorlagen/sidebar :: sidebar}"></div>
 
@@ -89,17 +99,17 @@
     </div>
 
     <!-- Futterplan List Section -->
-    <div class="card p-4">
-        <div class="header-row">
-            <h4 class="mb-0">Verwalten Sie die Futterpläne des Zoos</h4>
-            <button class="btn btn-success" onclick="addFutterplan()">
+    <div class="card">
+        <div class="d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Futterpläne verwalten</h4>
+            <a th:href="@{/addFutterplan}" class="btn btn-success">
                 <i class="fas fa-plus"></i> Neuer Futterplan
-            </button>
+            </a>
         </div>
 
-        <!-- Search Bar -->
-        <div class="search-container">
-            <input type="text" id="searchInput" placeholder="Suchen Sie nach Name..." onkeyup="filterTable()">
+        <!-- Suchleiste -->
+        <div class="search-container mt-3">
+            <input type="text" id="searchInput" class="form-control" placeholder="🔍 Nach Name, Futter oder Tag suchen..." onkeyup="filterTable()">
         </div>
 
         <!-- Ladeanimation -->
@@ -107,7 +117,7 @@
             <i class="fas fa-spinner fa-spin"></i> Daten werden geladen...
         </div>
 
-        <!-- Futterplan List -->
+        <!-- Futterplan Liste -->
         <div th:if="${futterplanList.size() > 0}">
             <div class="table-responsive">
                 <table class="table table-striped" id="futterplanTable">
@@ -116,7 +126,7 @@
                         <th>ID</th>
                         <th>Name</th>
                         <th>Futter</th>
-                        <th>Menge</th>
+                        <th>Menge (kg)</th>
                         <th>Futterzeiten</th>
                         <th>Wochentage</th>
                         <th>Aktionen</th>
@@ -131,9 +141,9 @@
                         <td th:text="${futterplan.getFutterZeiten() != null && !futterplan.getFutterZeiten().isEmpty() ? futterplan.getFutterZeiten() : '-'}"></td>
                         <td th:text="${futterplan.wochentage != null && !futterplan.wochentage.isEmpty() ? futterplan.wochentage : '-'}"></td>
                         <td>
-                            <button class="btn btn-primary btn-sm" th:onclick="'editFutterplan(' + ${futterplan.id} + ')'">
+                            <a th:href="@{/editFutterplan/{id}(id=${futterplan.id})}" class="btn btn-primary btn-sm">
                                 <i class="fas fa-edit"></i> Bearbeiten
-                            </button>
+                            </a>
                             <button class="btn btn-danger btn-sm" th:onclick="'deleteFutterplan(' + ${futterplan.id} + ')'">
                                 <i class="fas fa-trash"></i> Löschen
                             </button>
@@ -144,22 +154,14 @@
             </div>
         </div>
 
-        <!-- No Futterplans Message -->
+        <!-- Keine Futterpläne vorhanden -->
         <div th:if="${futterplanList.size() == 0}" class="alert alert-warning text-center">
-            <i class="fas fa-exclamation-circle"></i> Keine Futterpläne vorhanden. Bitte fügen Sie einen Futterplan hinzu.
+            <i class="fas fa-exclamation-circle"></i> Keine Futterpläne vorhanden. Bitte fügen Sie einen neuen Futterplan hinzu.
         </div>
     </div>
 </div>
 
 <script>
-    function addFutterplan() {
-        window.location.href = '/addFutterplan';
-    }
-
-    function editFutterplan(id) {
-        window.location.href = '/editFutterplan/' + id;
-    }
-
     function deleteFutterplan(id) {
         if (confirm('Möchten Sie den Futterplan mit ID ' + id + ' wirklich löschen?')) {
             document.getElementById('loading').style.display = 'block';
@@ -167,7 +169,7 @@
             fetch('/api/futterplan/delete', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: id })
+                body: JSON.stringify({ futterplanId: id })
             })
                 .then(response => {
                     document.getElementById('loading').style.display = 'none';
@@ -182,11 +184,11 @@
                 })
                 .catch(error => {
                     document.getElementById('loading').style.display = 'none';
-                    console.error('Fehler:', error);
                     alert('Es ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.');
                 });
         }
     }
+
 
     function filterTable() {
         const input = document.getElementById('searchInput').value.toLowerCase();
