@@ -11,6 +11,6 @@ public interface FutterPlanWochentagRepository extends JpaRepository<FutterPlanW
 
     FutterPlanWochentag findByFutterplanAndWochentag(FutterPlan futterplan, Wochentag wochentag);
     List<FutterPlanWochentag> findByFutterplan(FutterPlan futterplan);
-
+    List<FutterPlanWochentag> findByWochentag(Wochentag wochentag);
 
 }

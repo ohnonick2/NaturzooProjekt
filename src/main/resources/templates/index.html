@@ -5,96 +5,190 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fütterungsplan - Rheiner Zoo</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <div th:insert="~{vorlagen/icon :: icon}"></div>
+
     <style>
+        /* 🌿 Allgemeines Styling */
         body {
-            font-family: 'Arial', sans-serif;
-            background-color: #eef5f3;
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
         }
+
         .container {
-            margin: 40px auto;
-            padding: 20px;
-            max-width: 1000px;
-            background-color: #ffffff;
+            background: white;
+            padding: 30px;
             border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            max-width: 1100px;
+            margin: 40px auto;
         }
+
         h1 {
             text-align: center;
-            color: #2a7f3d;
+            color: #27632a;
             font-size: 32px;
             font-weight: bold;
             margin-bottom: 20px;
         }
-        .week-navigation {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            padding: 12px;
-            background-color: #2a7f3d;
-            color: white;
-            border-radius: 10px;
-        }
-        .week-navigation button {
-            background-color: white;
-            color: #2a7f3d;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
+
+        /* 📅 Wochenüberschrift */
+        .week-header {
+            text-align: center;
+            font-size: 18px;
             font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s ease;
+            color: #27632a;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #e9f5e1;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
         }
-        .week-navigation button:hover {
-            background-color: #e0e0e0;
-        }
+
+        /* 📊 Tabelle Styling */
         .table-container {
+            margin-top: 15px;
             overflow-x: auto;
-            margin-top: 20px;
         }
+
         .futterplan-table {
             width: 100%;
             border-collapse: collapse;
+            border-radius: 10px;
         }
+
+        .futterplan-table th {
+            background-color: #1f4e3e;
+            color: white;
+            padding: 12px;
+            font-size: 15px;
+            text-transform: uppercase;
+        }
+
         .futterplan-table th, .futterplan-table td {
             border: 1px solid #ddd;
             padding: 12px;
             text-align: center;
-            font-size: 16px;
+            font-size: 15px;
         }
-        .futterplan-table th {
-            background-color: #4a90e2;
-            color: white;
-            font-weight: bold;
+
+        .futterplan-table tr:hover {
+            background-color: #f8f9fa;
+            transition: 0.3s ease-in-out;
         }
+
+        /* 🎨 Neue Gestaltung für die Fütterungs-Buttons */
         .available {
-            background-color: #2a7f3d;
+            background-color: #28a745;
+            color: white;
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+            transition: 0.3s ease-in-out;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .available:hover {
+            background-color: #218838;
+            transform: scale(1.05);
+        }
+
+        .available i {
+            font-size: 18px;
+        }
+
+        /* 👤 Login/Logout Button */
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            background-color: #1f4e3e;
+            padding: 15px;
+            border-radius: 8px;
             color: white;
             font-weight: bold;
         }
-        .not-available {
-            background-color: #f44336;
-            color: white;
+
+        .login-btn {
+            background-color: white;
+            color: #1f4e3e;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: 0.3s ease-in-out;
         }
+
+        .login-btn:hover {
+            background-color: #d4edda;
+            color: #1f4e3e;
+        }
+
+        /* 📌 Footer */
         .footer {
             text-align: center;
             margin-top: 25px;
-            font-size: 14px;
-            color: #666;
+            font-size: 13px;
+            padding: 8px;
+            background-color: #1f4e3e;
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Responsivität */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 26px;
+            }
+
+            .header-row {
+                flex-direction: column;
+                text-align: center;
+            }
         }
     </style>
 </head>
+
 <body>
 
 <div class="container">
-    <h1>Fütterungszeiten - Rheiner Zoo</h1>
-
-    <div class="week-navigation">
-        <button onclick="changeWeek(-1)">Vorherige Woche</button>
-        <h2 th:text="'KW ' + ${kalenderWoche}"></h2>
-        <button onclick="changeWeek(1)">Nächste Woche</button>
+    <!-- 🔐 Header mit Login -->
+    <div class="header-row">
+        <h1>🐘 Fütterungszeiten - Rheiner Zoo 🦒</h1>
+        <div>
+            <a th:href="@{/login}" class="login-btn" th:if="${#authorization.expression('isAnonymous()')}">
+                🔑 Login
+            </a>
+            <a th:href="@{/logout}" class="login-btn" th:if="${#authorization.expression('isAuthenticated()')}">
+                🚪 Logout
+            </a>
+        </div>
     </div>
 
+    <!-- 📅 Zeigt die aktuelle Kalenderwoche -->
+    <div class="week-header">
+        Woche: <span th:text="'KW ' + ${kalenderWoche}"></span>
+    </div>
+
+    <!-- 📊 Tabelle -->
     <div class="table-container">
         <table class="futterplan-table">
             <thead>
@@ -105,18 +199,16 @@
             </thead>
             <tbody>
             <tr th:each="stunde : ${stunden}">
-                <td th:text="${stunde} + ':00'" style="font-weight: bold;"></td>
+                <td th:text="${stunde} + ':00'" style="font-weight: bold; background-color: #f3f7f0;"></td>
                 <td th:each="wochentag : ${wochentage}">
                     <div th:each="futterplan : ${futterplanList}">
-                        <!-- Prüft, ob der Fütterungsplan für diesen Wochentag und diese Uhrzeit existiert -->
                         <div th:each="futterungwochentag : ${futterplan.wochentage}">
                             <div th:if="${futterungwochentag eq wochentag.name}">
                                 <div th:each="futterungstunde : ${futterplan.uhrzeiten}">
-                                    <div th:if="${futterungstunde eq stunde + ':00'} or ${futterungstunde.startsWith(stunde)}">
-                                        <p th:text="${futterplan.name}" class="available"></p>
-
-
-
+                                    <div th:if="${futterungstunde eq stunde + ':00'}">
+                                        <a th:href="@{/getFutterplan/{id}(id=${futterplan.id})}" class="available">
+                                            <span th:text="${futterplan.name}"></span>
+                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -128,8 +220,9 @@
         </table>
     </div>
 
+    <!-- 📌 Footer -->
     <div class="footer">
-        © 2025 Rheiner Zoo | Fütterungszeiten
+        © 2025 Rheiner Zoo | 🦜 Tierische Erlebnisse für Groß & Klein 🦓
     </div>
 </div>
 

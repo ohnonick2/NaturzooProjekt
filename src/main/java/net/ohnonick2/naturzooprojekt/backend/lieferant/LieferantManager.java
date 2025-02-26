@@ -37,10 +37,15 @@ public class LieferantManager {
                 return ResponseEntity.badRequest().body("Invalid JSON");
             }
 
+            System.out.println(json);
+
             // Prüfen, ob notwendige Felder vorhanden sind
-            if (!json.has("name") || !json.has("telefon") || !json.has("ansprechpartner")) {
-                return ResponseEntity.badRequest().body("Fehlende Attribute: Name, Telefon oder Ansprechpartner.");
+            if (!json.has("name") || !json.has("telefon")) {
+                return ResponseEntity.badRequest().body("Fehlende Attribute: Name oder Telefon.");
             }
+
+            // Ansprechpartner ist optional
+            String ansprechpartner = json.has("ansprechpartner") ? json.get("ansprechpartner").getAsString() : null;
 
             Adresse adresse;
             if (json.has("adresseId")) {
@@ -75,6 +80,7 @@ public class LieferantManager {
                         adresseJson.get("hausnummer").getAsString(),
                         ort
                 );
+
                 if (adresse == null) {
                     adresse = new Adresse(adresseJson.get("strasse").getAsString(),
                             adresseJson.get("hausnummer").getAsString(), ort);
@@ -89,7 +95,7 @@ public class LieferantManager {
                     json.get("name").getAsString(),
                     adresse,
                     json.get("telefon").getAsString(),
-                    json.get("ansprechpartner").getAsString()
+                    ansprechpartner  // Kann null sein
             );
             lieferantRepository.save(lieferant);
 
@@ -98,6 +104,7 @@ public class LieferantManager {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Fehler: " + e.getMessage());
         }
     }
+
 
     /**
      * Bearbeitet einen vorhandenen Lieferanten.

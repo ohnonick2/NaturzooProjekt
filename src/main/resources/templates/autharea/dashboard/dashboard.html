@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
-
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,134 +7,325 @@
   <div th:insert="~{vorlagen/icon :: icon}"></div>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
   <style>
-    /* Allgemeine Stile */
+    /* Allgemeines Styling */
     body {
       font-family: Arial, sans-serif;
-      background-image: url('/images/background.png');
+      background-color: #f8f9fa;
       margin: 0;
       padding: 0;
-      background-color: #f4f6f9;
-      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
     }
 
-
-    /* Main Content */
+    /* Hauptcontainer */
     .main-content {
       margin-left: 250px;
       padding: 20px;
-      transition: margin-left 0.3s ease;
+      flex: 1;
     }
 
     .main-content.collapsed {
       margin-left: 70px;
     }
 
-    .card {
-      border: none;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-      margin-bottom: 20px;
-    }
-
     /* Header */
     .main-header {
-      background-color: #1f4e3e;
+      background: #1f4e3e;
       color: white;
       padding: 15px;
       text-align: center;
-      border-radius: 8px;
+      font-size: 20px;
+      font-weight: bold;
+      border-radius: 6px;
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
+    /* Benachrichtigungs-Icon */
+    .notification-icon {
+      position: relative;
+      font-size: 22px;
+      cursor: pointer;
+      margin-right: 20px;
+    }
 
+    .notification-icon .fa-bell {
+      color: white;
+    }
+
+    /* Roter Punkt für neue Nachrichten */
+    .notification-icon .badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: red;
+      color: white;
+      font-size: 10px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: none;
+    }
+
+    /* Dropdown-Menü für Benachrichtigungen */
+    .notification-dropdown {
+      position: absolute;
+      top: 40px;
+      right: 20px;
+      background: white;
+      color: black;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 6px;
+      width: 250px;
+      display: none;
+      padding: 10px;
+      z-index: 1000;
+    }
+
+    .notification-dropdown.active {
+      display: block;
+    }
+
+    .notification-dropdown .notification-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .notification-dropdown .notification-item:last-child {
+      border-bottom: none;
+    }
+
+    .notification-dropdown .notification-item .close-btn {
+      background: none;
+      border: none;
+      font-size: 14px;
+      color: red;
+      cursor: pointer;
+    }
+
+    /* Button für "Alle löschen" */
+    .clear-all {
+      display: none;
+      text-align: center;
+      padding: 10px;
+      font-size: 14px;
+      color: red;
+      cursor: pointer;
+      border-top: 1px solid #ddd;
+      background: #f8f9fa;
+    }
+
+    /* Karten */
+    .card {
+      background: white;
+      border-radius: 8px;
+      border: none;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+
+    /* Footer minimal halten */
+    footer {
+      background-color: #212529;
+      color: #bbb;
+      padding: 10px 0;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    footer a {
+      color: #28a745;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
 
   </style>
 </head>
 
 <body>
+
 <!-- Sidebar -->
 <div th:insert="~{vorlagen/sidebar :: sidebar}"></div>
 
 <!-- Main Content -->
 <div class="main-content" id="main-content">
-  <!-- Header -->
-  <div class="main-header">
-    <h2>Admin Management - Rheiner Zoo</h2>
+
+
+  <div th:insert="~{vorlagen/header :: header(pageTitle='Admin Management - Rheiner Zoo')}"></div>
+
+
+
+    <!-- 📍 Zugewiesenes Revier -->
+  <div class="card">
+    <h4>Dein Revier</h4>
+    <p>📍 Zugewiesene Reviere: <span th:text="${revierText}"></span></p>
+    <p>🐘 Anzahl der Tiere: <strong th:text="${anzahlTiere}" ></strong></p>
   </div>
+  <p id="pfleger-id" th:text="${id}" style="display: none;"></p>
 
-  <!-- Dashboard -->
-
-  <div th:if="${hasBirthday}" class="card birthday-card" style="background: linear-gradient(135deg, #1f4e3e, #6fa56f); border-radius: 20px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); color: white; text-align: center; padding: 20px;">
-    <h1 style="font-family: 'Brush Script MT', cursive; font-size: 32px; margin-bottom: 10px; text-shadow: 2px 2px rgba(0, 0, 0, 0.2);">
-      🎉 Happy Birthday, <span th:text="${username}"></span>! 🎉
-    </h1>
-    <p style="font-size: 18px; font-weight: 500; margin: 0;">
-      Wir wünschen Ihnen alles Gute zum Geburtstag und einen wundervollen Tag voller Freude! 🎂
-    </p>
-  </div>
-
-
-
-  <div class="card p-4">
-    <h4>Willkommen, <span th:text="${username}"></span></h4>
-    <p>Hier können Sie verschiedene Bereiche des Rheiner Zoos verwalten.</p>
-  </div>
-
-
-
-
-  <!-- Futterpläne -->
-  <div id="futterplaene" class="card p-4">
-    <h4>Futterpläne</h4>
-    <table class="table table-striped">
+  <!-- 🦁 Aktuelle Fütterungen -->
+  <div class="card">
+    <h4>Aktuelle Fütterungen</h4>
+    <table class="table table-bordered">
       <thead>
       <tr>
-        <th>ID</th>
-        <th>Tierart</th>
-        <th>Futtertyp</th>
-        <th>Menge</th>
+        <th>Futterplan Name</th>
+        <th>Futter</th>
         <th>Uhrzeit</th>
       </tr>
       </thead>
       <tbody>
-      <tr><td>1</td><td>Elefant</td><td>Heu, Gras</td><td>50 kg</td><td>08:00, 16:00</td></tr>
-      <tr><td>2</td><td>Löwe</td><td>Fleisch</td><td>10 kg</td><td>12:00</td></tr>
-      <tr><td>3</td><td>Schimpanse</td><td>Obst, Gemüse</td><td>5 kg</td><td>09:00, 14:00</td></tr>
+      <tr th:if="${#lists.isEmpty(relevanteFutterPlaene)}">
+        <td colspan="3" class="text-center">🚨 Heute sind keine Fütterungen geplant.</td>
+      </tr>
+      <tr th:each="futterplan : ${relevanteFutterPlaene}">
+        <td th:text="${futterplan.name}"></td>
+        <td>
+          <ul>
+            <li th:each="entry : ${futterplan.futterMitMenge}"
+                th:text="${entry.key.name + ' (' + entry.value + 'kg)'}"></li>
+          </ul>
+        </td>
+        <td th:text="${#strings.arrayJoin(futterplan.futterZeiten, ', ')}"></td>
+      </tr>
       </tbody>
     </table>
   </div>
 
-  <!-- Benutzerverwaltung -->
-  <div id="usermanagement" class="card p-4">
-    <h4>Benutzerverwaltung</h4>
-    <table class="table table-striped">
-      <thead>
-      <tr>
-        <th>ID</th>
-        <th>Benutzername</th>
-        <th>Rolle</th>
-        <th>Email</th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr><td>1</td><td>admin</td><td>Administrator</td><td>admin@zoo.de</td></tr>
-      <tr><td>2</td><td>pfleger1</td><td>Tierpfleger</td><td>pfleger1@zoo.de</td></tr>
-      <tr><td>3</td><td>tierarzt</td><td>Tierarzt</td><td>tierarzt@zoo.de</td></tr>
-      </tbody>
-    </table>
-  </div>
 </div>
 
 <!-- Footer -->
 <footer th:insert="~{vorlagen/footer :: footer}"></footer>
 
-
-<!-- Script für Sidebar -->
 <script>
-  function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('collapsed');
-    document.getElementById('main-content').classList.toggle('collapsed');
-  }
-</script>
-</body>
+  document.addEventListener("DOMContentLoaded", function() {
+    const pflegerIdElement = document.getElementById("pfleger-id");
+    const pflegerId = pflegerIdElement ? pflegerIdElement.textContent.trim() : null;
 
+    if (!pflegerId) {
+      console.error("Pfleger-ID nicht gefunden oder leer.");
+      return;
+    }
+
+    console.log("Pfleger-ID:", pflegerId);
+
+    const notificationIcon = document.getElementById("notification-icon");
+    const notificationDropdown = document.getElementById("notification-dropdown");
+    const notificationBadge = document.getElementById("notification-badge");
+    const clearAllButton = document.getElementById("clear-all");
+
+    /** 🛠 FIX: Glocke klickbar machen **/
+    notificationIcon.addEventListener("click", function(event) {
+      event.stopPropagation(); // Verhindert unerwünschtes Schließen
+      notificationDropdown.classList.toggle("active");
+
+      // 🔹 Falls geöffnet, rotes Badge ausblenden
+      if (notificationDropdown.classList.contains("active")) {
+        notificationBadge.style.display = "none";
+      }
+    });
+
+    // 🛠 Klicken außerhalb schließt Dropdown
+    document.addEventListener("click", function(event) {
+      if (!notificationIcon.contains(event.target) && !notificationDropdown.contains(event.target)) {
+        notificationDropdown.classList.remove("active");
+      }
+    });
+
+    function updateNotificationState() {
+      const notifications = document.querySelectorAll(".notification-item");
+      if (notifications.length === 0) {
+        notificationBadge.style.display = "none";
+        clearAllButton.style.display = "none";
+        notificationDropdown.innerHTML = '<p class="text-center text-muted">Keine neuen Nachrichten</p>';
+      } else {
+        clearAllButton.style.display = "block";
+      }
+    }
+
+    // 🕒 Countdown-Timer für Nachrichten, die bald gelöscht werden
+    function updateCountdown() {
+      const now = Date.now();
+      document.querySelectorAll(".countdown").forEach(countdownElement => {
+        const deleteOn = parseInt(countdownElement.getAttribute("data-deleteon"));
+        const timeLeft = deleteOn - now;
+
+        if (timeLeft <= 0) {
+          // Nachricht automatisch entfernen, wenn sie abgelaufen ist
+          const notificationItem = countdownElement.closest(".notification-item");
+          if (notificationItem) {
+            notificationItem.remove();
+            updateNotificationState();
+          }
+        } else if (timeLeft < 300000) { // Falls weniger als 5 Minuten übrig
+          const minutes = Math.floor(timeLeft / 60000);
+          const seconds = Math.floor((timeLeft % 60000) / 1000);
+          countdownElement.textContent = `${minutes}m ${seconds}s`;
+        } else {
+          const date = new Date(deleteOn);
+          countdownElement.textContent = date.toLocaleString("de-DE");
+        }
+      });
+    }
+
+    setInterval(updateCountdown, 1000); // Jede Sekunde aktualisieren
+
+    // Einzelne Benachrichtigung als gelesen markieren
+    document.addEventListener("click", function(event) {
+      if (event.target.classList.contains("close-btn")) {
+        const notificationId = event.target.getAttribute("data-id");
+
+        fetch("/api/notification/markasread", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ notificationId: notificationId, pflegerId: pflegerId })
+        }).then(response => {
+          if (response.ok) {
+            event.target.parentElement.remove();
+            updateNotificationState();
+          }
+        }).catch(error => console.error("Fehler beim Markieren als gelesen:", error));
+      }
+    });
+
+    // Alle Benachrichtigungen als gelesen markieren
+    if (clearAllButton) {
+      clearAllButton.addEventListener("click", function() {
+        fetch("/api/notification/markasread", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ pflegerId: pflegerId })
+        }).then(response => {
+          if (response.ok) {
+            document.querySelectorAll(".notification-item").forEach(item => item.remove());
+            updateNotificationState();
+          }
+        }).catch(error => console.error("Fehler beim Markieren aller als gelesen:", error));
+      });
+    }
+
+    updateNotificationState();
+    updateCountdown();
+  });
+</script>
+
+
+
+</body>
 </html>

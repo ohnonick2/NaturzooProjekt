@@ -1,0 +1,270 @@
+<th:block th:fragment="header">
+    <!-- 📌 Haupt-Header -->
+    <div class="main-header">
+        <span th:text="${pageTitle} ?: 'Rheiner Zoo Dashboard'"></span>
+
+        <!-- 🔔 Glockensymbol für Benachrichtigungen -->
+        <div class="notification-icon" id="notification-icon">
+            <i class="fas fa-bell"></i>
+            <span class="badge" id="notification-badge" th:if="${not #lists.isEmpty(notifications)}"></span>
+        </div>
+
+        <!-- 📩 Dropdown-Menü für Benachrichtigungen -->
+        <div class="notification-dropdown" id="notification-dropdown">
+            <p th:if="${#lists.isEmpty(notifications)}" class="text-center text-muted">Keine neuen Nachrichten</p>
+
+            <div class="notification-item" th:each="notifi : ${notificationsr}" th:data-id="${notifi.id}">
+                <div>
+                    <strong style="max-width: 300px; white-space: pre-wrap; word-break: break-all;" th:text="${notifi.title}"></strong>
+                    <br>
+                    <td style="max-width: 250px; white-space: pre-wrap; word-break: break-all;" th:text="${notifi.message}"></td>
+
+
+                    <small class="notification-time">
+                        <i class="far fa-clock"></i>
+                        <span>Erstellt am:</span>
+                        <span th:text="${#dates.format(notifi.created, 'dd.MM.yyyy HH:mm:ss')}"></span>
+                        <br>
+                        <span>Läuft bis:</span>
+                        <span th:text="${#dates.format(notifi.deleteon, 'dd.MM.yyyy HH:mm:ss')}"></span>
+                    </small>
+                </div>
+                <button class="close-btn" th:data-id="${notifi.id}">&times;</button>
+            </div>
+
+            <!-- Button zum Löschen aller Nachrichten -->
+            <div class="clear-all" id="clear-all" th:if="${not #lists.isEmpty(notifications)}">Alle löschen</div>
+        </div>
+    </div>
+
+    <!-- 📌 Unsichtbares Feld für Pfleger-ID -->
+    <input type="hidden" id="pfleger-id" th:value="${id}">
+
+    <!-- 📌 Styles & Script für Benachrichtigungen -->
+    <style>
+        /* 🔥 Header-Styling */
+        .main-header {
+            background: #1f4e3e;
+            color: white;
+            padding: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 6px;
+            position: relative;
+        }
+
+        /* 🔔 Glocke */
+        .notification-icon {
+            position: relative;
+            font-size: 22px;
+            cursor: pointer;
+            transition: 0.2s ease-in-out;
+        }
+
+        .notification-icon .fa-bell {
+            color: white;
+        }
+
+        .notification-icon:hover {
+            transform: scale(1.1);
+        }
+
+        /* 🔴 Roter Badge für neue Nachrichten */
+        .notification-icon .badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: red;
+            color: white;
+            font-size: 10px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* 📩 Dropdown-Styling */
+        .notification-dropdown {
+            position: absolute;
+            top: 50px;
+            right: 20px;
+            background: white;
+            color: black;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 6px;
+            width: 300px; /* Mehr Platz für Nachrichten */
+            display: none;
+            padding: 10px;
+            z-index: 1000;
+        }
+
+        .notification-dropdown.active {
+            display: block;
+        }
+
+        /* 📌 Nachrichten Styling */
+        .notification-item {
+            display: flex;
+            flex-direction: column; /* Stapelt Inhalt vertikal */
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        /* 🔹 Titel bleibt fett */
+        .notification-item strong {
+            font-size: 14px;
+            color: #333;
+        }
+
+        /* 📨 Nachricht bleibt normal */
+        .notification-item span {
+            font-size: 12px;
+            color: #444;
+            line-height: 1.4;
+        }
+
+        /* 📅 Kleinere Datumsanzeige */
+        .notification-item small {
+            font-size: 9px;  /* Extra klein */
+            color: #888;  /* Dezenter als Schwarz */
+            display: block; /* Zeilenumbruch forcieren */
+            line-height: 1.1;
+            margin-top: 4px;
+        }
+
+        /* ⏰ Icon noch kompakter */
+        .notification-item small i {
+            font-size: 9px;
+            margin-right: 2px;
+        }
+
+        /* ❌ Schließen-Button */
+        .close-btn {
+            font-size: 12px;
+            color: red;
+            cursor: pointer;
+            background: none;
+            border: none;
+            align-self: flex-end;
+            transition: 0.2s ease-in-out;
+        }
+
+        .close-btn:hover {
+            color: darkred;
+        }
+
+        /* 🛑 Button "Alle löschen" */
+        .clear-all {
+            text-align: center;
+            padding: 10px;
+            font-size: 13px;
+            color: red;
+            cursor: pointer;
+            border-top: 1px solid #ddd;
+            background: #f8f9fa;
+        }
+
+        .clear-all:hover {
+            background: #e0e0e0;
+        }
+
+    </style>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const notificationIcon = document.getElementById("notification-icon");
+            const notificationDropdown = document.getElementById("notification-dropdown");
+            const notificationBadge = document.getElementById("notification-badge");
+            const clearAllButton = document.getElementById("clear-all");
+            const pflegerIdElement = document.getElementById("pfleger-id");
+
+            // ✅ Hole die Pfleger-ID aus dem versteckten Input-Feld
+            const pflegerId = pflegerIdElement ? pflegerIdElement.value.trim() : null;
+
+            /** 🛠 Glocke klickbar machen (Punkt bleibt sichtbar) **/
+            notificationIcon.addEventListener("click", function (event) {
+                event.stopPropagation();
+                notificationDropdown.classList.toggle("active");
+
+                // ❌ Badge wird NICHT ausgeblendet, wenn nur das Menü geöffnet wird
+            });
+
+            // 📌 Menü schließen, wenn man außerhalb klickt
+            document.addEventListener("click", function (event) {
+                if (!notificationIcon.contains(event.target) && !notificationDropdown.contains(event.target)) {
+                    notificationDropdown.classList.remove("active");
+                }
+            });
+
+            function updateNotificationState() {
+                const notifications = document.querySelectorAll(".notification-item");
+                if (notifications.length === 0) {
+                    notificationBadge.style.display = "none"; // 🔴 Punkt ausblenden, wenn keine Benachrichtigungen mehr da sind
+                    clearAllButton.style.display = "none";
+                    notificationDropdown.innerHTML = '<p class="text-center text-muted">Keine neuen Nachrichten</p>';
+                } else {
+                    notificationBadge.style.display = "inline-block"; // 🔴 Punkt bleibt sichtbar
+                    clearAllButton.style.display = "block";
+                }
+            }
+
+            // **Benachrichtigung als gelesen markieren (Punkt bleibt bis zur Aktion)**
+            document.addEventListener("click", function (event) {
+                if (event.target.classList.contains("close-btn")) {
+                    const notificationId = event.target.getAttribute("data-id");
+
+                    if (!pflegerId) {
+                        console.error("⚠️ Fehler: Pfleger-ID nicht gefunden!");
+                        return;
+                    }
+
+                    fetch("/api/notification/markasread", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({ notificationId: notificationId, pflegerId: pflegerId })
+                    }).then(response => {
+                        if (response.ok) {
+                            event.target.parentElement.remove(); // Entferne nur die geklickte Nachricht
+                            updateNotificationState();
+                        }
+                    }).catch(error => console.error("Fehler beim Markieren als gelesen:", error));
+                }
+            });
+
+            // **Alle Benachrichtigungen als gelesen markieren**
+            if (clearAllButton) {
+                clearAllButton.addEventListener("click", function () {
+                    if (!pflegerId) {
+                        console.error("⚠️ Fehler: Pfleger-ID nicht gefunden!");
+                        return;
+                    }
+
+                    fetch("/api/notification/markasread", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({ pflegerId: pflegerId })
+                    }).then(response => {
+                        if (response.ok) {
+                            document.querySelectorAll(".notification-item").forEach(item => item.remove());
+                            updateNotificationState();
+                        }
+                    }).catch(error => console.error("Fehler beim Markieren aller als gelesen:", error));
+                });
+            }
+
+            updateNotificationState();
+        });
+
+    </script>
+</th:block>

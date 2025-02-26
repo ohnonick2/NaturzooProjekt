@@ -1,202 +1,206 @@
 <!DOCTYPE html>
 <html lang="de" xmlns:th="http://www.thymeleaf.org">
-<html lang="en" xmlns:sec="http://www.w3.org/1999/xhtml" xmlns="http://www.w3.org/1999/html">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Futterverwaltung</title>
+
+    <div th:insert="~{vorlagen/icon :: icon}"></div>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f6f9;
+            background-color: #f8f9fa;
             margin: 0;
             padding: 0;
-            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
 
         .main-content {
             margin-left: 250px;
             padding: 20px;
-            transition: margin-left 0.3s ease;
+            flex: 1;
         }
 
-        .main-content.collapsed {
-            margin-left: 70px;
-        }
-
-        .card {
-            border: none;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-            padding: 20px;
-        }
-
-        .header {
-            background-color: #1f4e3e;
+        .main-header {
+            background: #1f4e3e;
             color: white;
             padding: 15px;
             text-align: center;
-            border-radius: 8px;
-        }
-
-        .header-row {
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 6px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
         }
 
-        .btn-success {
-            background-color: #218838;
-            color: white;
-        }
-
-        table tbody td {
-            word-break: break-word;
-        }
-
-        .search-container {
+        .card {
+            background: white;
+            border-radius: 8px;
+            border: none;
+            padding: 15px;
             margin-bottom: 15px;
         }
 
-        .search-container input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        .table th, .table td {
+            vertical-align: middle;
+        }
+
+        .btn-group .btn {
+            font-size: 14px;
         }
     </style>
 </head>
 
 <body>
+
 <!-- Sidebar -->
 <div th:insert="~{vorlagen/sidebar :: sidebar}"></div>
 
 <!-- Main Content -->
 <div class="main-content" id="main-content">
-    <!-- Header -->
-    <div class="header">
-        <h2>Futterverwaltung</h2>
+
+    <!-- Header mit "Hinzufügen"-Button -->
+    <div class="main-header">
+        <span>Futterverwaltung</span>
+        <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addFutterModal">
+            <i class="fas fa-plus"></i> Hinzufügen
+        </button>
     </div>
 
-    <!-- Food Management Section -->
-    <div class="card p-4">
-        <div class="header-row">
-            <h4>Verwalten Sie das Futter für Ihre Tiere</h4>
-            <button class="btn btn-success" onclick="addFutter()" sec:authorize="hasAuthority('FUTTER_MANAGEMENT_WRITE') or hasAuthority('*')">
-                <i class="fas fa-plus"></i> Futter hinzufügen
-            </button>
-        </div>
-
-        <!-- Search Field -->
-        <div class="search-container">
-            <input type="text" id="searchInput" placeholder="Suchen Sie nach Name, Menge, Lieferant..." onkeyup="filterTable()">
-        </div>
-
-        <!-- Food List -->
-        <div th:if="${futterList.size() > 0}">
-            <table class="table table-striped" id="futterTable">
-                <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Menge (Gramm)</th>
-                    <th>Lieferant</th>
-                    <th>Aktionen</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="futter : ${futterList}">
-                    <td th:text="${futter.id}"></td>
-                    <td th:text="${futter.name}"></td>
-                    <td th:text="${futter.menge} + ' g'"></td>
-                    <td th:text="${futter.lieferant.name}"></td>
-                    <td>
-                        <button class="btn btn-primary" th:onclick="'editFutter(' + ${futter.id} + ')'">
+    <!-- Futterliste -->
+    <div class="card">
+        <h4>Alle Futtermittel</h4>
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Menge</th>
+                <th>Lieferant</th>
+                <th>Aktionen</th>
+            </tr>
+            </thead>
+            <tbody id="futterTable">
+            <tr th:each="futter : ${futterList}" th:id="'futter-' + ${futter.id}">
+                <td th:text="${futter.id}"></td>
+                <td th:text="${futter.name}"></td>
+                <td th:text="${futter.menge} + ' g'"></td>
+                <td th:text="${futter.lieferant.name}"></td>
+                <td>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-primary btn-sm edit-btn"
+                                data-bs-toggle="modal" data-bs-target="#editFutterModal"
+                                th:data-id="${futter.id}"
+                                th:data-name="${futter.name}"
+                                th:data-menge="${futter.menge}"
+                                th:data-lieferant="${futter.lieferant.id}">
                             <i class="fas fa-edit"></i> Bearbeiten
                         </button>
-                        <button class="btn btn-danger" th:onclick="'deleteFutter(' + ${futter.id} + ')'">
+                        <button type="button" class="btn btn-danger btn-sm delete-btn" th:data-id="${futter.id}">
                             <i class="fas fa-trash"></i> Löschen
                         </button>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 
-        <!-- No Food Message -->
-        <div th:if="${futterList.size() == 0}" class="alert alert-warning" role="alert">
-            Es ist kein Futter vorhanden. Bitte fügen Sie Futter hinzu.
+</div>
+
+<!-- Modal: Neues Futter hinzufügen -->
+<div class="modal fade" id="addFutterModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Neues Futter</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addFutterForm">
+                    <div class="mb-3">
+                        <label for="newName" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="newName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newMenge" class="form-label">Menge (Gramm)</label>
+                        <input type="number" class="form-control" id="newMenge" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newLieferant" class="form-label">Lieferant</label>
+                        <select class="form-control" id="newLieferant" required>
+                            <option th:each="lieferant : ${lieferanten}" th:value="${lieferant.id}"
+                                    th:text="${lieferant.name}"></option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success">Hinzufügen</button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Footer -->
-<footer th:insert="~{vorlagen/footer :: footer}"></footer>
+<!-- Modal: Futter bearbeiten -->
+<div class="modal fade" id="editFutterModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Futter bearbeiten</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editFutterForm">
+                    <input type="hidden" id="editId">
+                    <div class="mb-3">
+                        <label for="editName" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="editName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editMenge" class="form-label">Menge (Gramm)</label>
+                        <input type="number" class="form-control" id="editMenge" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editLieferant" class="form-label">Lieferant</label>
+                        <select class="form-control" id="editLieferant" required>
+                            <option th:each="lieferant : ${lieferanten}" th:value="${lieferant.id}"
+                                    th:text="${lieferant.name}"></option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Speichern</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
-    function addFutter() {
-        window.location.href = '/addFutter';
-    }
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".edit-btn").forEach(button => {
+            button.addEventListener("click", function () {
+                document.getElementById("editId").value = this.dataset.id;
+                document.getElementById("editName").value = this.dataset.name;
+                document.getElementById("editMenge").value = this.dataset.menge;
+                document.getElementById("editLieferant").value = this.dataset.lieferant;
+            });
+        });
 
-    function editFutter(futterId) {
-        window.location.href = '/editFutter/' + futterId;
-    }
-
-    function deleteFutter(futterId) {
-        if (confirm('Möchten Sie das Futter mit ID ' + futterId + ' wirklich löschen?')) {
-            fetch('/api/futter/delete', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ id: futterId })
-            })
-                .then(response => {
-                    if (response.ok) {
-                        alert('Futter erfolgreich gelöscht!');
-                        location.reload();
-                    } else {
-                        // Fehlernachricht auslesen
-                        return response.text().then(errorMessage => {
-                            alert('Fehler: ' + errorMessage);
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Fehler:', error);
-                    alert('Es ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.');
-                });
-        }
-    }
-
-    function toggleSidebar() {
-        document.getElementById('sidebar').classList.toggle('collapsed');
-        document.getElementById('main-content').classList.toggle('collapsed');
-    }
-
-    function filterTable() {
-        const input = document.getElementById('searchInput').value.toLowerCase();
-        const table = document.getElementById('futterTable');
-        const rows = table.getElementsByTagName('tr');
-
-        for (let i = 1; i < rows.length; i++) { // i = 1, um die Header-Zeile zu überspringen
-            const cells = rows[i].getElementsByTagName('td');
-            let match = false;
-
-            for (let j = 0; j < cells.length; j++) {
-                if (cells[j] && cells[j].innerText.toLowerCase().includes(input)) {
-                    match = true;
-                    break;
+        document.querySelectorAll(".delete-btn").forEach(button => {
+            button.addEventListener("click", function () {
+                if (confirm("Möchten Sie dieses Futter wirklich löschen?")) {
+                    fetch(`/api/futter/delete/${this.dataset.id}`, { method: "DELETE" })
+                        .then(response => response.ok ? location.reload() : alert("Löschen fehlgeschlagen!"));
                 }
-            }
-
-            rows[i].style.display = match ? '' : 'none';
-        }
-    }
+            });
+        });
+    });
 </script>
+
 </body>
 </html>

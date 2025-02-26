@@ -1,9 +1,7 @@
 package net.ohnonick2.naturzooprojekt.frontend.gebaeude;
 
 import net.ohnonick2.naturzooprojekt.db.gebaeude.Gebaeude;
-import net.ohnonick2.naturzooprojekt.repository.AktivitaetRepository;
 import net.ohnonick2.naturzooprojekt.repository.GebaeudeRepository;
-import net.ohnonick2.naturzooprojekt.service.AktivitaetService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

@@ -171,7 +171,7 @@ public class PflegerManager {
 
     @PostMapping("/add")
     public ResponseEntity<String> addPfleger(@RequestBody String body) {
-        System.out.println("ADD");
+
 
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
             return ResponseEntity.badRequest().body("Nicht authentifiziert");
@@ -214,8 +214,6 @@ public class PflegerManager {
             }
         }
          */
-
-        System.out.println(body);
 
         Ort existingOrt = ortrepository.findByPlz(targetUser.get("ort").getAsInt());
         if (existingOrt == null) {

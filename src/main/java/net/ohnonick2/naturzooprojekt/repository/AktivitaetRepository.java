@@ -10,5 +10,9 @@ import java.util.List;
 @Repository
 public interface AktivitaetRepository extends JpaRepository<Aktivitaet, Long> {
 
+    List<Aktivitaet> findAktivitaetByTimestamp(LocalDateTime timestamp);
+
+    List<Aktivitaet> findAktivitaetByUserId(long userId);
+
 
 }

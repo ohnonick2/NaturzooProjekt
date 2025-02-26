@@ -1,5 +1,6 @@
 package net.ohnonick2.naturzooprojekt.db.revier;
 
+import com.google.gson.JsonObject;
 import jakarta.persistence.*;
 import net.ohnonick2.naturzooprojekt.db.tier.Tier;
 
@@ -34,4 +35,15 @@ public class RevierTier implements Serializable {
     public Tier getTierId() {
         return tierId;
     }
+
+    @Override
+    public String toString() {
+
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("revierId", revierId.getId());
+        jsonObject.addProperty("tierId", tierId.getId());
+
+        return jsonObject.toString();
+    }
+
 }

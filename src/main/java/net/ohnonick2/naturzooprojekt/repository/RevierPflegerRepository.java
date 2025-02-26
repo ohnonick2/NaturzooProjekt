@@ -12,6 +12,6 @@ public interface RevierPflegerRepository extends JpaRepository<RevierPfleger, Re
     List<RevierPfleger> findAllByRevier(Revier revier);
     List<RevierPfleger> findAllByPfleger(Pfleger pfleger);
     RevierPfleger findByRevierAndPfleger(Revier revier, Pfleger pfleger);
-
+    List<RevierPfleger> findByPfleger(Pfleger pfleger);
 
 }

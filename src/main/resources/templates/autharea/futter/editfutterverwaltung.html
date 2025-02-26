@@ -5,155 +5,134 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Futter bearbeiten</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f6f9;
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
             margin: 0;
-            padding: 0;
-            overflow-x: hidden;
         }
 
-        .main-content {
-            margin-left: 250px;
+        .container {
+            max-width: 400px;
+            width: 100%;
+            background: white;
             padding: 20px;
-            transition: margin-left 0.3s ease;
-        }
-
-        .main-content.collapsed {
-            margin-left: 70px;
-        }
-
-        .card {
-            border: none;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-            padding: 20px;
-        }
-
-        .header {
-            background-color: #1f4e3e;
-            color: white;
-            padding: 15px;
-            text-align: center;
             border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h2 {
+            color: #1f4e3e;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            text-align: left;
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .btn {
+            width: 100%;
+            font-weight: bold;
+            margin-top: 10px;
+            border-radius: 5px;
         }
 
         .btn-primary {
-            background-color: #007bff;
-            color: white;
+            background-color: #1f4e3e;
+            border: none;
         }
 
         .btn-secondary {
             background-color: #6c757d;
-            color: white;
+            border: none;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
         }
     </style>
 </head>
-
 <body>
-<!-- Sidebar -->
-<div th:insert="~{vorlagen/sidebar :: sidebar}"></div>
 
-<!-- Main Content -->
-<div class="main-content" id="main-content">
-    <!-- Header -->
-    <div class="header">
-        <h2>Futter bearbeiten</h2>
-    </div>
+<div class="container">
+    <h2><i class="fas fa-utensils"></i> Futter bearbeiten</h2>
+    <form id="editFutterForm" onsubmit="submitFutterForm(event)">
+        <input type="hidden" id="futterId" th:value="${futter.id}">
 
-    <!-- Edit Food Section -->
-    <div class="card">
-        <h4>Bearbeiten Sie die Details des Futters</h4>
+        <!-- Name des Futters -->
+        <div class="form-group">
+            <label for="name" class="form-label"><i class="fas fa-tag"></i> Name</label>
+            <input type="text" class="form-control" id="name" th:value="${futter.name}" required>
+        </div>
 
-        <form id="editFutterForm" onsubmit="submitForm(event)">
-            <!-- Futter ID (hidden) -->
-            <input type="hidden" id="futterId" name="id" th:value="${futter.id}"/>
+        <!-- Menge -->
+        <div class="form-group">
+            <label for="menge" class="form-label"><i class="fas fa-weight-hanging"></i> Menge (Gramm)</label>
+            <input type="number" class="form-control" id="menge" th:value="${futter.menge}" min="1" required>
+        </div>
 
-            <!-- Name -->
-            <div class="mb-3">
-                <label for="name" class="form-label">Name</label>
-                <input type="text" class="form-control" id="name" name="name" th:value="${futter.name}" required/>
-            </div>
+        <!-- Lieferant -->
+        <div class="form-group">
+            <label for="lieferant" class="form-label"><i class="fas fa-truck"></i> Lieferant</label>
+            <select class="form-control" id="lieferant" required>
+                <option th:each="lieferant : ${lieferanten}" th:value="${lieferant.id}"
+                        th:text="${lieferant.name}" th:selected="${lieferant.id == futter.lieferant.id}">
+                </option>
+            </select>
+        </div>
 
-            <!-- Menge -->
-            <div class="mb-3">
-                <label for="menge" class="form-label">Menge (in Gramm)</label>
-                <input type="number" class="form-control" id="menge" name="menge" min="1" th:value="${futter.menge}" required/>
-            </div>
-
-            <!-- Lieferant -->
-            <div class="mb-3">
-                <label for="lieferant" class="form-label">Lieferant</label>
-                <select class="form-control" id="lieferant" name="lieferantId" required>
-                    <option th:each="lieferant : ${lieferanten}" th:value="${lieferant.id}"
-                            th:text="${lieferant.name}"
-                            th:selected="${lieferant.id} == ${futter.lieferant.id}">
-                    </option>
-                </select>
-            </div>
-
-            <!-- Buttons -->
-            <div class="mt-4">
-                <button type="button" class="btn btn-secondary" onclick="goBack()">Abbrechen</button>
-                <button type="submit" class="btn btn-primary">Speichern</button>
-            </div>
-        </form>
-    </div>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Speichern</button>
+        <button type="button" class="btn btn-secondary" onclick="goBack()"><i class="fas fa-times"></i> Abbrechen</button>
+    </form>
 </div>
-
-<!-- Footer -->
-<footer th:insert="~{vorlagen/footer :: footer}"></footer>
 
 <script>
     function goBack() {
         window.history.back();
     }
 
-    function toggleSidebar() {
-        document.getElementById('sidebar').classList.toggle('collapsed');
-        document.getElementById('main-content').classList.toggle('collapsed');
-    }
-
-    async function submitForm(event) {
+    async function submitFutterForm(event) {
         event.preventDefault();
 
-        // Erfassen der Eingabedaten
         const id = document.getElementById('futterId').value;
         const name = document.getElementById('name').value;
         const menge = document.getElementById('menge').value;
         const lieferantId = document.getElementById('lieferant').value;
 
-        // Daten für die Anfrage vorbereiten
-        const payload = {
-            id: parseInt(id, 10),
-            name,
-            menge: parseFloat(menge), // Menge in eine Zahl umwandeln
-            lieferantId: parseInt(lieferantId, 10) // Lieferant-ID in eine Zahl umwandeln
-        };
+        const response = await fetch('/api/food/edit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, name, menge, lieferantId })
+        });
 
-        try {
-            const response = await fetch('/api/food/edit', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
-
-            if (response.ok) {
-                alert('Futter erfolgreich aktualisiert!');
-                window.location.href = '/futter'; // Weiterleitung nach Erfolg
-            } else {
-                const errorText = await response.text();
-                alert('Fehler: ' + errorText);
-            }
-        } catch (error) {
-            console.error('Fehler:', error);
-            alert('Es ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.');
+        if (response.ok) {
+            alert('Futter erfolgreich aktualisiert!');
+            window.location.href = '/futter';
+        } else {
+            alert('Fehler beim Speichern!');
         }
     }
 </script>
+
 </body>
 </html>

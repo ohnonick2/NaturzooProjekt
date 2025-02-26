@@ -2,27 +2,20 @@ package net.ohnonick2.naturzooprojekt.backend.gebaeude;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import net.ohnonick2.naturzooprojekt.db.aktivitaet.Aktivitaet;
 import net.ohnonick2.naturzooprojekt.db.gebaeude.Gebaeude;
 import net.ohnonick2.naturzooprojekt.db.user.Pfleger;
 import net.ohnonick2.naturzooprojekt.repository.AktivitaetRepository;
 import net.ohnonick2.naturzooprojekt.repository.GebaeudeRepository;
 import net.ohnonick2.naturzooprojekt.repository.GebaeudeTierRepository;
 import net.ohnonick2.naturzooprojekt.repository.Pflegerrepository;
-import net.ohnonick2.naturzooprojekt.service.AktivitaetService;
-import net.ohnonick2.naturzooprojekt.utils.ActivityAction;
-import net.ohnonick2.naturzooprojekt.utils.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping(value = "/api/gebaeude")
@@ -38,8 +31,7 @@ public class GebaeudeManager {
     @Autowired
     private Pflegerrepository pflegerrepository;
 
-    @Autowired
-    private AktivitaetService aktivitaetService;
+
 
     @Autowired
     private AktivitaetRepository aktivitaetRepository;
@@ -56,7 +48,6 @@ public class GebaeudeManager {
         Pfleger pfleger = pflegerrepository.findPflegerById(userloggedIn.get("id").getAsLong());
 
 
-        aktivitaetRepository.save(new Aktivitaet(ActivityAction.GEBÄUDE_DELETE, pfleger, "Gebäude gelöscht"));
 
 
 

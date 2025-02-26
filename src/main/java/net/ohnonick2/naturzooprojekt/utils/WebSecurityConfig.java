@@ -74,14 +74,30 @@ public class WebSecurityConfig implements WebMvcConfigurer {
                 .csrf(csrf -> csrf.ignoringRequestMatchers("/login", "/logout", "/static/**" , "/api/public/**" ,"/api/**" , "/"))
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/images/{filename}" , "/" , "/api/food/getFutterplan" , "/index" , "/error").permitAll()
-                        .requestMatchers("/usermanagement").hasAnyAuthority("USER_MANAGEMENT_READ" , "*")
-                        .requestMatchers("/editUser/").hasAnyAuthority("USER_MANAGEMENT_WRITE" , "*")
-                        .requestMatchers("/editUser/**").hasAnyAuthority("USER_MANAGEMENT_WRITE" , "*")
-                        .requestMatchers("/addUser").hasAnyAuthority("USER_MANAGEMENT_WRITE" , "*")
-                        .requestMatchers("/addUser/**").hasAnyAuthority("USER_MANAGEMENT_WRITE" , "*")
-                        .requestMatchers("/deleteUser/**").hasAnyAuthority("USER_MANAGEMENT_WRITE" , "*")
-                        .requestMatchers("/futterplan").hasAnyAuthority("FOOD_PLAN_READ" , "*")
+                        .requestMatchers("/login", "/images/{filename}", "/", "/index", "/error"  , "/getFutterplan/**").permitAll()
+                        .requestMatchers("/api/food/getFutterplan").permitAll()
+
+                        .requestMatchers("/usermanagement/**").hasAnyAuthority("USER_MANAGEMENT_READ", "USER_MANAGEMENT_WRITE", "*")
+                        .requestMatchers("/editUser/**").hasAnyAuthority("USER_MANAGEMENT_WRITE", "*")
+                        .requestMatchers("/addUser/**").hasAnyAuthority("USER_MANAGEMENT_WRITE", "*")
+                        .requestMatchers("/deleteUser/**").hasAnyAuthority("USER_MANAGEMENT_WRITE", "*")
+
+
+                        .requestMatchers("/futterplan/**").hasAnyAuthority("FUTTERPLAN_MANAGEMENT_READ", "FUTTERPLAN_MANAGEMENT_WRITE", "*")
+                        .requestMatchers("/editFutterplan/**").hasAnyAuthority("FUTTERPLAN_MANAGEMENT_WRITE", "*")
+                        .requestMatchers("/api/futterplan/delete").hasAuthority("FUTTERPLAN_MANAGEMENT_WRITE")
+
+
+                        .requestMatchers("/tier/**").hasAnyAuthority("TIER_READ", "TIER_WRITE", "*")
+                        .requestMatchers("/editTier/**").hasAnyAuthority("TIER_WRITE", "*")
+                        .requestMatchers("/deleteTier/**").hasAnyAuthority("TIER_WRITE", "*")
+                        .requestMatchers("/addTier/**").hasAnyAuthority("TIER_WRITE", "*")
+
+                        .requestMatchers("/lieferanten/**").hasAnyAuthority("LIEFERANT_READ", "LIEFERANT_WRITE", "*")
+                        .requestMatchers("/editLieferant/**").hasAnyAuthority("LIEFERANT_WRITE", "*")
+                        .requestMatchers("/deleteLieferant/**").hasAnyAuthority("LIEFERANT_WRITE", "*")
+                        .requestMatchers("/addLieferant/**").hasAnyAuthority("LIEFERANT_WRITE", "*")
+                        .requestMatchers("/notification").hasAnyAuthority("NOTIFICATION_MANAGE" , "*")
 
 
                         .anyRequest().authenticated()

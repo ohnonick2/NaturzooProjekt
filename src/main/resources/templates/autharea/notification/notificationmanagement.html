@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Benachrichtigungen | Rheiner Zoo</title>
+
+  <!-- Standard-Icon -->
+  <div th:insert="~{vorlagen/icon :: icon}"></div>
+
+
+  <!-- Bootstrap & FontAwesome -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <!-- **Header CSS wird mitgeladen** -->
+  <link rel="stylesheet" th:href="@{/css/styles.css}">
+
+  <style>
+    .invalid-field {
+      border: 2px solid red !important;
+      background-color: #f8d7da;
+    }
+  </style>
+
+</head>
+
+<body>
+
+<!-- Sidebar -->
+<div th:insert="~{vorlagen/sidebar :: sidebar}"></div>
+
+<!-- Header EINBINDEN -->
+
+<!-- Main Content -->
+<div class="main-content" id="main-content">
+
+    <div th:replace="~{vorlagen/header :: header(pageTitle='Benachrichtigungen - Rheiner Zoo')}"></div>
+
+    <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addNotificationModal">
+      <i class="fas fa-plus"></i> Hinzufügen
+    </button>
+
+
+  <!-- Benachrichtigungsliste -->
+  <div class="card">
+    <h4>Alle Benachrichtigungen</h4>
+    <table class="table table-bordered">
+      <thead>
+      <tr>
+        <th>Titel</th>
+        <th>Nachricht</th>
+        <th>Erstellt am</th>
+        <th>Läuft ab</th>
+        <th>Aktionen</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="notification : ${notifications}">
+        <td style="max-width: 300px; white-space: pre-wrap; word-break: break-all;" th:text="${notification.title}"></td>
+        <td style="max-width: 300px; white-space: pre-wrap; word-break: break-all;" th:text="${notification.message}"></td>
+        <td th:text="${#dates.format(notification.created, 'dd.MM.yyyy HH:mm:ss')}"></td>
+        <td th:text="${#dates.format(notification.deleteon, 'dd.MM.yyyy HH:mm:ss')}"></td>
+        <td>
+          <div class="btn-group">
+            <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+              Aktionen
+            </button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item edit-btn" href="#" th:data-id="${notification.id}" data-bs-toggle="modal" data-bs-target="#editNotificationModal">
+                <i class="fas fa-edit"></i> Bearbeiten</a></li>
+              <li><a class="dropdown-item delete-btn" href="#" th:data-id="${notification.id}">
+                <i class="fas fa-trash"></i> Löschen</a></li>
+            </ul>
+          </div>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+
+    <!-- Pagination Buttons -->
+    <nav aria-label="Seiten Navigation">
+      <ul class="pagination">
+        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+          <a class="page-link" th:href="@{/notifications(page=0, size=5)}">Erste</a>
+        </li>
+        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+          <a class="page-link" th:href="@{/notifications(page=${currentPage - 1}, size=5)}">Zurück</a>
+        </li>
+
+        <li class="page-item" th:each="i : ${#numbers.sequence(0, (totalPages - 1))}" th:classappend="${i == currentPage} ? 'active'">
+          <a class="page-link" th:href="@{/notifications(page=${i}, size=5)}" th:text="${i + 1}"></a>
+        </li>
+
+        <li class="page-item" th:classappend="${currentPage + 1 == totalPages} ? 'disabled'">
+          <a class="page-link" th:href="@{/notifications(page=${currentPage + 1}, size=5)}">Weiter</a>
+        </li>
+        <li class="page-item" th:classappend="${currentPage + 1 == totalPages} ? 'disabled'">
+          <a class="page-link" th:href="@{/notifications(page=${totalPages - 1}, size=5)}">Letzte</a>
+        </li>
+      </ul>
+    </nav>
+
+
+
+  <p id="pfleger-id" style="display: none;" th:text="${id}"></p>
+
+<!-- Modal: Neue Benachrichtigung hinzufügen -->
+<div class="modal fade" id="addNotificationModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Neue Benachrichtigung</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
+      </div>
+      <div class="modal-body">
+        <form id="createNotificationForm">
+          <div class="mb-3">
+            <label for="newTitle" class="form-label">Titel</label>
+            <input type="text" class="form-control" id="newTitle" required>
+          </div>
+          <div class="mb-3">
+            <label for="newMessage" class="form-label">Nachricht</label>
+            <textarea class="form-control" id="newMessage" required></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="newDeleteon" class="form-label">Ablaufdatum</label>
+            <input type="datetime-local" class="form-control" id="newDeleteon" required>
+          </div>
+          <button type="submit" class="btn btn-success">Erstellen</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Benachrichtigung bearbeiten -->
+<div class="modal fade" id="editNotificationModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Benachrichtigung bearbeiten</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editNotificationForm">
+          <input type="hidden" id="editId">
+          <div class="mb-3">
+            <label for="editTitle" class="form-label">Titel</label>
+            <input type="text" class="form-control" id="editTitle" required>
+          </div>
+          <div class="mb-3">
+            <label for="editMessage" class="form-label">Nachricht</label>
+            <textarea class="form-control" id="editMessage" required></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="editDeleteon" class="form-label">Ablaufdatum</label>
+            <input type="datetime-local" class="form-control" id="editDeleteon" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Speichern</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Benachrichtigung zurückziehen -->
+<div class="modal fade" id="resetNotificationModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-white">
+        <h5 class="modal-title">Benachrichtigung zurückziehen</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="resetNotificationForm">
+          <input type="hidden" id="resetNotificationId">
+
+          <div class="mb-3">
+            <label class="form-label">Pfleger auswählen</label>
+            <div id="caregiverList">
+
+              <div th:each="player : ${notificationReads}" class="form-check">
+
+                  <div th:if="${#lists.isEmpty(notificationReads)}">
+                    <p>⚠️ Keine Pfleger verfügbar.</p>
+                  </div>
+
+                    <div th:if="notificationReads.notification.id == notification.id">
+                      <p type="hidden" th:value="${notification.id}" id="resetNotificationId2">
+
+                    <input class="form-check-input" type="checkbox"
+                           th:value="${player.getPfleger().id}"
+                           th:id="'caregiver-' + ${player.getPfleger().id}"
+                           name="caregivers">
+                    <label class="form-check-label" th:for="'caregiver-' + ${player.getPfleger().id}"
+                           th:text="${player.getPfleger().benutzername}"></label>
+
+                    </div>
+                </div>
+              </div>
+            </div>
+
+          <button type="submit" class="btn btn-warning w-100">Zurücksetzen</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+  </div>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+
+    // Bearbeitungsmodal mit aktuellen Daten füllen
+    document.querySelectorAll(".edit-btn").forEach(button => {
+      button.addEventListener("click", function(event) {
+        event.preventDefault();
+        const row = this.closest("tr");
+        const id = this.dataset.id;
+        const title = row.querySelector("td:nth-child(1)").innerText;
+        const message = row.querySelector("td:nth-child(2)").innerText;
+        const deleteon = row.querySelector("td:nth-child(4)").innerText;
+
+        document.getElementById("editId").value = id;
+        document.getElementById("editTitle").value = title;
+        document.getElementById("editMessage").value = message;
+        document.getElementById("editDeleteon").value = formatDateTime(deleteon);
+
+
+
+
+        new bootstrap.Modal(document.getElementById("editNotificationModal")).show();
+      });
+    });
+
+    // Formatierung für datetime-local Input
+    function formatDateTime(dateTimeString) {
+      const [date, time] = dateTimeString.split(" ");
+      const [day, month, year] = date.split(".");
+      return `${year}-${month}-${day}T${time}`;
+    }
+
+    // **Neue Benachrichtigung erstellen**
+    document.getElementById("createNotificationForm").addEventListener("submit", async function(event) {
+      event.preventDefault();
+
+
+      const deleteonValue = document.getElementById("newDeleteon").value;
+      const titleField = document.getElementById("newTitle");
+      const messageField = document.getElementById("newMessage");
+
+
+      if(title.length > 50){
+        titleField.classList.add("invalid-field");
+      }
+      if(message.length > 255){
+        messageField.classList.add("invalid-field");
+      }
+
+      if(title.length > 50 || message.length > 255){
+        alert("Fehler: Titel darf maximal 50 Zeichen und Nachricht maximal 255 Zeichen lang sein!");
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/notification/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title,
+            message,
+            deleteon: new Date(deleteonValue).getTime()
+          })
+        });
+
+        if (response.ok) {
+          alert("✅ Benachrichtigung erfolgreich erstellt!");
+          location.reload();
+        } else {
+          alert("❌ Fehler beim Erstellen der Benachrichtigung!");
+        }
+      } catch (error) {
+        console.error("❌ Fehler beim Senden der Anfrage:", error);
+        alert("❌ Netzwerk- oder Serverfehler!");
+      }
+    });
+
+    // **Bearbeitung speichern**
+    document.getElementById("editNotificationForm").addEventListener("submit", async function(event) {
+      event.preventDefault();
+
+      const id = document.getElementById("editId").value;
+      const title = document.getElementById("editTitle").value;
+      const message = document.getElementById("editMessage").value;
+      const deleteonValue = document.getElementById("editDeleteon").value;
+      const titleField = document.getElementById("editTitle");
+      const messageField = document.getElementById("editMessage");
+
+
+      if(title.length > 50){
+        titleField.classList.add("invalid-field");
+      }
+      if(message.length > 255){
+        messageField.classList.add("invalid-field");
+      }
+
+      if(title.length > 50 || message.length > 255){
+        alert("Fehler: Titel darf maximal 50 Zeichen und Nachricht maximal 255 Zeichen lang sein!");
+        return;
+      }
+
+
+
+      try {
+        const response = await fetch("/api/notification/edit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id,
+            title,
+            message,
+            deleteon: new Date(deleteonValue).getTime()
+          })
+        });
+
+        if (response.ok) {
+            alert("✅ Benachrichtigung erfolgreich bearbeitet!");
+
+          setTimeout(() => {
+            location.reload();
+          }, 500);
+        } else {
+          alert("❌ Fehler beim Bearbeiten der Benachrichtigung!");
+        }
+      } catch (error) {
+        console.error("❌ Fehler beim Senden der Anfrage:", error);
+        alert("❌ Netzwerk- oder Serverfehler!");
+      }
+    });
+
+    // **Benachrichtigung zurückziehen**
+    document.getElementById("resetNotificationForm").addEventListener("submit", async function(event) {
+      event.preventDefault();
+      const notificationId = document.getElementById("resetNotificationId2").value;
+      const selectedCaregivers = Array.from(document.querySelectorAll("input[name='caregivers']:checked"))
+              .map(cb => cb.value);
+
+      console.log("🟢 Zurücksetzen von Benachrichtigung", notificationId, "für Pfleger", selectedCaregivers);
+
+
+
+
+      try {
+        const response = await fetch("/api/notification/reset", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ notificationId, players: selectedCaregivers })
+        });
+
+        if (response.ok) {
+          alert("✅ Benachrichtigung erfolgreich zurückgesetzt!");
+          window.location.reload();
+        } else {
+          alert("❌ Fehler beim Zurückziehen der Benachrichtigung!");
+        }
+      } catch (error) {
+        console.error("❌ Fehler beim Senden der Anfrage:", error);
+        alert("❌ Netzwerk- oder Serverfehler!");
+      }
+    });
+
+    // **Löschen-Funktion mit event delegation (funktioniert für alle delete-Buttons)**
+    document.addEventListener("click", async function(event) {
+      console.log("🟢 Delete-Button wurde geklickt!", event.target);
+
+      const button = event.target.closest(".delete-btn");
+      if (button) {
+        event.preventDefault(); // Verhindert das Standardverhalten
+
+        const id = button.dataset.id; // ID des Elements
+        if (!id) {
+          console.error("❌ Fehler: Keine ID gefunden!");
+          return;
+        }
+
+        if (confirm("Möchtest du diese Benachrichtigung wirklich löschen?")) {
+          try {
+            const response = await fetch("/api/notification/delete", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id })
+            });
+
+            if (response.ok) {
+
+              const modal = bootstrap.Modal("Benachrichtigung gelöscht!");
+                modal.show();
+
+
+                setTimeout(() => {
+                  modal.hide();
+                }, 2000);
+
+
+
+
+              // Element mit der richtigen ID entfernen
+              const notificationRow = document.getElementById(`notification-${id}`);
+              if (notificationRow) {
+                notificationRow.remove();
+                window.location.reload();
+              } else {
+                console.warn(`⚠️ Konnte die Zeile mit ID notification-${id} nicht finden!`);
+              }
+            } else {
+              alert("❌ Fehler beim Löschen der Benachrichtigung!");
+            }
+          } catch (error) {
+            console.error("❌ Fehler beim Senden der Anfrage:", error);
+            alert("❌ Netzwerk- oder Serverfehler!");
+          }
+        }
+      }
+    });
+
+    document.getElementById("newTitle").addEventListener("input", function(){
+      if(this.value.length > 50){
+        this.classList.add("invalid-field");
+      } else {
+        this.classList.remove("invalid-field");
+      }
+    });
+
+    document.getElementById("newMessage").addEventListener("input", function(){
+      if(this.value.length > 255){
+        this.classList.add("invalid-field");
+      } else {
+        this.classList.remove("invalid-field");
+      }
+    });
+
+
+
+  });
+
+</script>
+
+<!-- Footer -->
+<footer th:insert="~{vorlagen/footer :: footer}"></footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</div>
+</body>
+</html>
