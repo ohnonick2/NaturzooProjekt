@@ -26,7 +26,8 @@ public class LieferantController {
     public String lieferant(Model model) {
 
         model.addAttribute("lieferantList", lieferantRepository.findAll());
-
+        model.addAttribute("orte", ortrepository.findAll());
+        model.addAttribute("adressen", adresseRepository.findAll());
         return "autharea/lieferant/lieferantmanagement";
     }
 

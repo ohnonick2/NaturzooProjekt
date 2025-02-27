@@ -94,91 +94,87 @@
 <div th:insert="~{vorlagen/sidebar :: sidebar}"></div>
 
 <!-- Main Content -->
-<div class="main-content" id="main-content">
-    <!-- Header -->
-    <div class="header">
-        <h2>Pfleger hinzufügen</h2>
-    </div>
-
-    <!-- Add Caretaker Section -->
-    <div class="card">
-        <h4>Fügen Sie einen neuen Pfleger hinzu</h4>
-
-        <form id="addPflegerForm" novalidate>
-            <!-- Benutzername -->
-            <div class="mb-3">
-                <label for="benutzername" class="form-label">Benutzername</label>
-                <input type="text" class="form-control" id="benutzername" required />
+<div class="modal fade" id="addPflegerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Neuen Pfleger hinzufügen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
+            <div class="modal-body">
+                <form id="addPflegerForm">
 
-            <!-- Vorname -->
-            <div class="mb-3">
-                <label for="vorname" class="form-label">Vorname</label>
-                <input type="text" class="form-control" id="vorname" required />
+                    <!-- Benutzername -->
+                    <div class="mb-3">
+                        <label for="benutzername" class="form-label">Benutzername</label>
+                        <input type="text" class="form-control" id="benutzername" placeholder="Benutzername" required>
+                    </div>
+
+                    <!-- Vorname -->
+                    <div class="mb-3">
+                        <label for="vorname" class="form-label">Vorname</label>
+                        <input type="text" class="form-control" id="vorname" placeholder="Vorname" required>
+                    </div>
+
+                    <!-- Nachname -->
+                    <div class="mb-3">
+                        <label for="nachname" class="form-label">Nachname</label>
+                        <input type="text" class="form-control" id="nachname" placeholder="Nachname" required>
+                    </div>
+
+                    <!-- Geburtsdatum -->
+                    <div class="mb-3">
+                        <label for="geburtstag" class="form-label">Geburtsdatum</label>
+                        <input type="date" class="form-control" id="geburtstag" required>
+                    </div>
+
+                    <!-- Ort (mit Auto-Vervollständigung) -->
+                    <div class="mb-3">
+                        <label for="ort" class="form-label">Ort (PLZ oder Name suchen)</label>
+                        <input type="text" class="form-control" id="ort" placeholder="Ort suchen..." autocomplete="off" required>
+                        <input type="hidden" id="ortPlz">
+                        <div id="autocomplete-suggestions" class="autocomplete-suggestions"></div>
+                    </div>
+
+                    <!-- Aktiviert -->
+                    <div class="mb-3">
+                        <label for="enabled" class="form-label">Aktiviert</label>
+                        <select class="form-control" id="enabled" required>
+                            <option value="true">Ja</option>
+                            <option value="false">Nein</option>
+                        </select>
+                    </div>
+
+                    <!-- Rolle -->
+                    <div class="mb-3">
+                        <label for="role" class="form-label">Rolle</label>
+                        <select class="form-control" id="role" required>
+                            <option value="" disabled selected>Bitte wählen</option>
+                            <option th:each="role : ${roles}" th:value="${role.name}" th:text="${role.name}"></option>
+                        </select>
+                    </div>
+
+                    <!-- Passwort -->
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Passwort</label>
+                        <input type="password" class="form-control" id="password" placeholder="Passwort eingeben" required>
+                    </div>
+
+                    <!-- Passwort bestätigen -->
+                    <div class="mb-3">
+                        <label for="confirmPassword" class="form-label">Passwort bestätigen</label>
+                        <input type="password" class="form-control" id="confirmPassword" placeholder="Passwort erneut eingeben" required>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                        <button type="submit" class="btn btn-success">Hinzufügen</button>
+                    </div>
+
+                </form>
             </div>
-
-            <!-- Nachname -->
-            <div class="mb-3">
-                <label for="nachname" class="form-label">Nachname</label>
-                <input type="text" class="form-control" id="nachname" required />
-            </div>
-
-            <!-- Geburtsdatum -->
-            <div class="mb-3">
-                <label for="geburtstag" class="form-label">Geburtsdatum</label>
-                <input type="date" class="form-control" id="geburtstag" required />
-            </div>
-
-            <!-- Aktiviert -->
-            <div class="mb-3">
-                <label for="enabled" class="form-label">Aktiviert</label>
-                <select class="form-control" id="enabled" required>
-                    <option value="true">Ja</option>
-                    <option value="false">Nein</option>
-                </select>
-            </div>
-
-            <!-- Rolle -->
-            <div class="mb-3">
-                <label for="role" class="form-label">Rolle</label>
-                <select class="form-control" id="role" name="role" required>
-                    <option value="" disabled selected>Bitte wählen</option>
-                    <option th:each="role : ${roles}" th:value="${role.name}" th:text="${role.name}"></option>
-                </select>
-            </div>
-
-            <!-- Ort -->
-            <div class="mb-3 autocomplete-container">
-                <label for="ort" class="form-label">Ort (PLZ oder Name suchen)</label>
-                <input type="text" class="form-control" id="ort" placeholder="Ort suchen..." autocomplete="off"  required />
-                <input type="hidden" id="ortPlz" /> <!-- Versteckte Eingabe für PLZ -->
-                <div id="autocomplete-suggestions" class="autocomplete-suggestions"></div>
-                <ul id="orte-list" style="display: none;">
-                    <li th:each="ort : ${orte}" th:data-id="${ort.plz}" th:data-plz="${ort.plz}" th:data-name="${ort.ortname}">
-                        <span th:text="${ort.ortname} + ' (' + ${ort.plz} + ')'"></span>
-                    </li>
-                </ul>
-            </div>
-
-
-            <!-- Passwort -->
-            <div class="mb-3">
-                <label for="password" class="form-label">Passwort</label>
-                <input type="password" class="form-control" id="password" placeholder="Passwort eingeben" required />
-            </div>
-
-            <!-- Passwort bestätigen -->
-            <div class="mb-3">
-                <label for="confirmPassword" class="form-label">Passwort bestätigen</label>
-                <input type="password" class="form-control" id="confirmPassword" placeholder="Passwort erneut eingeben" required />
-            </div>
-
-            <!-- Buttons -->
-            <div class="header-row">
-                <button type="button" class="btn btn-secondary" onclick="goBack()">Abbrechen</button>
-                <button type="submit" class="btn btn-primary">Hinzufügen</button>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 
@@ -216,26 +212,26 @@
         }
     });
 
-    document.getElementById('addPflegerForm').addEventListener('submit', function (e) {
+    document.getElementById("addPflegerForm").addEventListener("submit", function (e) {
         e.preventDefault();
 
-        const password = document.getElementById('password').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
+        const password = document.getElementById("password").value;
+        const confirmPassword = document.getElementById("confirmPassword").value;
 
         if (password !== confirmPassword) {
-            alert('Die Passwörter stimmen nicht überein.');
+            alert("Die Passwörter stimmen nicht überein!");
             return;
         }
 
         const payload = {
-            benutzername: document.getElementById('benutzername').value,
-            vorname: document.getElementById('vorname').value,
-            nachname: document.getElementById('nachname').value,
-            geburtstag: document.getElementById('geburtstag').value,
-            enabled: document.getElementById('enabled').value === 'true',
-            rollen: document.getElementById('role').value,
-            ort: document.getElementById('ortPlz').value,
-            password
+            benutzername: document.getElementById("benutzername").value,
+            vorname: document.getElementById("vorname").value,
+            nachname: document.getElementById("nachname").value,
+            geburtstag: document.getElementById("geburtstag").value,
+            ort: document.getElementById("ortPlz").value,
+            enabled: document.getElementById("enabled").value === "true",
+            role: document.getElementById("role").value,
+            password: password
         };
 
         fetch('/api/pfleger/add', {
@@ -245,13 +241,45 @@
         })
             .then(response => {
                 if (response.ok) {
-                    window.location.href = "/usermanagement";
+                    alert("Pfleger erfolgreich hinzugefügt!");
+                    location.reload();
                 } else {
-                    alert('Ein Fehler ist aufgetreten.');
+                    alert("Fehler beim Hinzufügen des Pflegers!");
                 }
             })
-            .catch(error => alert('Es ist ein Netzwerkfehler aufgetreten.'));
+            .catch(error => {
+                console.error("Netzwerkfehler:", error);
+                alert("Fehler beim Speichern der Daten!");
+            });
     });
+
+    document.getElementById("ort").addEventListener("input", function () {
+        const query = this.value.toLowerCase();
+        const suggestionsBox = document.getElementById("autocomplete-suggestions");
+        const ortList = document.querySelectorAll("#orte-list li");
+
+        suggestionsBox.innerHTML = "";
+
+        if (query.length > 2) {
+            ortList.forEach(ort => {
+                const ortName = ort.getAttribute("data-name").toLowerCase();
+                const ortPlz = ort.getAttribute("data-plz");
+
+                if (ortName.includes(query) || ortPlz.includes(query)) {
+                    const suggestion = document.createElement("div");
+                    suggestion.className = "autocomplete-suggestion";
+                    suggestion.textContent = `${ort.getAttribute("data-name")} (${ortPlz})`;
+                    suggestion.onclick = () => {
+                        document.getElementById("ort").value = ort.getAttribute("data-name") + " (" + ortPlz + ")";
+                        document.getElementById("ortPlz").value = ortPlz;
+                        suggestionsBox.innerHTML = "";
+                    };
+                    suggestionsBox.appendChild(suggestion);
+                }
+            });
+        }
+    });
+
 
     function goBack() {
         window.history.back();

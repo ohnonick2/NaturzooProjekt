@@ -1,6 +1,5 @@
 package net.ohnonick2.naturzooprojekt.backend.pfleger;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.ohnonick2.naturzooprojekt.db.ort.Ort;
@@ -12,7 +11,6 @@ import net.ohnonick2.naturzooprojekt.repository.Pflegerrepository;
 import net.ohnonick2.naturzooprojekt.repository.RolleRepository;
 import net.ohnonick2.naturzooprojekt.repository.RolleUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,8 +20,8 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
-
 
 @RestController
 @RequestMapping(value = "/api/pfleger")
@@ -40,195 +38,130 @@ public class PflegerManager {
 
     @Autowired
     private Ortrepository ortrepository;
+
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public PflegerManager() {
-    }
-
+    // ✅ Pfleger löschen
     @PostMapping("/delete")
     public ResponseEntity<String> deletePfleger(@RequestBody String body) {
-        if (SecurityContextHolder.getContext().getAuthentication() == null) return ResponseEntity.badRequest().build();
-
-        String username = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
-        JsonObject userloggedIn = JsonParser.parseString(username).getAsJsonObject();
         JsonObject targetUser = JsonParser.parseString(body).getAsJsonObject();
-        if (userloggedIn.get("id").getAsLong() == targetUser.get("id").getAsLong()) {
-            return ResponseEntity.badRequest().build();
-        }
+        Long pflegerId = targetUser.get("id").getAsLong();
 
-        Pfleger pfleger = pflegerrepository.findById( targetUser.get("id").getAsLong()).get();
-        if (pfleger == null) {
-            return ResponseEntity.badRequest().build();
-        }
-        List<RolleUser> rolleUserList = rolleUserRepository.findAll();
+        Pfleger pfleger = pflegerrepository.findById(pflegerId).orElse(null);
+        if (pfleger == null) return ResponseEntity.badRequest().body("Pfleger nicht gefunden");
+
+        List<RolleUser> rolleUserList = rolleUserRepository.findByRolleId(pfleger.getId());
 
         for (RolleUser rolleUser : rolleUserList) {
-            if (pfleger.getId() == rolleUser.getUser().getId()) {
-                rolleUserRepository.delete(rolleUser);
-            }
-
+            rolleUserRepository.delete(rolleUser);
         }
-
-
-
         pflegerrepository.delete(pfleger);
-        return ResponseEntity.ok().build();
+
+        return ResponseEntity.ok("Pfleger erfolgreich gelöscht");
     }
 
+    // ✅ Pfleger bearbeiten
     @PostMapping("/edit")
     public ResponseEntity<String> editPfleger(@RequestBody String body) {
-        System.out.println("EDIT");
+        JsonObject targetUser = JsonParser.parseString(body).getAsJsonObject();
 
-        // Überprüfen, ob der Benutzer authentifiziert ist
-        if (SecurityContextHolder.getContext().getAuthentication() == null) {
-            return ResponseEntity.badRequest().body("Benutzer ist nicht authentifiziert.");
-        }
+        System.out.println("PFLEGER BEARBEITEN: " + "\n" + body);
 
-        // Benutzernamen des angemeldeten Benutzers abrufen
-        String username = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+        Long pflegerId = targetUser.get("id").getAsLong();
 
-        JsonObject userloggedIn;
-        JsonObject targetUser;
-        try {
-            userloggedIn = JsonParser.parseString(username).getAsJsonObject();
-            targetUser = JsonParser.parseString(body).getAsJsonObject();
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Fehler beim Parsen der JSON-Daten.");
-        }
+        Pfleger pfleger = pflegerrepository.findById(pflegerId).orElse(null);
+        if (pfleger == null) return ResponseEntity.badRequest().body("Pfleger nicht gefunden");
 
-
-
-        // Verhindern, dass der Benutzer sich selbst bearbeitet
-        if (userloggedIn.get("id").getAsLong() == targetUser.get("id").getAsLong()) {
-            return ResponseEntity.badRequest().body("Benutzer kann sich nicht selbst bearbeiten.");
-        }
-
-        System.out.println("TEST");
-
-        // Ziel-Pfleger aus der Datenbank abrufen
-        Pfleger pfleger = pflegerrepository.findById(targetUser.get("id").getAsLong()).orElse(null);
-        if (pfleger == null) {
-            return ResponseEntity.badRequest().body("Pfleger mit der angegebenen ID wurde nicht gefunden.");
-        }
-        System.out.println("TEST");
-        // Aktualisierung der Pfleger-Daten
         pfleger.setBenutzername(targetUser.get("benutzername").getAsString());
         pfleger.setVorname(targetUser.get("vorname").getAsString());
         pfleger.setNachname(targetUser.get("nachname").getAsString());
         pfleger.setEnabled(targetUser.get("enabled").getAsBoolean());
+        pfleger.setGeburtsdatum(LocalDate.parse(targetUser.get("geburtsdatum").getAsString()));
 
-        // Geburtsdatum setzen
-        String geburtstag = targetUser.get("geburtstag").getAsString();
-        if (geburtstag != null && !geburtstag.isEmpty()) {
-            pfleger.setGeburtsdatum(LocalDate.parse(geburtstag)); // Erwartet ISO-Format (yyyy-MM-dd)
-        } else {
-            pfleger.setGeburtsdatum(null); // Geburtsdatum auf null setzen, falls leer
-        }
-        System.out.println("TEST");
-        // Ort setzen
-        JsonObject ortJson = targetUser.getAsJsonObject("ort");
-        if (ortJson != null && ortJson.has("plz")) {
-            int plz = ortJson.get("plz").getAsInt(); // PLZ extrahieren
-            Ort ort = ortrepository.findByPlz(plz); // Ort aus der Datenbank abrufen
-            if (ort != null) {
-                pfleger.setOrt(ort);
-            } else {
-                return ResponseEntity.badRequest().body("Ort mit der angegebenen PLZ wurde nicht gefunden.");
+        try {
+            if (targetUser.has("lockedUntil")) {
+                String lockedUntilStr = targetUser.get("lockedUntil").getAsString();
+
+                // Format anpassen an das JSON-Format: "yyyy-MM-dd'T'HH:mm"
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+
+                // String in LocalDateTime umwandeln
+                LocalDateTime lockedUntil = LocalDateTime.parse(lockedUntilStr, formatter);
+                pfleger.setLockedUntil(lockedUntil);
             }
-        } else {
-            return ResponseEntity.badRequest().body("Ungültige oder fehlende Ort-Daten.");
+        } catch (DateTimeParseException e) {
+            System.err.println("Fehler beim Parsen von lockedUntil: " + e.getMessage());
         }
 
-        // Änderungen speichern
+
+        Ort ort;
+        try {
+            int ortPlz = targetUser.get("ort").getAsInt();
+            ort = ortrepository.findByPlz(ortPlz);
+        } catch (NumberFormatException e) {
+            String ortName = targetUser.get("ort").getAsString();
+            ort = ortrepository.findByOrtname(ortName);
+        }
+        if (ort == null) return ResponseEntity.badRequest().body("Ort nicht gefunden");
+
         pflegerrepository.save(pfleger);
-        return ResponseEntity.ok("Pfleger erfolgreich aktualisiert.");
+        return ResponseEntity.ok("Pfleger erfolgreich aktualisiert");
     }
 
 
     @PostMapping("/changePassword")
     public ResponseEntity<String> changePassword(@RequestBody String body) {
-        System.out.println("TEST CHANGE");
-        if (SecurityContextHolder.getContext().getAuthentication() == null) return ResponseEntity.badRequest().build();
-
-        String username = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
-        System.out.println(username);
-        System.out.println("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDdd");
-        System.out.println(body);
-
-        JsonObject userLoggedIN = JsonParser.parseString(username).getAsJsonObject();
         JsonObject targetUser = JsonParser.parseString(body).getAsJsonObject();
-        if (targetUser == null || userLoggedIN == null) return ResponseEntity.badRequest().body("Irgendwas ist schiefgelaufen");
-        if (targetUser == userLoggedIN) return ResponseEntity.badRequest().body("Geht nicht ,weil geht nicht");
+        Pfleger pfleger = pflegerrepository.findById(targetUser.get("id").getAsLong()).orElse(null);
 
-        Pfleger pfleger = pflegerrepository.findPflegerById(targetUser.get("id").getAsLong());
+        if (pfleger == null) return ResponseEntity.badRequest().body("Pfleger nicht gefunden");
+
         pfleger.setPassword(passwordEncoder.encode(targetUser.get("password").getAsString()));
-
         pflegerrepository.save(pfleger);
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok("Passwort erfolgreich geändert");
     }
+
 
     @PostMapping("/add")
     public ResponseEntity<String> addPfleger(@RequestBody String body) {
-
-
-        if (SecurityContextHolder.getContext().getAuthentication() == null) {
-            return ResponseEntity.badRequest().body("Nicht authentifiziert");
-        }
-
-        String username = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
-        JsonObject userloggedIn = JsonParser.parseString(username).getAsJsonObject();
-
-
-
         JsonObject targetUser = JsonParser.parseString(body).getAsJsonObject();
-
-        Pfleger pflegerCheck = pflegerrepository.findByBenutzername(targetUser.get("benutzername").getAsString());
-        if (pflegerCheck != null) {
+        System.out.println("PFLEGER HINZUFÜGEN: " + "\n" + body);
+        if (pflegerrepository.findByBenutzername(targetUser.get("benutzername").getAsString()) != null) {
             return ResponseEntity.badRequest().body("Benutzername bereits vergeben");
         }
+
+        //if enebled is not set, set it to true
+        if (!targetUser.has("enabled")) {
+            targetUser.addProperty("enabled", true);
+        }
+
+
 
         Pfleger pfleger = new Pfleger();
         pfleger.setBenutzername(targetUser.get("benutzername").getAsString());
         pfleger.setVorname(targetUser.get("vorname").getAsString());
         pfleger.setNachname(targetUser.get("nachname").getAsString());
         pfleger.setEnabled(targetUser.get("enabled").getAsBoolean());
-        pfleger.setPassword(passwordEncoder.encode(targetUser.get("password").getAsString()));
-        pfleger.setGeburtsdatum(LocalDate.parse(targetUser.get("geburtstag").getAsString()));
-        System.out.println("rollen: " + targetUser.get("rollen").getAsString());
 
-        Rolle rolle = rolleRepository.findRolleByName(targetUser.get("rollen").getAsString());
-        if (rolle == null) {
-            return ResponseEntity.badRequest().body("Rolle nicht gefunden");
+        pfleger.setPassword(passwordEncoder.encode(targetUser.get("passwort").getAsString()));
+        pfleger.setGeburtsdatum(LocalDate.parse(targetUser.get("geburtsdatum").getAsString()));
+
+
+        Ort ort;
+        try {
+            int ortPlz = targetUser.get("ort").getAsInt();
+            ort = ortrepository.findByPlz(ortPlz);
+        } catch (NumberFormatException e) {
+            String ortName = targetUser.get("ort").getAsString();
+            ort = ortrepository.findByOrtname(ortName);
         }
+        if (ort == null) return ResponseEntity.badRequest().body("Ort nicht gefunden");
 
-        /**
-        if (targetUser.has("ortName") || targetUser.get("ortName").getAsString().isEmpty() || !targetUser.has("ort") || targetUser.get("ort").isJsonNull()) {
-            String ortName = targetUser.get("ortName").getAsString();
-            String[] parts = ortName.split(" ");
-            if (parts.length > 0) {
-                targetUser.addProperty("ort", parts[0]);
-            } else {
-                return ResponseEntity.badRequest().body("Ungültiger Ortname");
-            }
-        }
-         */
-
-        Ort existingOrt = ortrepository.findByPlz(targetUser.get("ort").getAsInt());
-        if (existingOrt == null) {
-            existingOrt = new Ort(targetUser.get("ort").getAsInt(), targetUser.get("ortName").getAsString());
-            ortrepository.save(existingOrt);
-        }
-
-        pfleger.setOrt(existingOrt);
+        pfleger.setOrt(ort);
         pflegerrepository.save(pfleger);
-        RolleUser rolleUser = new RolleUser();
-        rolleUser.setUser(pfleger);
-        rolleUser.setRolle(rolle);
-        rolleUserRepository.save(rolleUser);
 
         return ResponseEntity.ok("Pfleger erfolgreich hinzugefügt");
     }
-
 }

@@ -1,263 +1,319 @@
 <!DOCTYPE html>
-<html lang="de" xmlns:sec="http://www.w3.org/1999/xhtml" xmlns="http://www.w3.org/1999/html">
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pflegermanagement</title>
+  <title>Pflegermanagement | Rheiner Zoo</title>
+
   <div th:insert="~{vorlagen/icon :: icon}"></div>
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" th:href="@{/css/styles.css}">
+
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-image: url('/images/background.png');
-      margin: 0;
-      padding: 0;
       background-color: #f4f6f9;
-      overflow-x: hidden;
     }
-
     .main-content {
       margin-left: 250px;
       padding: 20px;
-      transition: margin-left 0.3s ease;
     }
-
-    .main-content.collapsed {
-      margin-left: 70px;
-    }
-
     .card {
       border: none;
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-      margin-bottom: 20px;
+      padding: 20px;
     }
-
-    .header {
-      background-color: #1f4e3e;
+    .btn-primary, .btn-danger {
       color: white;
-      padding: 15px;
-      text-align: center;
-      border-radius: 8px;
-    }
-
-    .header-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-
-    .btn-success {
-      background-color: #218838;
-      color: white;
-    }
-
-    table tbody td {
-      word-break: break-word;
-    }
-
-    .search-container {
-      margin-bottom: 15px;
-    }
-
-    .search-container input {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
-
-    #pagination {
-      margin-top: 20px;
-    }
-
-    #pagination button {
-      margin: 0 5px;
     }
   </style>
 </head>
 
 <body>
+
 <!-- Sidebar -->
 <div th:insert="~{vorlagen/sidebar :: sidebar}"></div>
 
 <!-- Main Content -->
-<div class="main-content" id="main-content">
-  <!-- Header -->
-  <div class="header">
-    <h2>Pflegermanagement</h2>
+<div class="main-content">
+  <div th:replace="~{vorlagen/header :: header(pageTitle='Pfleger Verwaltung - Rheiner Zoo')}"></div>
+
+  <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addPflegerModal">
+    <i class="fas fa-user-plus"></i> Pfleger hinzufügen
+  </button>
+
+  <!-- Suchfeld -->
+  <div class="mt-3">
+    <label for="searchInput"></label><input type="text" id="searchInput" class="form-control" placeholder="Pfleger suchen..." onkeyup="filterTable()">
   </div>
 
-  <!-- Caretaker Management Section -->
-  <div class="card p-4">
-    <div class="header-row">
-      <h4>Verwalten Sie die Benutzer für das Pflegermanagement</h4>
-      <div>
-        <button class="btn btn-success" onclick="addPfleger()" sec:authorize="hasAuthority('USER_MANAGEMENT_WRITE') or hasAuthority('*')">
-          <i class="fas fa-user-plus"></i> Pfleger hinzufügen
-        </button>
+  <!-- Tabelle -->
+  <div class="card mt-3">
+    <h4>Pflegerübersicht</h4>
+    <table class="table table-bordered">
+      <thead>
+      <tr>
+        <th>ID</th>
+        <th>Benutzername</th>
+        <th>Vorname</th>
+        <th>Nachname</th>
+        <th>Geburtsdatum</th>
+        <th>Ort</th>
+        <th>Aktionen</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="user : ${usersWithRoles}">
+        <td th:text="${user.pfleger.id}"></td>
+        <td th:text="${user.pfleger.benutzername}"></td>
+        <td th:text="${user.pfleger.vorname}"></td>
+        <td th:text="${user.pfleger.nachname}"></td>
+        <td th:text="${#temporals.format(user.pfleger.geburtsdatum, 'dd.MM.yyyy')}"></td>
+        <td th:text="${user.pfleger.ort.ortname}"></td>
+        <td>
+
+          <div class="btn-group">
+            <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+              Aktionen
+            </button>
+            <ul class="dropdown-menu">
+              <li>
+                <a class="dropdown-item edit-btn" href="#"
+                   onclick="openEditModal(this)"
+                   th:data-id="${user.pfleger.id}"
+                   th:data-username="${user.pfleger.benutzername}"
+                   th:data-vorname="${user.pfleger.vorname}"
+                   th:data-nachname="${user.pfleger.nachname}"
+                   th:data-geburtsdatum="${user.pfleger.geburtsdatum}"
+                   th:data-ort="${user.pfleger.ort.ortname}"
+                   th:data-enabled="${user.pfleger.enabled}"
+                   th:data-lockeduntil="${user.pfleger.lockedUntil}">
+                  <i class="fas fa-edit"></i> Bearbeiten
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item delete-btn" href="#"
+                   th:data-id="${user.pfleger.id}"
+                   onclick="'deleteUser(${user.pfleger.id})'">
+                  <i class="fas fa-trash"></i> Löschen
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="#"
+                   th:data-id="${user.pfleger.id}"
+                   th:data-rolle="${user.roleNames}"
+                   th:data-gesperrt="${user.pfleger.getLockedUntil() != null ? 'true' : 'false'}"
+                   th:data-gesperrtbis="${user.pfleger.getLockedUntil() != null ? #temporals.format(user.pfleger.getLockedUntil(), 'dd.MM.yyyy HH:mm') : ''}"
+                   onclick="openDetailsModal(this)">
+                  <i class="fas fa-info-circle"></i> Mehr Info
+                </a>
+              </li>
+            </ul>
+          </div>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Modal: Pfleger hinzufügen -->
+  <div class="modal fade" id="addPflegerModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Neuen Pfleger hinzufügen</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="addPflegerForm">
+            <label>Benutzername</label>
+            <input type="text" class="form-control mb-3" id="addBenutzername" required>
+            <label>Vorname</label>
+            <input type="text" class="form-control mb-3" id="addVorname" required>
+            <label>Nachname</label>
+            <input type="text" class="form-control mb-3" id="addNachname" required>
+            <label>Geburtsdatum</label>
+            <input type="date" class="form-control mb-3" id="addGeburtsdatum" required>
+            <label>Ort</label>
+            <input type="text" class="form-control mb-3" id="addOrt" list="ortList" required>
+            <datalist id="addortList">
+              <option th:each="ort : ${orte}" th:id="${ort.plz}" th:value="${ort.ortname}"></option>
+            </datalist>
+            <label>Passwort</label>
+            <input type="password" class="form-control mb-3" id="addPasswort" required>
+            <button type="submit" class="btn btn-success">Hinzufügen</button>
+          </form>
+        </div>
       </div>
     </div>
+  </div>
 
-    <!-- Search Field -->
-    <div class="search-container">
-      <input type="text" id="searchInput" placeholder="Pfleger suchen (z. B. Name, Benutzername, Ort)" onkeyup="filterTable()">
-    </div>
-
-    <!-- User List -->
-    <div th:if="${usersWithRoles.size() > 0}">
-      <table class="table table-striped" id="pflegerTable">
-        <thead>
-        <tr>
-          <th>ID</th>
-          <th>Benutzername</th>
-          <th>Vorname</th>
-          <th>Nachname</th>
-          <th>Geburtsdatum</th>
-          <th>Ort</th>
-          <th>Rollen</th>
-          <th>Aktionen</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="userWithRoles : ${usersWithRoles}">
-          <td th:text="${userWithRoles.pfleger.id}"></td>
-          <td th:text="${userWithRoles.pfleger.benutzername}"></td>
-          <td th:text="${userWithRoles.pfleger.vorname}"></td>
-          <td th:text="${userWithRoles.pfleger.nachname}"></td>
-          <td th:text="${userWithRoles.pfleger.geburtsdatum != null ? #temporals.format(userWithRoles.pfleger.geburtsdatum, 'dd.MM.yyyy') : 'Kein Datum'}"></td>
-          <td th:text="${userWithRoles.pfleger.ort.ortname}"></td>
-          <td>
-            <ul>
-              <li th:each="role : ${userWithRoles.roles}" th:text="${role.name}"></li>
-            </ul>
-          </td>
-          <td>
-            <div sec:authorize="hasAuthority('FUTTERPLAN_MANAGEMENT_WRITE') or hasAuthority('*')">
-              <div th:if="${!userWithRoles.isSuperadmin()}">
-                <button class="btn btn-primary btn-action" th:onclick="'editUser(' + ${userWithRoles.pfleger.id} + ')'">
-                  <i class="fas fa-edit"></i> Bearbeiten
-                </button>
-                <button class="btn btn-danger btn-action" th:onclick="'deleteUser(' + ${userWithRoles.pfleger.id} + ')'">
-                  <i class="fas fa-trash"></i> Löschen
-                </button>
-              </div>
-              <div th:if="${userWithRoles.isSuperadmin()}">
-                <span>Superadmin kann nicht bearbeitet oder gelöscht werden</span>
-              </div>
-            </div>
-          </td>
-        </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Pagination -->
-    <div id="pagination" class="d-flex justify-content-center"></div>
-
-    <!-- No Users Message -->
-    <div th:if="${usersWithRoles.size() == 0}" class="alert alert-warning" role="alert">
-      Es sind keine Benutzer vorhanden. Bitte fügen Sie einen Benutzer hinzu.
+  <!-- Modal: Pfleger bearbeiten -->
+  <div class="modal fade" id="editPflegerModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Pfleger bearbeiten</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editPflegerForm">
+            <input type="hidden" id="editId">
+            <label>Benutzername</label>
+            <input type="text" class="form-control mb-3" id="editBenutzername" required>
+            <label>Vorname</label>
+            <input type="text" class="form-control mb-3" id="editVorname" required>
+            <label>Nachname</label>
+            <input type="text" class="form-control mb-3" id="editNachname" required>
+            <label>Geburtsdatum</label>
+            <input type="date" class="form-control mb-3" id="editGeburtsdatum" required>
+            <label>Ort</label>
+            <input type="text" class="form-control mb-3" id="editOrt" list="ortList" required>
+            <datalist id="ortList">
+              <option th:each="ort : ${orte}" th:id="${ort.plz}" th:value="${ort.ortname}"></option>
+            </datalist>
+            <label>Aktiviert</label>
+            <select class="form-control mb-3" id="editEnabled" required>
+              <option value="true">Ja</option>
+              <option value="false">Nein</option>
+            </select>
+            <label>Gesperrt bis</label>
+            <input type="datetime-local" class="form-control mb-3" id="editLockedUntil">
+            <button type="submit" class="btn btn-primary">Speichern</button>
+          </form>
+        </div>
+      </div>
     </div>
   </div>
+
+  <div class="modal fade" id="detailsPflegerModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Pfleger Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p><strong>ID:</strong> <span id="detailsId"></span></p>
+          <p><strong>Rolle:</strong> <span id="detailsRolle"></span></p>
+          <p><strong>Gesperrt:</strong> <span id="detailsGesperrt"></span></p>
+          <div id="gesperrtDetails" style="display: none;">
+            <p><strong>Gesperrt bis:</strong> <span id="detailsGesperrtBis"></span></p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+
 </div>
 
-<!-- Footer -->
-<footer th:insert="~{vorlagen/footer :: footer}"></footer>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  let currentPage = 1;
-  const rowsPerPage = 20; // Anzahl der Zeilen pro Seite
+  function openEditModal(button) {
+    document.getElementById("editId").value = button.getAttribute("data-id");
+    document.getElementById("editBenutzername").value = button.getAttribute("data-username");
+    document.getElementById("editVorname").value = button.getAttribute("data-vorname");
+    document.getElementById("editNachname").value = button.getAttribute("data-nachname");
+    document.getElementById("editGeburtsdatum").value = button.getAttribute("data-geburtsdatum") || "";
+    document.getElementById("editOrt").value = button.getAttribute("data-ort") || "";
+    document.getElementById("editEnabled").value = button.getAttribute("data-enabled") === "true" ? "true" : "false";
+    document.getElementById("editLockedUntil").value = button.getAttribute("data-lockeduntil") || "";
 
-  function addPfleger() {
-    window.location.href = '/addPfleger';
+    new bootstrap.Modal(document.getElementById("editPflegerModal")).show();
   }
 
-  function editUser(userId) {
-    window.location.href = '/editUser/' + userId;
-  }
+  async function deleteUser(id) {
+    if (!confirm("Möchtest du diesen Pfleger wirklich löschen?")) return;
 
-  function deleteUser(userId) {
-    if (confirm('Möchten Sie den Benutzer mit ID ' + userId + ' wirklich löschen?')) {
-      fetch('/api/pfleger/delete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ id: userId })
-      })
-              .then(response => {
-                if (response.ok) {
-                  alert('Benutzer erfolgreich gelöscht!');
-                  location.reload();
-                } else {
-                  response.text().then(text => {
-                    alert('Fehler beim Löschen: ' + text);
-                  });
-                }
-              })
-              .catch(error => {
-                console.error('Fehler:', error);
-                alert('Es ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.');
-              });
+    const response = await fetch("/api/pfleger/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id })
+    });
+
+    if (response.ok) {
+      alert("✅ Pfleger erfolgreich gelöscht!");
+      location.reload();
+    } else {
+      alert("❌ Fehler beim Löschen des Pflegers!");
     }
   }
 
-  function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('collapsed');
-    document.getElementById('main-content').classList.toggle('collapsed');
-  }
+  document.getElementById("addPflegerForm").addEventListener("submit", async function(event) {
+    event.preventDefault();
+    const benutzername = document.getElementById("addBenutzername").value;
+    const vorname = document.getElementById("addVorname").value;
+    const nachname = document.getElementById("addNachname").value;
+    const geburtsdatum = document.getElementById("addGeburtsdatum").value;
+    const ort = document.getElementById("addOrt").value;
+    const passwort = document.getElementById("addPasswort").value;
 
-  function filterTable() {
-    const input = document.getElementById('searchInput').value.toLowerCase();
-    const table = document.getElementById('pflegerTable');
-    const rows = table.getElementsByTagName('tr');
+    const response = await fetch("/api/pfleger/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ benutzername, vorname, nachname, geburtsdatum, ort , passwort })
+    });
 
-    for (let i = 1; i < rows.length; i++) { // i = 1, um die Header-Zeile zu überspringen
-      const cells = rows[i].getElementsByTagName('td');
-      let match = false;
-
-      for (let j = 0; j < cells.length; j++) {
-        if (cells[j] && cells[j].innerText.toLowerCase().includes(input)) {
-          match = true;
-          break;
-        }
-      }
-
-      rows[i].style.display = match ? '' : 'none';
+    if (response.ok) {
+      alert("✅ Pfleger erfolgreich hinzugefügt!");
+      location.reload();
+    } else {
+      alert("❌ Fehler beim Hinzufügen des Pflegers!");
     }
-  }
-
-  function displayTablePage(page) {
-    const table = document.getElementById('pflegerTable');
-    const rows = table.getElementsByTagName('tr');
-    const pagination = document.getElementById('pagination');
-    const totalPages = Math.ceil((rows.length - 1) / rowsPerPage); // -1 für die Header-Zeile
-
-    if (page < 1) page = 1;
-    if (page > totalPages) page = totalPages;
-
-    currentPage = page;
-
-    for (let i = 1; i < rows.length; i++) { // i = 1, um die Header-Zeile zu überspringen
-      rows[i].style.display = (i > (page - 1) * rowsPerPage && i <= page * rowsPerPage) ? '' : 'none';
-    }
-
-    pagination.innerHTML = '';
-    for (let i = 1; i <= totalPages; i++) {
-      const button = document.createElement('button');
-      button.innerText = i;
-      button.className = `btn btn-sm ${i === currentPage ? 'btn-primary' : 'btn-secondary'}`;
-      button.onclick = () => displayTablePage(i);
-      pagination.appendChild(button);
-    }
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    displayTablePage(1);
   });
+
+  document.getElementById("editPflegerForm").addEventListener("submit", async function(event) {
+    event.preventDefault();
+    const id = document.getElementById("editId").value;
+    const benutzername = document.getElementById("editBenutzername").value;
+    const vorname = document.getElementById("editVorname").value;
+    const nachname = document.getElementById("editNachname").value;
+    const geburtsdatum = document.getElementById("editGeburtsdatum").value;
+    const ort = document.getElementById("editOrt").value;
+    const enabled = document.getElementById("editEnabled").value;
+    const lockedUntil = document.getElementById("editLockedUntil").value;
+
+    const response = await fetch("/api/pfleger/edit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, benutzername, vorname, nachname, geburtsdatum, ort, enabled, lockedUntil })
+    });
+
+    if (response.ok) {
+      alert("✅ Pfleger erfolgreich bearbeitet!");
+      location.reload();
+    } else {
+      alert("❌ Fehler beim Bearbeiten des Pflegers!");
+    }
+  });
+
+  function openDetailsModal(button) {
+    document.getElementById("detailsId").innerText = button.getAttribute("data-id");
+
+    const roles = button.getAttribute("data-rolle");
+    if (roles) {
+      document.getElementById("detailsRolle").innerText = roles.split(',').join(', ');
+    } else {
+      document.getElementById("detailsRolle").innerText = "Keine Rolle";
+    }
+
+    const gesperrt = button.getAttribute("data-gesperrt") === "true";
+    document.getElementById("detailsGesperrt").innerText = gesperrt ? "Ja" : "Nein";
+    if (gesperrt) {
+      document.getElementById("gesperrtDetails").style.display = "block";
+      document.getElementById("detailsGesperrtBis").innerText = button.getAttribute("data-gesperrtbis") || "N/A";
+    } else {
+      document.getElementById("detailsGesperrt").innerText = "Nicht gesperrt";
+      document.getElementById("gesperrtDetails").style.display = "none";
+    }
+    new bootstrap.Modal(document.getElementById("detailsPflegerModal")).show();
+  }
+
 </script>
+
 </body>
 </html>

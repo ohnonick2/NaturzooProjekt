@@ -22,6 +22,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -31,6 +32,7 @@ import java.util.Random;
 
 @Configuration
 public class WebSecurityConfig implements WebMvcConfigurer {
+
 
 
     @Bean
@@ -126,13 +128,16 @@ public class WebSecurityConfig implements WebMvcConfigurer {
 
                             response.sendRedirect("/login?error=session"); // Weiterleitung bei abgelaufener Sitzung
                         })
+
                         .maxSessionsPreventsLogin(true) // Zusätzliche Anmeldungen verhindern
                         .sessionRegistry(sessionRegistry()) // SessionRegistry für Verwaltung
+
                 )
                 .sessionManagement(session -> session
                         .maximumSessions(1) // Nur eine aktive Sitzung pro Benutzer
                         .maxSessionsPreventsLogin(true)
                         .sessionRegistry(sessionRegistry())
+
 
                 )
                 .exceptionHandling(exceptionHandling -> exceptionHandling
@@ -142,6 +147,7 @@ public class WebSecurityConfig implements WebMvcConfigurer {
 
         return http.build();
     }
+
 
 
 

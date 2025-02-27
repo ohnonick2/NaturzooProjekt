@@ -24,7 +24,7 @@ public class NotificationManager {
     @PostMapping("/create")
     public ResponseEntity<String> createNotification(@RequestBody String body) {
         JsonObject jsonObject = JsonParser.parseString(body).getAsJsonObject();
-
+        System.out.println(body);
         if (!jsonObject.has("title") || !jsonObject.has("message") || !jsonObject.has("deleteon")) {
             return ResponseEntity.badRequest().body("Missing parameters");
         }

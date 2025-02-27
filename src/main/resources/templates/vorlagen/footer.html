@@ -1,18 +1,37 @@
 <th:block th:fragment="footer">
     <style>
+        /* Body und HTML auf volle Höhe setzen */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Wrapper für den Hauptinhalt */
+        .content-wrapper {
+            flex: 1; /* Sorgt dafür, dass der Inhalt den Platz auffüllt */
+            padding-bottom: 60px; /* Platz für den Footer */
+        }
+
+        /* Footer fixieren */
         footer {
             background-color: #212529;
             color: #bbb;
             padding: 10px 0;
             font-size: 14px;
             text-align: center;
+            width: 100%;
+            position: relative;
+            bottom: 0;
         }
 
         footer a {
             color: #28a745;
-            margin: 0 8px;
             text-decoration: none;
             font-size: 14px;
+            margin: 0 10px;
         }
 
         footer a:hover {
@@ -21,36 +40,21 @@
 
         .social-icons a {
             font-size: 16px;
-            margin: 0 5px;
+            margin: 0 8px;
             color: #bbb;
         }
 
         .social-icons a:hover {
             color: #28a745;
         }
-
-        /* Footer minimal halten */
-        footer {
-            background-color: #212529;
-            color: #bbb;
-            padding: 10px 0;
-            font-size: 14px;
-            text-align: center;
-        }
-
-        footer a {
-            color: #28a745;
-            text-decoration: none;
-            font-size: 14px;
-        }
-
-        footer a:hover {
-            text-decoration: underline;
-        }
     </style>
 
+    <div class="content-wrapper">
+        <!-- Dein Hauptinhalt hier -->
+    </div>
+
     <footer>
-        <p>© 2025 Rheiner Zoo</p>
+        <p>© <span id="currentYear"></span> Rheiner Zoo</p>
         <p>
             <a href="https://www.naturzoo.de/impressum" target="_blank">Impressum</a> |
             <a href="https://www.naturzoo.de/datenschutz" target="_blank">Datenschutz</a> |
@@ -62,5 +66,9 @@
             <a href="https://www.facebook.com/naturzoo" target="_blank"><i class="fab fa-facebook"></i></a>
         </div>
     </footer>
-</th:block>
 
+    <script>
+        // Setzt das aktuelle Jahr automatisch
+        document.getElementById("currentYear").textContent = new Date().getFullYear();
+    </script>
+</th:block>

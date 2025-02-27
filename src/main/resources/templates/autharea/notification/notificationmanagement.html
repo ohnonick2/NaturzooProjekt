@@ -244,20 +244,18 @@
     document.getElementById("createNotificationForm").addEventListener("submit", async function(event) {
       event.preventDefault();
 
-
+      const title = document.getElementById("newTitle").value;
+      const message = document.getElementById("newMessage").value;
       const deleteonValue = document.getElementById("newDeleteon").value;
-      const titleField = document.getElementById("newTitle");
-      const messageField = document.getElementById("newMessage");
 
-
-      if(title.length > 50){
-        titleField.classList.add("invalid-field");
+      if (title.length > 50) {
+        document.getElementById("newTitle").classList.add("invalid-field");
       }
-      if(message.length > 255){
-        messageField.classList.add("invalid-field");
+      if (message.length > 255) {
+        document.getElementById("newMessage").classList.add("invalid-field");
       }
 
-      if(title.length > 50 || message.length > 255){
+      if (title.length > 50 || message.length > 255) {
         alert("Fehler: Titel darf maximal 50 Zeichen und Nachricht maximal 255 Zeichen lang sein!");
         return;
       }

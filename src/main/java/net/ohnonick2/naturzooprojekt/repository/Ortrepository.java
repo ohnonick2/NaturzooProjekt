@@ -9,6 +9,7 @@ import java.util.List;
 public interface Ortrepository extends JpaRepository<Ort, Long> {
 
     Ort findByPlz(Integer plz);
+    Ort findByOrtname(String ortname);
 
     List<Ort> findByOrtnameAndPlz(String ortname , Integer plz);
     List<Ort> findByOrtnameOrPlz(String ortname , Integer plz);

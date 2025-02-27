@@ -3,12 +3,12 @@ package net.ohnonick2.naturzooprojekt.backend.food;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.ohnonick2.naturzooprojekt.db.futter.Futter;
-
 import net.ohnonick2.naturzooprojekt.db.lieferant.Lieferant;
-
 import net.ohnonick2.naturzooprojekt.repository.FutterRepositority;
 import net.ohnonick2.naturzooprojekt.repository.LieferantRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,11 +39,8 @@ public class FoodManager {
             return ResponseEntity.badRequest().body("Futter existiert bereits");
         }
 
-
-
         // Prüfe, ob der Lieferant existiert
-        Lieferant lieferant = lieferantRepository.findById(lieferantId
-        ).orElse(null);
+        Lieferant lieferant = lieferantRepository.findById(lieferantId).orElse(null);
         if (lieferant == null) {
             return ResponseEntity.badRequest().body("Lieferant nicht gefunden");
         }
@@ -58,12 +55,11 @@ public class FoodManager {
         futterRepository.save(futter);
 
         return ResponseEntity.ok("Futter erfolgreich hinzugefügt");
-
     }
 
     @PostMapping(value = "/edit")
     public ResponseEntity<String> editFood(@RequestBody String food) {
-       if (!food.startsWith("{") && !food.endsWith("}")) {
+        if (!food.startsWith("{") && !food.endsWith("}")) {
             return ResponseEntity.badRequest().body("Ungültiges JSON-Objekt");
         }
 
@@ -94,5 +90,23 @@ public class FoodManager {
         futterRepository.save(existingFutter);
 
         return ResponseEntity.ok("Futter erfolgreich bearbeitet");
+    }
+
+    @PostMapping(value = "/delete")
+    public ResponseEntity<String> deleteFood(@RequestBody String food) {
+        JsonObject foodJson = new JsonParser().parse(food).getAsJsonObject();
+        Long id = foodJson.get("id").getAsLong();
+
+        Futter futter = futterRepository.findById(id).orElse(null);
+        if (futter == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Futter mit ID " + id + " wurde nicht gefunden.");
+        }
+
+        try {
+            futterRepository.delete(futter);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Futter kann nicht gelöscht werden, da es noch verwendet wird.");
+        }
+        return ResponseEntity.ok("Futter erfolgreich gelöscht.");
     }
 }

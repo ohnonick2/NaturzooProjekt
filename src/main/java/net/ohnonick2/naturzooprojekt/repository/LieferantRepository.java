@@ -7,4 +7,5 @@ public interface LieferantRepository extends JpaRepository<Lieferant, Long> {
 
     Lieferant findLieferantById(Long id);
 
+    boolean existsLieferantByName(String name);
 }
