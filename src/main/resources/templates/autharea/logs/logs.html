@@ -1,211 +1,162 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aktivitätsprotokolle</title>
+  <title>Aktivitäten Log | Rheiner Zoo</title>
+
+  <!-- Icons & Styles -->
+  <div th:insert="~{vorlagen/icon :: icon}"></div>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" th:href="@{/css/styles.css}">
+
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-image: url('/images/background.png');
-      background-color: #f4f6f9;
-      margin: 0;
-      padding: 0;
-      overflow-x: hidden;
-    }
-
-    .container {
-      max-width: 1200px;
-    }
-
-    .header {
-      background-color: #1f4e3e;
-      color: white;
-      padding: 15px;
-      text-align: center;
-      border-radius: 8px;
-      margin-bottom: 30px;
-    }
-
-    .pagination {
-      margin-top: 20px;
-    }
-
-    .search-container, .filter-container {
-      margin-bottom: 20px;
-    }
-
-    .search-container input, .filter-container select {
-      padding: 10px;
-      border-radius: 5px;
-      border: 1px solid #ddd;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
-
-    .card-body {
-      background-color: #fff;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
-
-    .card-title {
-      font-weight: bold;
-    }
-
-    .footer {
-      margin-top: 10px;
-      text-align: center;
-      font-size: 14px;
-    }
-    .autocomplete-suggestion {
-      padding: 10px;
-      cursor: pointer;
-    }
-
-    .autocomplete-suggestion:hover {
-      background: #f0f0f0;
-    }
+    body { font-family: Arial, sans-serif; background-color: #f4f6f9; }
+    .main-content { margin-left: 250px; padding: 20px; transition: margin-left 0.3s ease; }
+    .card { border: none; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); padding: 15px; }
+    .btn-primary { background-color: #1f4e3e; color: white; }
+    .btn-primary:hover { background-color: #145c3a; }
+    table tbody td { word-break: break-word; }
   </style>
 </head>
+
 <body>
+
+<!-- Sidebar -->
 <div th:insert="~{vorlagen/sidebar :: sidebar}"></div>
-<div class="container mt-5">
-  <!-- Header und Gesamtzahl der Logs -->
-  <div class="header">
-    <h1>Aktivitätsprotokolle</h1>
-    <p>Es gibt insgesamt <span id="logCount" th:text="${logs.size()}"></span> Protokolle.</p>
-  </div>
 
-  <!-- Such- und Filterbereich -->
-  <div class="row mb-3">
-    <div class="col-md-4">
-      <!-- Suchfeld -->
-      <div class="search-container">
-        <input type="text" id="searchInput" class="form-control" placeholder="Protokolle durchsuchen..." onkeyup="searchTable()">
-      </div>
-    </div>
-    <div class="col-md-4">
-      <!-- Filter Dropdown -->
-      <div class="filter-container">
-        <select id="filterSelect" class="form-select" onchange="filterLogs()">
-          <option value="">Filter nach Aktion</option>
-          <!-- Thymeleaf Schleife zum Hinzufügen der Werte von ActivityAction -->
-          <option th:each="action : ${type}" th:value="${action}" th:text="${action}"></option>        </select>
-      </div>
-    </div>
-  </div>
+<!-- Main Content -->
+<div class="main-content">
+  <!-- Header -->
+  <div th:replace="~{vorlagen/header :: header(pageTitle='Aktivitäten Log - Rheiner Zoo')}"></div>
 
-  <!-- Log Cards -->
-  <div class="row" id="logCardsContainer">
-    <div class="col-md-4" th:each="log : ${logs}">
-      <div class="card mb-4">
-        <div class="card-body">
-          <h5 class="card-title" th:text="${log.action.getActionname()}"></h5>
-          <p class="card-text" th:text="${log.details}"></p>
-          <footer class="blockquote-footer">
-            <span>Benutzer:</span> <span th:text="${log.pfleger.benutzername}"></span> - <span th:text="${log.timestamp}"></span>
-          </footer>
-        </div>
-      </div>
+  <div class="card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4>Protokollierte Aktivitäten</h4>
     </div>
-  </div>
 
-  <!-- Paginierungssteuerung -->
-  <div class="d-flex justify-content-center mb-3">
-    <nav>
-      <ul class="pagination" id="pagination">
-        <!-- Dynamische Paginierung wird hier eingefügt -->
-      </ul>
-    </nav>
+    <!-- Suchleiste -->
+    <div class="d-flex gap-2 mb-3">
+      <input type="text" id="searchInput" class="form-control" placeholder="Suche nach Benutzername...">
+      <select id="actionFilter" class="form-select">
+        <option value="">Alle Aktionen</option>
+        <option th:each="action : ${actions}" th:value="${action}" th:text="${action}"></option>
+      </select>
+      <button onclick="filterTable()" class="btn btn-primary"><i class="fas fa-search"></i></button>
+      <button onclick="resetFilter()" class="btn btn-secondary"><i class="fas fa-times"></i></button>
+    </div>
+
+    <!-- Aktivitäten-Tabelle -->
+    <table class="table table-striped" id="aktivitaetenTable">
+      <thead>
+      <tr>
+        <th>Benutzername</th>
+        <th>Aktion</th>
+        <th>Zeitstempel</th>
+        <th>Beschreibung</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="aktivitaet : ${aktivitaeten}">
+        <td th:text="${aktivitaet.username}"></td>
+        <td th:text="${aktivitaet.action}"></td>
+        <td th:text="${#temporals.format(aktivitaet.timestamp, 'dd.MM.yyyy HH:mm')}"></td>
+        <td th:text="${aktivitaet.description}"></td>
+      </tr>
+      </tbody>
+    </table>
+
+    <!-- Keine Ergebnisse gefunden -->
+    <div id="noResultsMessage" class="alert alert-warning d-none" role="alert">
+      Keine Aktivitäten gefunden.
+    </div>
+
+    <!-- Paginierung -->
+    <div class="d-flex justify-content-center mt-3">
+      <button class="btn btn-secondary me-2" onclick="previousPage()" id="prevBtn">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <span id="pageIndicator"></span>
+      <button class="btn btn-secondary ms-2" onclick="nextPage()" id="nextBtn">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
 <script>
+  const rowsPerPage = 8;
   let currentPage = 1;
-  const rowsPerPage = 5; // Pro Seite anzuzeigende Logs
-  const logs = /*[[${logs}]]*/ []; // Thymeleaf log-Daten hier eingebunden
+  const table = document.getElementById("aktivitaetenTable");
+  const rows = table.getElementsByTagName("tr");
+  const totalPages = Math.ceil((rows.length - 1) / rowsPerPage);
+  const pageIndicator = document.getElementById("pageIndicator");
 
-  function displayTablePage(page) {
-    const rows = document.getElementById('logCardsContainer').getElementsByClassName('col-md-4');
-    const totalRows = rows.length;
-    const totalPages = Math.ceil(totalRows / rowsPerPage);
+  function showPage(page) {
+    let start = (page - 1) * rowsPerPage + 1;
+    let end = start + rowsPerPage;
 
-    if (page < 1) page = 1;
-    if (page > totalPages) page = totalPages;
-
-    currentPage = page;
-
-    // Logs für die aktuelle Seite anzeigen
-    for (let i = 0; i < totalRows; i++) {
-      rows[i].style.display = (i >= (page - 1) * rowsPerPage && i < page * rowsPerPage) ? '' : 'none';
+    for (let i = 1; i < rows.length; i++) {
+      rows[i].style.display = (i >= start && i < end) ? "" : "none";
     }
 
-    // Paginierung aktualisieren
-    updatePagination(totalPages);
+    pageIndicator.textContent = `Seite ${page} von ${totalPages}`;
+    document.getElementById("prevBtn").disabled = page === 1;
+    document.getElementById("nextBtn").disabled = page === totalPages;
   }
 
-  function updatePagination(totalPages) {
-    const pagination = document.getElementById('pagination');
-    pagination.innerHTML = ''; // Aktuelle Paginierung leeren
-
-    const prevButton = document.createElement('li');
-    prevButton.classList.add('page-item', currentPage === 1 ? 'disabled' : '');
-    prevButton.innerHTML = `<a class="page-link" href="#" onclick="displayTablePage(${currentPage - 1})">Zurück</a>`;
-    pagination.appendChild(prevButton);
-
-    for (let i = 1; i <= totalPages; i++) {
-      const pageButton = document.createElement('li');
-      pageButton.classList.add('page-item', currentPage === i ? 'active' : '');
-      pageButton.innerHTML = `<a class="page-link" href="#" onclick="displayTablePage(${i})">${i}</a>`;
-      pagination.appendChild(pageButton);
+  function nextPage() {
+    if (currentPage < totalPages) {
+      currentPage++;
+      showPage(currentPage);
     }
-
-    const nextButton = document.createElement('li');
-    nextButton.classList.add('page-item', currentPage === totalPages ? 'disabled' : '');
-    nextButton.innerHTML = `<a class="page-link" href="#" onclick="displayTablePage(${currentPage + 1})">Weiter</a>`;
-    pagination.appendChild(nextButton);
   }
 
-  function searchTable() {
-    const input = document.getElementById('searchInput');
-    const filter = input.value.toLowerCase();
-    const rows = document.getElementById('logCardsContainer').getElementsByClassName('col-md-4');
+  function previousPage() {
+    if (currentPage > 1) {
+      currentPage--;
+      showPage(currentPage);
+    }
+  }
 
-    for (let row of rows) {
-      const cells = row.getElementsByClassName('card-body')[0].getElementsByTagName('p');
-      let found = false;
+  function filterTable() {
+    let input = document.getElementById("searchInput").value.toLowerCase();
+    let actionFilter = document.getElementById("actionFilter").value;
+    let hasResults = false;
 
-      for (let cell of cells) {
-        if (cell.textContent.toLowerCase().indexOf(filter) > -1) {
-          found = true;
-          break;
-        }
+    for (let i = 1; i < rows.length; i++) {
+      let usernameCell = rows[i].getElementsByTagName("td")[0];
+      let actionCell = rows[i].getElementsByTagName("td")[1];
+
+      if (usernameCell && actionCell) {
+        let username = usernameCell.innerText.toLowerCase();
+        let action = actionCell.innerText;
+        let matchesUsername = username.includes(input);
+        let matchesAction = actionFilter === "" || action === actionFilter;
+
+        rows[i].style.display = (matchesUsername && matchesAction) ? "" : "none";
+        if (matchesUsername && matchesAction) hasResults = true;
       }
-
-      row.style.display = found ? '' : 'none';
     }
+
+    document.getElementById("noResultsMessage").classList.toggle("d-none", hasResults);
   }
 
-  function filterLogs() {
-    const filterValue = document.getElementById('filterSelect').value;
-    const rows = document.getElementById('logCardsContainer').getElementsByClassName('col-md-4');
-
-    for (let row of rows) {
-      const action = row.querySelector('.card-title').textContent.toLowerCase();
-      row.style.display = action.includes(filterValue.toLowerCase()) || filterValue === '' ? '' : 'none';
-    }
+  function resetFilter() {
+    document.getElementById("searchInput").value = "";
+    document.getElementById("actionFilter").value = "";
+    filterTable();
   }
 
-  // Initialisierung der Seite
-  document.addEventListener('DOMContentLoaded', () => {
-    displayTablePage(1);
-  });
+  if (totalPages > 1) showPage(1);
 </script>
+
+<!-- Footer -->
+<footer th:insert="~{vorlagen/footer :: footer}"></footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

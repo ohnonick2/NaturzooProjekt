@@ -14,6 +14,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,29 +35,16 @@ public class Tiermanagement {
     @GetMapping("/tier")
     public String tierManagement(Model model) {
         List<RevierTier> revierTierList = revierTierRespository.findAll();
+        List<Tier> tierList = tierrespository.findAll();
 
-        if (revierTierList.isEmpty()) {
-            System.out.println("Keine Tiere in der Datenbank gefunden!");
-        } else {
-            System.out.println("Gefundene Tiere: " + revierTierList.size());
-        }
 
-        // Daten für das Frontend aufbereiten
-        List<Map<String, Object>> enrichedList = revierTierList.stream().map(revierTier -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("tierId", revierTier.getTierId().getId());
-            map.put("tierName", revierTier.getTierId().getName());
-            map.put("geburtsdatum", revierTier.getTierId().getGeburtsdatum());
-            map.put("sterbedatum", revierTier.getTierId().getSterbedatum() != null ? revierTier.getTierId().getSterbedatum() : "Noch am Leben");
-            map.put("geschlecht", revierTier.getTierId().getGeschlecht());
-            map.put("tierArtName", revierTier.getTierId().getTierArt().getName());
-            map.put("revierName", revierTier.getRevierId().getName());
-            map.put("abgegeben", revierTier.getTierId().isAbgegeben() ? "Ja" : "Nein");
+        model.addAttribute("revierTierList", revierTierList);
+        model.addAttribute("reviere", revierRepository.findAll());
+        model.addAttribute("tierart", tierartrepository.findAll());
 
-            return map;
-        }).toList();
 
-        model.addAttribute("tierList", enrichedList);
+
+
         return "autharea/tiermanagement/tiermanagement";
     }
 
@@ -71,6 +59,7 @@ public class Tiermanagement {
 
         model.addAttribute("genders", geschlechts);
         model.addAttribute("tierArten", tierartrepository.findAll());
+        model.addAttribute("reviere", revierRepository.findAll());
 
 
 

@@ -2,35 +2,18 @@ package net.ohnonick2.naturzooprojekt.utils;
 
 public enum ActivityAction {
 
-    LOGIN("User Login", "Benutzer Login"),
-    USER_EDIT("Edit User", "Benutzer bearbeiten"),
-    USER_DELETE("Delete User", "Benutzer löschen"),
-    TIER_ADD("Add Animal", "Tier hinzufügen"),
-    TIER_DELETE("Delete Animal", "Tier löschen"),
-    TIER_EDIT("Edit Animal", "Tier bearbeiten"),
-    ROLE_ASSIGN("Assign Role", "Rolle zuweisen"),
-    ROLE_REVOKE("Revoke Role", "Rolle entziehen"),
-    SETTINGS_UPDATE("Update Settings", "Einstellungen aktualisieren"),
-    GEBÄUDE_ADD("Add Building", "Gebäude hinzufügen"),
-    GEBÄUDE_EDIT("Edit Building", "Gebäude bearbeiten"),
-    GEBÄUDE_DELETE("Delete Building", "Gebäude löschen");
+    SAVE("hat {target} gespeichert."),
+    EDIT("hat {target} bearbeitet."),
+    DELETE("hat {target} gelöscht.");
 
-    private final String action;      // Englische Beschreibung
-    private final String actionname;  // Deutsche Beschreibung
+    private final String messageTemplate;
 
-    // Konstruktor, der beide Werte setzt
-    ActivityAction(String action, String actionname) {
-        this.action = action;
-        this.actionname = actionname;
+    ActivityAction(String messageTemplate) {
+        this.messageTemplate = messageTemplate;
     }
 
-    // Getter für den englischen Namen
-    public String getAction() {
-        return action;
+    public String getFormattedMessage(String user, String target) {
+        return user + " " + messageTemplate.replace("{target}", target);
     }
 
-    // Getter für den deutschen Namen
-    public String getActionname() {
-        return actionname;
-    }
 }

@@ -1,55 +1,92 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<div th:insert="~{vorlagen/icon :: icon}"></div>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Logout</title>
+    <title>Logout | Rheiner Zoo</title>
+    <div th:replace="~{vorlagen/icon :: icon}"></div>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
             margin: 0;
-            padding: 0;
         }
-        .container {
-            margin: 100px auto;
-            padding: 20px;
-            max-width: 500px;
+
+        .logout-container {
             text-align: center;
-            background-color: #ffffff;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 90%;
         }
-        button {
-            margin: 10px;
-            padding: 10px 20px;
-            font-size: 16px;
-            border: none;
+
+        h1 {
+            font-size: 1.8em;
+            color: #2d6a4f;
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 1em;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        img {
+            width: 100px;
+            margin: 10px 0;
+            opacity: 0.8;
+        }
+
+        .btn {
+            display: inline-block;
+            width: 90%;
+            text-decoration: none;
+            color: #fff;
+            background-color: #52b788;
+            padding: 10px;
             border-radius: 5px;
+            font-size: 1em;
+            font-weight: bold;
+            border: none;
             cursor: pointer;
+            transition: background 0.3s ease-in-out;
+            margin-bottom: 10px;
         }
-        .logout-btn {
-            background-color: #d9534f;
-            color: white;
+
+        .btn:hover {
+            background-color: #40916c;
         }
+
         .cancel-btn {
-            background-color: #5bc0de;
-            color: white;
+            background: #6c757d;
+        }
+
+        .cancel-btn:hover {
+            background: #5a6268;
         }
     </style>
 </head>
 <body>
-<div class="container">
-    <h1>Logout</h1>
-    <p>Möchten Sie sich wirklich abmelden?</p>
+
+<div class="logout-container">
+    <img src="https://cdn-icons-png.flaticon.com/512/1828/1828490.png" alt="Logout Icon">
+    <h1>Abmelden?</h1>
+    <p>Sind Sie sicher?</p>
+
     <form th:action="@{/logout}" method="post">
-        <button type="submit" class="logout-btn">Ja, Abmelden</button>
+        <button type="submit" class="btn">Ja, abmelden</button>
     </form>
-    <a th:href="@{/index}">
-        <button type="button" class="cancel-btn">Abbrechen</button>
-    </a>
+
+    <a th:href="@{/dashboard}" class="btn cancel-btn">Abbrechen</a>
 </div>
+
 </body>
 </html>

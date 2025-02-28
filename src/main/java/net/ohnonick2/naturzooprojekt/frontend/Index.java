@@ -31,30 +31,6 @@ public class Index {
     @Autowired
     private FutterPlanFutterZeitRepository futterPlanFutterZeitRepository;
 
-    @GetMapping("/index")
-    public String showIndexPage(Model model , HttpServletRequest request) {
-
-        if (request.getAttribute(WebAttributes.AUTHENTICATION_EXCEPTION) != null) {
-            return "redirect:/login?error";
-        }
-        if (request.getParameter("session") != null && request.getParameter("session").equals("invalid")) {
-            return "redirect:/login?invalidession";
-        }
-        if (SecurityContextHolder.getContext().getAuthentication() != null &&
-                SecurityContextHolder.getContext().getAuthentication().isAuthenticated()) {
-            String username = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
-            JsonObject jsonObject = JsonParser.parseString(username).getAsJsonObject();
-            String benutzername = jsonObject.get("benutzername").getAsString();
-            model.addAttribute("username", benutzername);
-            Collection<? extends GrantedAuthority> authorities = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
-            String authoritiesList = authorities.stream()
-                    .map(GrantedAuthority::getAuthority)
-                    .collect(Collectors.joining(", "));
-            model.addAttribute("authorities", authoritiesList);
-            return "auth/userindex";
-        }
-        return "redirect:/login";
-    }
 
     @Autowired
     private FutterZeitRepository futterZeitRepository;
@@ -67,7 +43,7 @@ public class Index {
     @Autowired
     private FutterPlanWochentagRepository futterPlanWochentagRepository;
 
-    @GetMapping("/")
+    @GetMapping("/index")
     public String showFoodPlan(Model model) {
         List<FutterPlan> futterplaene = futterPlanRepository.findAll();
         List<Wochentag> wochentage = wochenTagRepository.findAll();
@@ -151,7 +127,7 @@ public class Index {
         LocalDate today = LocalDate.now();
         WeekFields weekFields = WeekFields.of(Locale.GERMANY);
         int weekNumber = today.get(weekFields.weekOfWeekBasedYear());
-        return "KW " + weekNumber + " (" + today.with(DayOfWeek.MONDAY) + " - " + today.with(DayOfWeek.SUNDAY) + ")";
+        return weekNumber + " (" + today.with(DayOfWeek.MONDAY) + " - " + today.with(DayOfWeek.SUNDAY) + ")";
     }
 
     public class FutterplanDTO {

@@ -1,51 +1,74 @@
-<html>
-
-<head>
-    <meta charset="UTF-8">
-    <link rel="icon" type="image/png" href="/images/favicon.png">
-</head>
-
 <th:block th:fragment="footer">
-<style>
-    footer {
-        background-color: #343a40;
-        color: #fff;
-        padding: 20px 0;
-        text-align: center;
-    }
+    <style>
+        /* Body und HTML auf volle Höhe setzen */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+        }
 
-    footer a {
-        color: #28a745;
-        margin: 0 10px;
-        font-size: 1.5rem;
-        text-decoration: none;
-    }
+        /* Wrapper für den Hauptinhalt */
+        .content-wrapper {
+            flex: 1; /* Sorgt dafür, dass der Inhalt den Platz auffüllt */
+            padding-bottom: 60px; /* Platz für den Footer */
+        }
 
-    footer p {
-        margin-bottom: 0;
-    }
+        /* Footer fixieren */
+        footer {
+            background-color: #212529;
+            color: #bbb;
+            padding: 10px 0;
+            font-size: 14px;
+            text-align: center;
+            width: 100%;
+            position: relative;
+            bottom: 0;
+        }
 
-    footer hr {
-        border-color: rgba(255, 255, 255, 0.2);
-    }
+        footer a {
+            color: #28a745;
+            text-decoration: none;
+            font-size: 14px;
+            margin: 0 10px;
+        }
 
+        footer a:hover {
+            text-decoration: underline;
+        }
 
-</style>
+        .social-icons a {
+            font-size: 16px;
+            margin: 0 8px;
+            color: #bbb;
+        }
+
+        .social-icons a:hover {
+            color: #28a745;
+        }
+    </style>
+
+    <div class="content-wrapper">
+        <!-- Dein Hauptinhalt hier -->
+    </div>
+
     <footer>
-        <div class="footer-links">
-            <a href="https://www.naturzoo.de/impressum" target="_blank">Impressum</a>
-            <a href="https://www.naturzoo.de/datenschutz" target="https://www.naturzoo.de/datenschutz">Datenschutz</a>
-            <a href="https://www.naturzoo.de/newsletter/anmeldung" target="_blank">Newsletter</a>
-            <a href="https://www.naturzoo.de/sitemap" target="_blank">Sitemap</a>
-        </div>
+        <p>© <span id="currentYear"></span> Rheiner Zoo</p>
+        <p>
+            <a href="https://www.naturzoo.de/impressum" target="_blank">Impressum</a> |
+            <a href="https://www.naturzoo.de/datenschutz" target="_blank">Datenschutz</a> |
+            <a href="/support">Support</a>
+        </p>
         <div class="social-icons">
             <a href="https://www.youtube.com/@NaturZooYoutube" target="_blank"><i class="fab fa-youtube"></i></a>
             <a href="https://www.instagram.com/naturzoo" target="_blank"><i class="fab fa-instagram"></i></a>
             <a href="https://www.facebook.com/naturzoo" target="_blank"><i class="fab fa-facebook"></i></a>
-            <a href="https://whatsapp.com/channel/0029VapC8nI1CYoZdnUytI3D" target="_blank"><i class="fab fa-whatsapp"></i></a>
-            <a href="tel:+495971161480"><i class="fas fa-phone"></i></a>
         </div>
-        <p>Kontakt: <a href="mailto:info@naturzoo.de">info@naturzoo.de</a></p>
     </footer>
+
+    <script>
+        // Setzt das aktuelle Jahr automatisch
+        document.getElementById("currentYear").textContent = new Date().getFullYear();
+    </script>
 </th:block>
-</html>

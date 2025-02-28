@@ -1,232 +1,225 @@
+
 <!DOCTYPE html>
-<html lang="de" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tiermanagement | Rheiner Zoo</title>
+  <title>Tierverwaltung | Rheiner Zoo</title>
 
-  <!-- Bootstrap & Icons -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <div th:insert="~{vorlagen/icon :: icon}"></div>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" th:href="@{/css/styles.css}">
 
   <style>
     body {
       font-family: Arial, sans-serif;
       background-color: #f4f6f9;
-      margin: 0;
-      padding: 0;
-      overflow-x: hidden;
-      display: flex;
     }
-
     .main-content {
-      margin-left: 270px;
+      margin-left: 250px;
       padding: 20px;
-      width: calc(100% - 270px);
     }
-
     .card {
       border: none;
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-      border-radius: 8px;
-      margin-bottom: 20px;
+      padding: 20px;
     }
-
-    .header {
-      background-color: #1f4e3e;
-      color: white;
-      padding: 15px;
-      text-align: center;
-      border-radius: 8px;
-      margin-bottom: 20px;
-    }
-
-    .btn-success {
-      background-color: #218838;
+    .btn-primary, .btn-danger {
       color: white;
     }
-
-    .search-container input {
-      width: 100%;
-      padding: 10px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
-
-    table tbody td {
-      word-break: break-word;
-    }
-
-    .btn-action {
-      margin: 0 5px;
-    }
-
-    #pagination button {
-      margin: 0 5px;
-    }
-
   </style>
 </head>
 
 <body>
 
+<!-- Sidebar -->
 <div th:insert="~{vorlagen/sidebar :: sidebar}"></div>
 
-<!-- Hauptinhalt -->
+<!-- Main Content -->
 <div class="main-content">
-  <div class="header">
-    <h2>Tiermanagement</h2>
+  <div th:replace="~{vorlagen/header :: header(pageTitle='Tierverwaltung - Rheiner Zoo')}"></div>
+
+  <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addTierModal">
+    <i class="fas fa-plus"></i> Tier hinzufügen
+  </button>
+
+  <!-- Suchfeld -->
+  <div class="mt-3">
+    <label for="searchInput"></label><input type="text" id="searchInput" class="form-control" placeholder="Tier suchen..." onkeyup="filterTable()">
   </div>
 
-  <div class="card p-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h4>Verwalten Sie die Tiere im Rheiner Zoo</h4>
-      <button class="btn btn-success" onclick="addTier()" sec:authorize="hasAuthority('TIER_WRITE') or hasAuthority('*')">
-        <i class="fas fa-plus"></i> Tier hinzufügen
-      </button>
-    </div>
-
-    <div class="search-container mb-3">
-      <input type="text" id="searchInput" placeholder="Tier suchen (z. B. Name, Art, Revier)" onkeyup="filterTable()">
-    </div>
-
-    <div th:if="${tierList.size() > 0}">
-      <table class="table table-striped" id="tierTable">
-        <thead>
-        <tr>
-          <th>ID</th>
-          <th>Name</th>
-          <th>Geburtsdatum</th>
-          <th>Tierart</th>
-          <th>Revier</th>
-          <th>Aktionen</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="tier : ${tierList}">
-          <td th:text="${tier.tierId}"></td>
-          <td th:text="${tier.tierName}"></td>
-          <td th:text="${tier.geburtsdatum}"></td>
-          <td th:text="${tier.tierArtName}"></td>
-          <td th:text="${tier.revierName}"></td>
-          <td>
-            <button class="btn btn-primary btn-action" th:onclick="'editTier(' + ${tier.tierId} + ')'">
-              <i class="fas fa-edit"></i> Bearbeiten
+  <!-- Tabelle -->
+  <div class="card mt-3">
+    <h4>Tierübersicht</h4>
+    <table class="table table-bordered">
+      <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Geburtsdatum</th>
+        <th>Geschlecht</th>
+        <th>Tierart</th>
+        <th>Revier</th>
+        <th>Aktionen</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="tier : ${tiere}">
+        <td th:text="${tier.id}"></td>
+        <td th:text="${tier.name}"></td>
+        <td th:text="${#temporals.format(tier.geburtsdatum, 'dd.MM.yyyy')}"></td>
+        <td th:text="${tier.geschlecht}"></td>
+        <td th:text="${tier.tierArt.name}"></td>
+        <td th:text="${tier.revier.name}"></td>
+        <td>
+          <div class="btn-group">
+            <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+              Aktionen
             </button>
-            <button class="btn btn-danger btn-action" onclick="confirmDeleteTier(this)" data-tier-id="${tier.tierId}">
-              <i class="fas fa-trash"></i> Löschen
-            </button>
-          </td>
-        </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div th:if="${tierList.size() == 0}" class="alert alert-warning">
-      Es sind keine Tiere vorhanden. Bitte fügen Sie ein Tier hinzu.
-    </div>
-
-    <div id="pagination" class="d-flex justify-content-center mt-3"></div>
+            <ul class="dropdown-menu">
+              <li>
+                <a class="dropdown-item edit-btn" href="#" onclick="openEditModal(this)"
+                   th:data-id="${tier.id}"
+                   th:data-name="${tier.name}"
+                   th:data-geburtsdatum="${tier.geburtsdatum}"
+                   th:data-geschlecht="${tier.geschlecht}"
+                   th:data-tierart="${tier.tierArt.name}"
+                   th:data-revier="${tier.revier.name}">
+                  <i class="fas fa-edit"></i> Bearbeiten
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item delete-btn" href="#" th:data-id="${tier.id}" onclick="deleteTier(this)">
+                  <i class="fas fa-trash"></i> Löschen
+                </a>
+              </li>
+            </ul>
+          </div>
+        </td>
+      </tr>
+      </tbody>
+    </table>
   </div>
+
+  <!-- Modal: Tier hinzufügen -->
+  <div class="modal fade" id="addTierModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Neues Tier hinzufügen</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="addTierForm">
+            <label>Name</label>
+            <input type="text" class="form-control mb-3" id="addName" required>
+            <label>Geburtsdatum</label>
+            <input type="date" class="form-control mb-3" id="addGeburtsdatum" required>
+            <label>Geschlecht</label>
+            <select class="form-control mb-3" id="addGeschlecht" required>
+              <option value="MÄNNLICH">Männlich</option>
+              <option value="WEIBLICH">Weiblich</option>
+            </select>
+
+            <label>Tierart</label>
+            <select class="form-control mb-3" id="addTierart" required>
+              <option th:each="tierart : ${tierarten}" th:value="${tierart.name}" th:text="${tierart.name}"></option>
+              <option value="new">+ Neue Tierart hinzufügen...</option>
+            </select>
+
+            <label>Revier</label>
+            <select class="form-control mb-3" id="addRevier" required>
+              <option th:each="revier : ${reviere}" th:value="${revier.name}" th:text="${revier.name}"></option>
+              <option value="new">+ Neues Revier hinzufügen...</option>
+            </select>
+
+            <button type="submit" class="btn btn-success">Hinzufügen</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal für neue Tierart -->
+  <div class="modal fade" id="newTierartModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Neue Tierart hinzufügen</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="text" class="form-control mb-3" id="newTierartName" placeholder="Tierart eingeben">
+          <button class="btn btn-success" onclick="saveNewTierart()">Speichern</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal für neues Revier -->
+  <div class="modal fade" id="newRevierModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Neues Revier hinzufügen</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="text" class="form-control mb-3" id="newRevierName" placeholder="Revier eingeben">
+          <button class="btn btn-success" onclick="saveNewRevier()">Speichern</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
-<!-- Modal für Löschbestätigung -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="deleteModalLabel">Tier löschen</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
-      </div>
-      <div class="modal-body">
-        Möchten Sie das Tier wirklich löschen?
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-        <button type="button" class="btn btn-danger" id="confirmDeleteButton">Ja, löschen</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- JavaScript -->
 <script>
-  let currentPage = 1;
-  const rowsPerPage = 10;
-  let deleteTierId = null;
+  document.addEventListener("DOMContentLoaded", function () {
+    console.log("✅ JavaScript geladen!");
 
-  function addTier() {
-    window.location.href = '/addTier/';
-  }
-
-  function editTier(tierId) {
-    window.location.href = '/editTier/' + tierId;
-  }
-
-  function confirmDeleteTier(button) {
-    deleteTierId = button.getAttribute("data-tier-id");
-    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
-    modal.show();
-  }
-
-  document.getElementById("confirmDeleteButton").addEventListener("click", function () {
-    fetch('/api/tier/delete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: deleteTierId })
-    })
-            .then(response => {
-              if (response.ok) {
-                location.reload();
-              } else {
-                alert('Fehler beim Löschen.');
-              }
-            })
-            .catch(() => alert('Ein Fehler ist aufgetreten.'));
-  });
-
-  function filterTable() {
-    const input = document.getElementById('searchInput').value.toLowerCase();
-    const rows = document.querySelectorAll('#tierTable tbody tr');
-
-    rows.forEach(row => {
-      const text = row.innerText.toLowerCase();
-      row.style.display = text.includes(input) ? '' : 'none';
-    });
-  }
-
-  function displayTablePage(page) {
-    const rows = document.querySelectorAll('#tierTable tbody tr');
-    const totalPages = Math.ceil(rows.length / rowsPerPage);
-    currentPage = Math.min(Math.max(page, 1), totalPages);
-
-    rows.forEach((row, index) => {
-      row.style.display = (index >= (currentPage - 1) * rowsPerPage && index < currentPage * rowsPerPage) ? '' : 'none';
-    });
-
-    renderPagination(totalPages);
-  }
-
-  function renderPagination(totalPages) {
-    const pagination = document.getElementById('pagination');
-    pagination.innerHTML = '';
-
-    for (let i = 1; i <= totalPages; i++) {
-      const button = document.createElement('button');
-      button.innerText = i;
-      button.className = `btn btn-sm ${i === currentPage ? 'btn-primary' : 'btn-outline-secondary'}`;
-      button.onclick = () => displayTablePage(i);
-      pagination.appendChild(button);
+    // Prüfen, ob Bootstrap geladen wurde
+    if (typeof bootstrap === "undefined") {
+      console.error("❌ Bootstrap JS fehlt!");
+      alert("Bootstrap JS fehlt! Stelle sicher, dass es geladen ist.");
+      return;
     }
-  }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    displayTablePage(1);
+    // Event-Listener für Tierart-Dropdown
+    const addTierart = document.getElementById("addTierart");
+    if (addTierart) {
+      addTierart.addEventListener("change", function() {
+        if (this.value === "new") {
+          console.log("📢 Tierart-Modal wird geöffnet...");
+          const modal = new bootstrap.Modal(document.getElementById("newTierartModal"));
+          modal.show();
+          this.value = "";
+        }
+      });
+    } else {
+      console.error("❌ addTierart nicht gefunden!");
+    }
+
+    // Event-Listener für Revier-Dropdown
+    const addRevier = document.getElementById("addRevier");
+    if (addRevier) {
+      addRevier.addEventListener("change", function() {
+        if (this.value === "new") {
+          console.log("📢 Revier-Modal wird geöffnet...");
+          const modal = new bootstrap.Modal(document.getElementById("newRevierModal"));
+          modal.show();
+          this.value = "";
+        }
+      });
+    } else {
+      console.error("❌ addRevier nicht gefunden!");
+    }
   });
-</script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</script>
 
 </body>
 </html>

@@ -10,7 +10,7 @@ import java.time.LocalDate;
 public class Tier {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
 
     private String name;
@@ -40,7 +40,6 @@ public class Tier {
         this.sterbedatum = sterbedatum;
         this.geschlecht = geschlecht;
         this.tierArt = tierArt;
-        this.abgabeDatum = abgabeDatum;
         this.isAbgegeben = false;
         this.abgabeDatum = null;
     }

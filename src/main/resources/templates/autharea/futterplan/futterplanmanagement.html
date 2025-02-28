@@ -3,90 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Futterplan-Management</title>
+    <title>Futterplan Management | Rheiner Zoo</title>
+
+    <!-- Standard-Icon -->
+    <div th:insert="~{vorlagen/icon :: icon}"></div>
+
+    <!-- Bootstrap & FontAwesome -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
 
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-image: url('/images/background.png');
-            background-color: #f4f6f9;
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
-        }
-
-        .main-content {
-            margin-left: 250px;
-            padding: 20px;
-            transition: margin-left 0.3s ease;
-        }
-
-        .card {
-            border: none;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            border-radius: 10px;
-            background: white;
-        }
-
-        .header {
-            background-color: #1f4e3e;
-            color: white;
-            padding: 15px;
-            text-align: center;
-            border-radius: 8px;
-        }
-
-        .btn-success {
-            background-color: #218838;
-            color: white;
-        }
-
-        .btn-danger {
-            background-color: #dc3545;
-        }
-
-        .btn-primary {
-            background-color: #007bff;
-        }
-
-        .search-container input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            margin-bottom: 15px;
-        }
-
-        .table thead {
-            background-color: #1f4e3e;
-            color: white;
-        }
-
-        table tbody td {
-            word-break: break-word;
-            text-align: center;
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .loading i {
-            font-size: 2rem;
-            color: #007bff;
-        }
-
-        .alert-warning {
-            margin-top: 20px;
+        .invalid-field {
+            border: 2px solid red !important;
+            background-color: #f8d7da;
         }
     </style>
 </head>
-
 <body>
 
 <!-- Sidebar -->
@@ -94,111 +27,249 @@
 
 <!-- Main Content -->
 <div class="main-content" id="main-content">
-    <div class="header">
-        <h2>Futterplan-Management</h2>
-    </div>
+    <!-- Header -->
+    <div th:replace="~{vorlagen/header :: header(pageTitle='Futterplan Management - Rheiner Zoo')}"></div>
 
-    <!-- Futterplan List Section -->
-    <div class="card">
-        <div class="d-flex justify-content-between align-items-center">
-            <h4 class="mb-0">Futterpläne verwalten</h4>
-            <a th:href="@{/addFutterplan}" class="btn btn-success">
+    <div class="container">
+        <!-- Aktion: Neuer Futterplan hinzufügen -->
+        <div class="d-flex justify-content-between my-3">
+            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addFutterplanModal">
                 <i class="fas fa-plus"></i> Neuer Futterplan
-            </a>
-        </div>
-
-        <!-- Suchleiste -->
-        <div class="search-container mt-3">
-            <input type="text" id="searchInput" class="form-control" placeholder="🔍 Nach Name, Futter oder Tag suchen..." onkeyup="filterTable()">
-        </div>
-
-        <!-- Ladeanimation -->
-        <div class="loading" id="loading">
-            <i class="fas fa-spinner fa-spin"></i> Daten werden geladen...
+            </button>
         </div>
 
         <!-- Futterplan Liste -->
-        <div th:if="${futterplanList.size() > 0}">
-            <div class="table-responsive">
-                <table class="table table-striped" id="futterplanTable">
-                    <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Futter</th>
-                        <th>Menge (kg)</th>
-                        <th>Futterzeiten</th>
-                        <th>Wochentage</th>
-                        <th>Aktionen</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="futterplan : ${futterplanList}">
-                        <td th:text="${futterplan.id}"></td>
-                        <td th:text="${futterplan.name}"></td>
-                        <td th:text="${futterplan.futter != null ? futterplan.futter : '-'}"></td>
-                        <td th:text="${futterplan.menge != null ? futterplan.menge : '-'}"></td>
-                        <td th:text="${futterplan.getFutterZeiten() != null && !futterplan.getFutterZeiten().isEmpty() ? futterplan.getFutterZeiten() : '-'}"></td>
-                        <td th:text="${futterplan.wochentage != null && !futterplan.wochentage.isEmpty() ? futterplan.wochentage : '-'}"></td>
-                        <td>
-                            <a th:href="@{/editFutterplan/{id}(id=${futterplan.id})}" class="btn btn-primary btn-sm">
-                                <i class="fas fa-edit"></i> Bearbeiten
-                            </a>
-                            <button class="btn btn-danger btn-sm" th:onclick="'deleteFutterplan(' + ${futterplan.id} + ')'">
-                                <i class="fas fa-trash"></i> Löschen
+        <div class="card">
+            <h4>Futterpläne</h4>
+            <table class="table table-bordered table-sm">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Futter</th>
+                    <th>Wochentage</th>
+                    <th>Uhrzeiten</th>
+                    <th>Aktionen</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="plan : ${futterplanList}">
+                    <td th:text="${plan.id}">1</td>
+                    <td th:text="${plan.name}">Plan Name</td>
+                    <td th:text="${plan.futter}">Futterliste</td>
+                    <td th:text="${plan.wochentage}">Tage</td>
+                    <td th:text="${plan.getFutterZeiten()}">Zeiten</td>
+                    <td>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                                Aktionen
                             </button>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Keine Futterpläne vorhanden -->
-        <div th:if="${futterplanList.size() == 0}" class="alert alert-warning text-center">
-            <i class="fas fa-exclamation-circle"></i> Keine Futterpläne vorhanden. Bitte fügen Sie einen neuen Futterplan hinzu.
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item edit-btn" href="#"
+                                       th:data-id="${plan.id}" data-bs-toggle="modal" data-bs-target="#editFutterplanModal">
+                                        <i class="fas fa-edit"></i> Bearbeiten
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item delete-btn" href="#" th:data-id="${plan.id}">
+                                        <i class="fas fa-trash"></i> Löschen
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
         </div>
     </div>
+
+    <!-- Modal: Neuer Futterplan -->
+    <div class="modal fade" id="addFutterplanModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Neuer Futterplan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createFutterplanForm" th:action="@{/api/futterplan/add}" method="post">
+                        <div class="mb-3">
+                            <label for="planName" class="form-label">Name des Futterplans</label>
+                            <input type="text" class="form-control" id="planName" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Futter hinzufügen</label>
+                            <div class="input-group">
+                                <select class="form-select" id="futterSelect" name="futterId">
+                                    <option th:each="futter : ${verfuegbareFutterList}"
+                                            th:value="${futter.id}" th:text="${futter.name}">Futter</option>
+                                </select>
+                                <input type="number" class="form-control" id="futterMenge" name="menge" min="1" placeholder="Menge (kg)">
+                                <button type="button" class="btn btn-primary" id="addFutterItemBtn">Hinzufügen</button>
+                            </div>
+                            <ul class="list-group mt-2" id="futterItemList">
+                                <!-- Dynamische Futtereinträge -->
+                            </ul>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Uhrzeiten</label>
+                            <div class="input-group">
+                                <input type="time" class="form-control" id="timeInput">
+                                <button type="button" class="btn btn-primary" id="addTimeBtn">Hinzufügen</button>
+                            </div>
+                            <ul class="list-group mt-2" id="timeItemList">
+                                <!-- Dynamische Uhrzeit-Einträge -->
+                            </ul>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Wochentage</label>
+                            <div>
+                                <div class="form-check form-check-inline" th:each="tag : ${wochentagList}">
+                                    <input class="form-check-input" type="checkbox" th:id="'tag-' + ${tag.id}"
+                                           th:name="wochentage" th:value="${tag.name}">
+                                    <label class="form-check-label" th:for="'tag-' + ${tag.id}" th:text="${tag.name}">Tag</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-success">Speichern</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Futterplan bearbeiten -->
+    <div class="modal fade" id="editFutterplanModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Futterplan bearbeiten</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editFutterplanForm" th:action="@{/api/futterplan/edit}" method="post">
+                        <input type="hidden" id="editPlanId" name="id" th:value="${futterplan.id}">
+                        <div class="mb-3">
+                            <label for="editPlanName" class="form-label">Name des Futterplans</label>
+                            <input type="text" class="form-control" id="editPlanName" name="name" required th:value="${futterplan.name}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Futter bearbeiten</label>
+                            <div class="input-group">
+                                <select class="form-select" id="editFutterSelect" name="futterId">
+                                    <option th:each="futter : ${futterplanList}"
+                                            th:value="${futter.getFutter()}" th:text="${futter.getFutter()}">Futter</option>
+                                </select>
+                                <input type="number" class="form-control" id="editFutterMenge" name="menge" min="1" placeholder="Menge (kg)">
+                                <button type="button" class="btn btn-primary" id="editAddFutterItemBtn">Hinzufügen</button>
+                            </div>
+                            <ul class="list-group mt-2" id="editFutterItemList">
+                                <li th:each="item : ${futterplanList}" class="list-group-item">
+                                    <span th:text="${item.getFutter()} + ' - ' + ${item.getMenge()} + ' kg'">Eintrag</span>
+                                    <span class="remove-btn" onclick="this.parentElement.remove()">×</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Uhrzeiten bearbeiten</label>
+                            <div class="input-group">
+                                <input type="time" class="form-control" id="editTimeInput">
+                                <button type="button" class="btn btn-primary" id="editAddTimeBtn">Hinzufügen</button>
+                            </div>
+                            <ul class="list-group mt-2" id="editTimeItemList">
+                                <li th:each="time : ${futterplanList}" class="list-group-item">
+                                    <span th:text="${time.getFutterZeiten()}">Uhrzeit</span>
+                                    <span class="remove-btn" onclick="this.parentElement.remove()">×</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Wochentage</label>
+                            <div>
+                                <div class="form-check form-check-inline" th:each="tag : ${futterplanList}">
+                                    <input class="form-check-input" type="checkbox" th:id="'editTag-' + ${tag.wochentage}"
+                                           th:name="wochentage" th:value="${tag.wochentage}">
+                                    <label class="form-check-label" th:for="'editTag-' + ${tag.wochentage}" th:text="${tag.wochentage}">Tag</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary">Speichern</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer th:insert="~{vorlagen/footer :: footer}"></footer>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    function deleteFutterplan(id) {
-        if (confirm('Möchten Sie den Futterplan mit ID ' + id + ' wirklich löschen?')) {
-            document.getElementById('loading').style.display = 'block';
+    // Dynamisches Hinzufügen von Futtereinträgen im "Neuer Futterplan"-Formular
+    document.getElementById('addFutterItemBtn').addEventListener('click', function() {
+        const select = document.getElementById('futterSelect');
+        const menge = document.getElementById('futterMenge').value;
+        if (!menge) { alert('Bitte eine Menge eingeben.'); return; }
+        const text = select.options[select.selectedIndex].text + ' - ' + menge + ' kg';
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        li.innerHTML = text + ' <span class="remove-btn" onclick="this.parentElement.remove()">×</span>';
+        document.getElementById('futterItemList').appendChild(li);
+        document.getElementById('futterMenge').value = '';
 
-            fetch('/api/futterplan/delete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ futterplanId: id })
-            })
-                .then(response => {
-                    document.getElementById('loading').style.display = 'none';
-                    if (response.ok) {
-                        alert('Futterplan erfolgreich gelöscht!');
-                        location.reload();
-                    } else {
-                        response.text().then(text => {
-                            alert('Fehler beim Löschen: ' + text);
-                        });
-                    }
-                })
-                .catch(error => {
-                    document.getElementById('loading').style.display = 'none';
-                    alert('Es ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.');
-                });
+    });
+
+    // Dynamisches Hinzufügen von Uhrzeiten im "Neuer Futterplan"-Formular
+    document.getElementById('addTimeBtn').addEventListener('click', function() {
+        const timeInput = document.getElementById('timeInput');
+        if (!timeInput.value) { alert('Bitte eine Uhrzeit eingeben.'); return; }
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        li.innerHTML = timeInput.value + ' <span class="remove-btn" onclick="this.parentElement.remove()">×</span>';
+        document.getElementById('timeItemList').appendChild(li);
+        timeInput.value = '';
+    });
+
+    // Ähnliche Funktionen für das Edit-Formular
+    document.getElementById('editAddFutterItemBtn').addEventListener('click', function() {
+        const select = document.getElementById('editFutterSelect');
+        const menge = document.getElementById('editFutterMenge').value;
+        if (!menge) { alert('Bitte eine Menge eingeben.'); return; }
+        const text = select.options[select.selectedIndex].text + ' - ' + menge + ' kg';
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        li.innerHTML = text + ' <span class="remove-btn" onclick="this.parentElement.remove()">×</span>';
+        document.getElementById('editFutterItemList').appendChild(li);
+        document.getElementById('editFutterMenge').value = '';
+    });
+
+    document.getElementById('editAddTimeBtn').addEventListener('click', function() {
+        const timeInput = document.getElementById('editTimeInput');
+        if (!timeInput.value) { alert('Bitte eine Uhrzeit eingeben.'); return; }
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        li.innerHTML = timeInput.value + ' <span class="remove-btn" onclick="this.parentElement.remove()">×</span>';
+        document.getElementById('editTimeItemList').appendChild(li);
+        timeInput.value = '';
+    });
+
+
+    document.getElementById("editPlanName").addEventListener("input", function(){
+        if(this.value.length > 50){
+            this.classList.add("invalid-field");
+        } else {
+            this.classList.remove("invalid-field");
         }
-    }
+    });
 
 
-    function filterTable() {
-        const input = document.getElementById('searchInput').value.toLowerCase();
-        const rows = document.querySelectorAll('#futterplanTable tbody tr');
-        rows.forEach(row => {
-            const cells = row.querySelectorAll('td');
-            const matches = Array.from(cells).some(cell => cell.innerText.toLowerCase().includes(input));
-            row.style.display = matches ? '' : 'none';
-        });
-    }
 </script>
 </body>
 </html>

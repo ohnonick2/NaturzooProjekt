@@ -1,202 +1,221 @@
 <!DOCTYPE html>
-<html lang="de">
-
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Futter Management | Rheiner Zoo</title>
+    <title>Login - Rheiner Zoo</title>
+    <div th:insert="~{vorlagen/icon :: icon}"></div>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <div th:insert="~{vorlagen/icon :: icon}"></div>
+
     <style>
+        /* Allgemeines Styling */
         body {
-            font-family: 'Arial', sans-serif;
-            background-image: url('/images/background.png');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
             margin: 0;
             padding: 0;
         }
 
-        /* Header */
-        header {
-            background-color: #2d6c5d;
-            color: white;
-            text-align: center;
-            padding: 10px 0;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-        }
-
-        header h1 {
-            font-size: 2rem;
-            margin: 0;
-            font-weight: bold;
-        }
-
-        header p {
-            font-size: 1rem;
-            margin: 0;
-            font-style: italic;
-        }
-
-        /* Login Card */
-        .login-card {
-            background-color: rgba(255, 255, 255, 0.95);
+        .login-container {
+            background: white;
+            padding: 40px;
             border-radius: 12px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            padding: 50px;
-            width: 600px;
-            margin: auto;
-            position: relative;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            max-width: 450px;
+            width: 100%;
+            text-align: center;
+            animation: fadeIn 0.5s ease-in-out;
         }
 
-        .login-card img {
-            width: 400px;
-            height: auto;
-            margin-bottom: 30px;
-            border-radius: 15px;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
+        /* Sanfte Einblendung */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        /* Fehlermeldung oben links */
-        .error-message-top-left {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            background-color: #dc3545;
+        h1 {
+            color: #27632a;
+            font-size: 26px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        /* Fehler-Message Styling */
+        .error-message {
+            display: none;
+            background: #dc3545;
             color: white;
-            padding: 10px 20px;
+            padding: 12px;
             border-radius: 8px;
             font-size: 1rem;
-            text-align: left;
-            opacity: 1;
-            z-index: 1000;
-            transition: opacity 1s ease-out;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: opacity 0.5s ease-in-out;
+            margin-bottom: 15px;
+            opacity: 0;
         }
 
         /* Eingabefelder */
         .form-control {
-            height: 60px;
-            font-size: 1.3rem;
+            height: 50px;
+            font-size: 1.1rem;
+            border: 2px solid #2d6c5d;
+            border-radius: 8px;
+            padding: 10px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .form-control:focus {
+            border-color: #218838;
+            box-shadow: 0 0 8px rgba(33, 136, 56, 0.3);
         }
 
         .form-label {
             font-size: 1.1rem;
             font-weight: bold;
-        }
-
-        .btn-login {
-            background-color: #28a745;
-            color: white;
-
+            color: #2d6c2e;
+            text-align: left;
             display: block;
-            margin: auto;
+            margin-bottom: 5px;
+        }
+
+        /* Passwort-Feld mit mittigem Auge */
+        .password-wrapper {
+            position: relative;
+        }
+
+        .password-input {
             width: 100%;
-            font-size: 1.3rem;
-            padding: 12px;
-        }
-
-        .btn-login:hover {
-            background-color: #218838;
-        }
-
-        footer {
-            background-color: #343a40;
-            color: #fff;
-            padding: 20px 0;
-            text-align: center;
-        }
-
-        footer a {
-            color: #28a745;
-            margin: 0 10px;
-            font-size: 1.5rem;
-            text-decoration: none;
-        }
-
-        footer p {
-            margin-bottom: 0;
-        }
-
-        footer hr {
-            border-color: rgba(255, 255, 255, 0.2);
+            padding-right: 40px;
         }
 
         .password-toggle {
             position: absolute;
             top: 50%;
-            right: 20px;
+            right: 15px;
             transform: translateY(-50%);
             cursor: pointer;
             color: #6c757d;
+            font-size: 1.3rem;
+        }
+
+        /* Login-Button */
+        .btn-login {
+            background: linear-gradient(to right, #218838, #2d6c5d);
+            color: white;
             font-size: 1.2rem;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            width: 100%;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-login:hover {
+            background: linear-gradient(to right, #1e7e34, #1f4e3e);
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Zurück-Button */
+        .btn-back {
+            background: white;
+            color: #2d6c5d;
+            font-size: 1rem;
+            padding: 10px;
+            border: 2px solid #2d6c5d;
+            border-radius: 8px;
+            width: 100%;
+            transition: all 0.3s ease-in-out;
+            margin-top: 10px;
+        }
+
+        .btn-back:hover {
+            background: #2d6c5d;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #6c757d;
         }
 
     </style>
 </head>
 
 <body>
-<!-- Header -->
-<header>
-    <h1>Willkommen im Rheiner Zoo</h1>
-    <p>Futter Management System</p>
-</header>
 
-<!-- Login Card -->
-<main class="d-flex align-items-center justify-content-center" style="min-height: 100vh;">
-    <div class="login-card text-center">
-        <!-- Fehlernachricht oben links -->
-        <div id="error-message-top-left" class="error-message-top-left" style="display: none;">
-            <span id="error-text-top-left">Fehler: Benutzername oder Passwort ist falsch!</span>
+<div class="login-container">
+    <h1>Login - Rheiner Zoo</h1>
+
+    <!-- Fehlernachricht -->
+    <div id="error-message" class="error-message">
+        <span id="error-text">Benutzername oder Passwort ist falsch</span>
+    </div>
+
+    <form action="/login" method="POST">
+        <div class="mb-3 text-start">
+            <label for="username" class="form-label">Benutzername:</label>
+            <input type="text" id="username" name="username" class="form-control" required>
         </div>
 
-        <!-- Bild -->
-        <img src="/images/login1.png" alt="Zoo Logo">
-        <h4 class="mb-4">Login in Ihren Account</h4>
-        <form action="/login" method="POST">
-            <div class="mb-4 text-start">
-                <label for="username" class="form-label">Benutzername</label>
-                <input type="text" id="username" name="username" class="form-control" required>
-            </div>
-            <div class="mb-4 text-start position-relative">
-                <label for="password" class="form-label">Passwort</label>
-                <input type="password" id="password" name="password" class="form-control" required>
+        <div class="mb-4 text-start">
+            <label for="password" class="form-label">Passwort:</label>
+            <div class="password-wrapper">
+                <input type="password" id="password" name="password" class="form-control password-input" required>
                 <i id="password-toggle" class="fa fa-eye password-toggle"></i>
             </div>
-            <button type="submit" class="btn btn-login w-100">Login</button>
-        </form>
-    </div>
-</main>
+        </div>
 
-<!-- Footer -->
-<footer th:insert="~{vorlagen/footer :: footer}"></footer>
+        <button type="submit" class="btn btn-login">Login</button>
+    </form>
+
+    <!-- Zurück-Button -->
+    <a href="/" class="btn btn-back">Zurück zur Startseite</a>
+</div>
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
         const errorParam = urlParams.get('error');
-        console.log(errorParam);
+
         if (errorParam) {
-            const errorMessageTopLeft = document.getElementById('error-message-top-left');
-            const errorTextTopLeft = document.getElementById('error-text-top-left');
+            const errorMessage = document.getElementById('error-message');
+            const errorText = document.getElementById('error-text');
+
             const errorMessages = {
-                'session': 'Ihre Sitzung ist abgelaufen!',
-                'error': 'Benutzername oder Passwort ist falsch!'
+                'session': 'Ihre Sitzung ist abgelaufen.',
+                'error': 'Benutzername oder Passwort ist falsch.'
             };
 
-            errorTextTopLeft.innerText = errorMessages[errorParam] || 'Unbekannter Fehler';
-            errorMessageTopLeft.style.display = 'block';
+            errorText.innerText = errorMessages[errorParam] || 'Unbekannter Fehler';
+            errorMessage.style.display = 'block';
+            errorMessage.style.opacity = '1';
 
             setTimeout(() => {
-                errorMessageTopLeft.style.opacity = '0';
+                errorMessage.style.opacity = '0';
             }, 5000);
 
             setTimeout(() => {
-                errorMessageTopLeft.style.display = 'none';
-            }, 6000);
+                errorMessage.style.display = 'none';
+            }, 5500);
         }
 
         const passwordToggle = document.getElementById('password-toggle');
@@ -209,7 +228,7 @@
             passwordToggle.classList.toggle('fa-eye-slash');
         });
     });
-
 </script>
+
 </body>
 </html>

@@ -36,13 +36,8 @@ import java.util.Map;
             // Hole den Benutzer anhand des Benutzernamens
             Pfleger pfleger = pflegerrepository.findPflegerById(userloggedIn.get("id").getAsLong());
 
-            if (pfleger != null && pfleger.getBild() != null) {
-                model.addAttribute("profilbild", Base64.getEncoder().encodeToString(pfleger.getBild()));
-            } else {
-                model.addAttribute("profilbild", null);  // Optional: Platzhalter für fehlendes Bild
-            }
+            model.addAttribute("pfleger", pfleger);
 
-            model.addAttribute("email", pfleger != null ? pfleger.getBenutzername() : "");  // Beispiel: E-Mail hinzufügen
             return "settings";
         }
 

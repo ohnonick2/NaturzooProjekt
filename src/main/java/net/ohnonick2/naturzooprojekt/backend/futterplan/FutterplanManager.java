@@ -5,14 +5,17 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.ohnonick2.naturzooprojekt.db.futter.*;
+import net.ohnonick2.naturzooprojekt.db.revier.Revier;
+import net.ohnonick2.naturzooprojekt.db.revier.RevierTier;
+import net.ohnonick2.naturzooprojekt.db.tier.Tier;
 import net.ohnonick2.naturzooprojekt.db.wochentag.Wochentag;
 import net.ohnonick2.naturzooprojekt.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @RestController
 @RequestMapping(value = "/api/futterplan")
@@ -38,11 +41,20 @@ public class FutterplanManager {
 
     @Autowired
     private FutterPlanFutterZeitRepository futterPlanFutterZeitRepository;
+    @Autowired
+    private Tierrespository tierrespository;
+    @Autowired
+    private FutterPlanTierRepository futterPlanTierRepositority;
+    @Autowired
+    private RevierTierRepository revierTierRepository;
+    @Autowired
+    private RevierRepository revierRepository;
 
     @PostMapping(value = "/add")
     public ResponseEntity<String> addFutterplan(@RequestBody String body) {
         JsonObject json = JsonParser.parseString(body).getAsJsonObject();
         System.out.println(json);
+
         if (!json.has("name") || !json.has("wochentage") || !json.has("uhrzeiten") || !json.has("futterList")) {
             return ResponseEntity.badRequest().body("Fehlende Felder: 'name', 'wochentage', 'uhrzeiten' oder 'futterList'");
         }
@@ -55,9 +67,9 @@ public class FutterplanManager {
         FutterPlan futterPlan = new FutterPlan(futterplanName);
         futterPlanRepository.save(futterPlan);
 
-        // ✅ Wochentage speichern
-        for (int i = 0; i < wochentageArray.size(); i++) {
-            Long wochentagId = wochentageArray.get(i).getAsLong();
+
+        for (JsonElement wochentagElement : wochentageArray) {
+            Long wochentagId = wochentagElement.getAsLong();
             Wochentag wochentag = wochenTagRepository.findById(wochentagId).orElse(null);
 
             if (wochentag == null) {
@@ -67,13 +79,12 @@ public class FutterplanManager {
             futterPlanWochentagRepository.save(new FutterPlanWochentag(futterPlan, wochentag));
         }
 
-        // ✅ Uhrzeiten speichern
-        for (int i = 0; i < uhrzeitenArray.size(); i++) {
-            String uhrzeit = uhrzeitenArray.get(i).getAsString();
 
-            //remove * als uhrzeit from the list
-            if (uhrzeit.equals("x")) {
-                continue;
+        for (JsonElement uhrzeitElement : uhrzeitenArray) {
+            String uhrzeit = uhrzeitElement.getAsString().trim();
+
+            if (uhrzeit.isEmpty() || uhrzeit.equalsIgnoreCase("x")) {
+                continue; // Überspringe leere oder ungültige Uhrzeiten
             }
 
             FutterZeit futterZeit = futterZeitRepository.findFutterZeitByuhrzeit(uhrzeit);
@@ -84,13 +95,15 @@ public class FutterplanManager {
             }
 
             futterPlanFutterZeitRepository.save(new FutterPlanFutterZeit(futterZeit, futterPlan));
-
-
         }
 
+        // ✅ Futter speichern (null-Werte ignorieren)
+        for (JsonElement futterElement : futterListArray) {
+            JsonObject futterObj = futterElement.getAsJsonObject();
+            if (!futterObj.has("futterId") || futterObj.get("futterId").isJsonNull()) {
+                continue; // Überspringe ungültige Einträge
+            }
 
-        for (int i = 0; i < futterListArray.size(); i++) {
-            JsonObject futterObj = futterListArray.get(i).getAsJsonObject();
             Long futterId = futterObj.get("futterId").getAsLong();
             int menge = futterObj.get("menge").getAsInt();
 
@@ -106,7 +119,143 @@ public class FutterplanManager {
             futterplanFutterRepository.save(new FutterplanFutter(futterPlan, futter, menge));
         }
 
+        // ✅ Tiere speichern (wenn vorhanden)
+        if (json.has("tiere")) {
+            JsonArray tierArray = json.getAsJsonArray("tiere");
+            for (JsonElement tierElement : tierArray) {
+                Long tierId = tierElement.getAsLong();
+                Tier tier = tierrespository.findById(tierId).orElse(null);
+                if (tier == null) {
+                    return ResponseEntity.badRequest().body("Tier mit ID " + tierId + " nicht gefunden.");
+                }
+                futterPlanTierRepositority.save(new FutterPlanTier(futterPlan, tier));
+            }
+        }
+
+        // ✅ Revier speichern (wenn vorhanden)
+        if (json.has("revierId") && !json.get("revierId").isJsonNull()) {
+            Long revierId = json.get("revierId").getAsLong();
+
+            Revier revier = revierRepository.findById(revierId).orElse(null);
+            if (revier == null) {
+                return ResponseEntity.badRequest().body("Revier mit ID " + revierId + " nicht gefunden.");
+            }
+
+            List<RevierTier> revierTierList = revierTierRepository.findAllByRevierId(revier);
+
+            for (RevierTier revierTier : revierTierList) {
+                futterPlanTierRepositority.save(new FutterPlanTier(futterPlan, revierTier.getTierId()));
+            }
+        }
+
         return ResponseEntity.ok("Futterplan erfolgreich mit Wochentagen, Uhrzeiten und Futter hinzugefügt.");
+    }
+
+
+    @PostMapping(value = "/edit")
+    public ResponseEntity<String> editFutterplan(@RequestBody String body) {
+        try {
+            JsonObject json = JsonParser.parseString(body).getAsJsonObject();
+
+            if (!json.has("id") || !json.has("name") || !json.has("wochentage") || !json.has("uhrzeiten") || !json.has("futterList")) {
+                return ResponseEntity.badRequest().body("Fehlende Pflichtfelder: 'id', 'name', 'wochentage', 'uhrzeiten', 'futterList'");
+            }
+
+            Long futterplanId = json.get("id").getAsLong();
+            String futterplanName = json.get("name").getAsString();
+            JsonArray wochentageArray = json.getAsJsonArray("wochentage");
+            JsonArray uhrzeitenArray = json.getAsJsonArray("uhrzeiten");
+            JsonArray futterListArray = json.getAsJsonArray("futterList");
+
+            Optional<FutterPlan> optionalFutterPlan = futterPlanRepository.findById(futterplanId);
+            if (optionalFutterPlan.isEmpty()) {
+                return ResponseEntity.badRequest().body("Futterplan mit ID " + futterplanId + " nicht gefunden.");
+            }
+
+            FutterPlan futterPlan = optionalFutterPlan.get();
+
+            // 📝 Name aktualisieren
+            futterPlan.setName(futterplanName);
+
+            // 🗑️ Entferne nicht mehr existierende Wochentage
+            List<FutterPlanWochentag> alteWochentage = futterPlanWochentagRepository.findByFutterplan(futterPlan);
+            Set<Long> neueWochentageIds = new HashSet<>();
+            for (JsonElement wochentagElement : wochentageArray) {
+                neueWochentageIds.add(wochentagElement.getAsLong());
+            }
+
+            alteWochentage.stream()
+                    .filter(w -> !neueWochentageIds.contains(w.getWochentag().getId()))
+                    .forEach(futterPlanWochentagRepository::delete);
+
+            // 📝 Neue Wochentage hinzufügen
+            for (Long wochentagId : neueWochentageIds) {
+                Wochentag wochentag = wochenTagRepository.findById(wochentagId).orElse(null);
+                if (wochentag != null && alteWochentage.stream().noneMatch(w -> w.getWochentag().getId() == wochentagId)) {
+                    futterPlanWochentagRepository.save(new FutterPlanWochentag(futterPlan, wochentag));
+                }
+            }
+
+            // 🕑 Uhrzeiten aktualisieren
+            List<FutterPlanFutterZeit> alteUhrzeiten = futterPlanFutterZeitRepository.findByFutterplanId(futterPlan.getId());
+            Set<String> neueUhrzeiten = new HashSet<>();
+            for (JsonElement uhrzeitElement : uhrzeitenArray) {
+                neueUhrzeiten.add(uhrzeitElement.getAsString().trim());
+            }
+
+            alteUhrzeiten.stream()
+                    .filter(z -> !neueUhrzeiten.contains(z.getFutterZeit().getUhrzeit()))
+                    .forEach(futterPlanFutterZeitRepository::delete);
+
+            for (String uhrzeit : neueUhrzeiten) {
+                if (!uhrzeit.isEmpty()) {
+                    FutterZeit futterZeit = futterZeitRepository.findFutterZeitByuhrzeit(uhrzeit);
+                    if (futterZeit == null) {
+                        futterZeit = new FutterZeit(uhrzeit);
+                        futterZeitRepository.save(futterZeit);
+                    }
+                    futterPlanFutterZeitRepository.save(new FutterPlanFutterZeit(futterZeit, futterPlan));
+                }
+            }
+
+            // 🍽️ Futter aktualisieren
+            List<FutterplanFutter> alteFutter = futterplanFutterRepository.findByFutterplanId(futterPlan.getId());
+
+            // 🛠️ JSON-Array in eine Liste von IDs umwandeln
+            Set<Long> neueFutterIds = new HashSet<>();
+            Map<Long, Integer> neueFutterMengen = new HashMap<>();
+            for (JsonElement futterElement : futterListArray) {
+                JsonObject futterObj = futterElement.getAsJsonObject();
+                if (futterObj.has("futterId") && !futterObj.get("futterId").isJsonNull()) {
+                    Long futterId = futterObj.get("futterId").getAsLong();
+                    int menge = futterObj.get("menge").getAsInt();
+                    neueFutterIds.add(futterId);
+                    neueFutterMengen.put(futterId, menge);
+                }
+            }
+
+            // 🗑️ Lösche alte Futtereinträge, die nicht mehr existieren
+            for (FutterplanFutter f : alteFutter) {
+                if (!neueFutterIds.contains(f.getFutter().getId())) {
+                    futterplanFutterRepository.delete(f);
+                }
+            }
+
+            // ✨ Neue Futtereinträge hinzufügen
+            for (Long futterId : neueFutterIds) {
+                Futter futter = futterRepository.findById(futterId).orElse(null);
+                if (futter != null) {
+                    FutterplanFutter futterplanFutter = new FutterplanFutter(futterPlan, futter, neueFutterMengen.get(futterId));
+                    futterplanFutterRepository.save(futterplanFutter);
+                }
+            }
+
+            futterPlanRepository.save(futterPlan);
+            return ResponseEntity.ok("Futterplan erfolgreich aktualisiert.");
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Ungültige JSON-Daten: " + e.getMessage());
+        }
     }
 
 
@@ -127,19 +276,13 @@ public class FutterplanManager {
         }
 
         List<FutterPlanFutterZeit> futterPlanFutterZeit = futterPlanFutterZeitRepository.findByFutterplanId(futterPlan.getId());
-        for (FutterPlanFutterZeit planFutterZeit : futterPlanFutterZeit) {
-            futterPlanFutterZeitRepository.delete(planFutterZeit);
-        }
+        futterPlanFutterZeitRepository.deleteAll(futterPlanFutterZeit);
 
         List<FutterPlanWochentag> futterPlanWochentag = futterPlanWochentagRepository.findByFutterplan(futterPlan);
-        for (FutterPlanWochentag planWochentag : futterPlanWochentag) {
-            futterPlanWochentagRepository.delete(planWochentag);
-        }
+        futterPlanWochentagRepository.deleteAll(futterPlanWochentag);
 
         List<FutterplanFutter> futterplanFutters = futterplanFutterRepository.findByFutterplanId(futterPlan.getId());
-        for (FutterplanFutter futterplanFutter : futterplanFutters) {
-            futterplanFutterRepository.delete(futterplanFutter);
-        }
+        futterplanFutterRepository.deleteAll(futterplanFutters);
 
 
 

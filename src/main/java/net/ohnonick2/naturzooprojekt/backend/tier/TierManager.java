@@ -11,10 +11,15 @@ import net.ohnonick2.naturzooprojekt.db.tier.TierArt;
 import net.ohnonick2.naturzooprojekt.repository.*;
 import net.ohnonick2.naturzooprojekt.utils.TierGeschlecht;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Random;
 
 @RestController
@@ -28,7 +33,7 @@ public class TierManager {
     private Tierartrepository tierartrepository;
 
     @Autowired
-    private FutterPlanTierRepositority futterPlanTierRepositority;
+    private FutterPlanTierRepository futterPlanTierRepositority;
 
     @Autowired
     private FutterPlanRepository futterPlanRepository;
@@ -42,42 +47,142 @@ public class TierManager {
     @PostMapping("/add")
     public ResponseEntity<String> addTier(@RequestBody String body) {
         if (body == null || body.isEmpty() || !body.startsWith("{") || !body.endsWith("}")) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body("Ungültige JSON-Daten.");
         }
-        JsonObject jsonObject = new JsonParser().parse(body).getAsJsonObject();
+
+        JsonObject jsonObject;
+        try {
+            jsonObject = JsonParser.parseString(body).getAsJsonObject();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Fehler beim Parsen der JSON-Daten: " + e.getMessage());
+        }
+
+        // Prüfen, ob alle erforderlichen Felder existieren
+        if (!jsonObject.has("name") || !jsonObject.has("geburtsdatum") || !jsonObject.has("geschlecht")
+                || !jsonObject.has("tierArt") || !jsonObject.has("revier")) {
+            return ResponseEntity.badRequest().body("Fehlende Felder im JSON.");
+        }
+
+        // 🔹 Name sicher extrahieren
         String name = jsonObject.get("name").getAsString();
-        LocalDate geburtsdatum = LocalDate.parse(jsonObject.get("geburtsdatum").getAsString());
-        LocalDate sterbedatum = jsonObject.get("sterbedatum") == null ? null : LocalDate.parse(jsonObject.get("sterbedatum").getAsString());
-        TierGeschlecht geschlecht = TierGeschlecht.valueOf(jsonObject.get("geschlecht").getAsString());
-        TierArt tierArt = tierartrepository.findByName(jsonObject.get("tierArt").getAsString());
-        String revier = jsonObject.get("revier").getAsString();
-        if (name == null || geburtsdatum == null || geschlecht == null || tierArt == null || revier == null) {
-            return ResponseEntity.badRequest().build();
-        }
-        Tier tier = new Tier(name, geburtsdatum,   sterbedatum , null, geschlecht, tierArt);
 
-        Revier revier1 = revierRepository.findRevierByName(revier);
-        if (revier1 == null) {
-            return ResponseEntity.badRequest().build();
+        // 🔹 Geburtsdatum sicher extrahieren
+        LocalDate geburtsdatum;
+        try {
+            geburtsdatum = LocalDate.parse(jsonObject.get("geburtsdatum").getAsString());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Ungültiges Geburtsdatum-Format.");
         }
 
-        boolean isAbgegeben = jsonObject.get("isAbgegeben").getAsBoolean();
+        // 🔹 Sterbedatum prüfen und sicher extrahieren
+        LocalDate sterbedatum = null;
+        if (jsonObject.has("sterbedatum") && !jsonObject.get("sterbedatum").isJsonNull()) {
+            try {
+                sterbedatum = LocalDate.parse(jsonObject.get("sterbedatum").getAsString());
+            } catch (Exception e) {
+                return ResponseEntity.badRequest().body("Ungültiges Sterbedatum-Format.");
+            }
+        }
+
+        // 🔹 Geschlecht sicher extrahieren
+        TierGeschlecht geschlecht;
+        try {
+            geschlecht = TierGeschlecht.valueOf(jsonObject.get("geschlecht").getAsString());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Ungültiges Geschlecht.");
+        }
+
+        // 🔹 Prüfen, ob die Tierart existiert – wenn nicht, wird sie erstellt
+        String tierArtName = jsonObject.get("tierArt").getAsString().trim();
+        TierArt tierArt = tierartrepository.findByName(tierArtName);
+        if (tierArt == null) {
+            TierArt newTierArt = new TierArt();
+            newTierArt.setName(tierArtName);
+            TierArt save = tierartrepository.save(newTierArt);
+            tierArt = save;
+        }
+
+        // 🔹 Revier-ID extrahieren
+        Long revierId = null;
+        if (jsonObject.has("revier") && !jsonObject.get("revier").isJsonNull()) {
+            revierId = jsonObject.get("revier").getAsLong();
+        }
+        if (revierId == null) {
+            return ResponseEntity.badRequest().body("Revier nicht angegeben.");
+        }
+
+        // 🔹 Revier aus der Datenbank abrufen
+        Revier revier = revierRepository.findById(revierId).orElse(null);
+        if (revier == null) {
+            return ResponseEntity.badRequest().body("Revier nicht gefunden.");
+        }
+
+        // 🔹 Neues Tier erstellen
+        Tier tier = new Tier(name, geburtsdatum, sterbedatum, null, geschlecht, tierArt);
+
+        // 🔹 `isAbgegeben` sicher abrufen
+        boolean isAbgegeben = jsonObject.has("isAbgegeben") && jsonObject.get("isAbgegeben").getAsBoolean();
         tier.setAbgegeben(isAbgegeben);
 
-        if (isAbgegeben) {
-            LocalDate abgabeDatum = jsonObject.has("abgabeDatum") && !jsonObject.get("abgabeDatum").isJsonNull()
-                    ? LocalDate.parse(jsonObject.get("abgabeDatum").getAsString())
-                    : LocalDate.now();  // Falls kein Datum übergeben wird, aktuelles Datum setzen
+        // 🔹 Abgabedatum setzen (falls vorhanden)
+        LocalDate abgabeDatum = null;
+        if (jsonObject.has("abgabeDatum") && !jsonObject.get("abgabeDatum").isJsonNull()) {
+            try {
+                abgabeDatum = LocalDate.parse(jsonObject.get("abgabeDatum").getAsString());
+            } catch (Exception e) {
+                return ResponseEntity.badRequest().body("Ungültiges Abgabedatum-Format.");
+            }
+        }
+        tier.setAbgabeDatum(abgabeDatum);
 
-            tier.setAbgabeDatum(abgabeDatum);
-        } else {
-            tier.setAbgabeDatum(null);  // Falls das Tier nicht abgegeben ist, Datum entfernen
+        // 🔹 Tier in die Datenbank speichern
+        tierrespository.save(tier);
+
+        // 🔹 Verbindung zwischen Revier und Tier speichern
+        revierTierRespository.save(new RevierTier(revier, tier));
+
+        return ResponseEntity.ok("Tier erfolgreich hinzugefügt.");
+    }
+
+
+
+    @GetMapping("/export")
+    public ResponseEntity<byte[]> exportTiere() {
+        List<Tier> tiere = tierrespository.findAll();
+
+        if (tiere.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
         }
 
-        tierrespository.save(tier);
-        revierTierRespository.save(new RevierTier(revier1, tier));
-        return ResponseEntity.ok().build();
+        StringWriter writer = new StringWriter();
+        PrintWriter csvWriter = new PrintWriter(writer);
+
+        // CSV-Header
+        csvWriter.println("ID,Name,Geburtsdatum,Sterbedatum,Abgegeben,Abgabedatum");
+
+        // Daten in CSV schreiben
+        for (Tier tier : tiere) {
+            csvWriter.println(
+                    tier.getId() + "," +
+                            tier.getName() + "," +
+                            tier.getGeburtsdatum() + "," +
+                            (tier.getSterbedatum() != null ? tier.getSterbedatum() : "") + "," +
+                            (tier.isAbgegeben() ? "Ja" : "Nein") + "," +
+                            (tier.getAbgabeDatum() != null ? tier.getAbgabeDatum() : "")
+            );
+        }
+
+        csvWriter.flush();
+        byte[] csvBytes = writer.toString().getBytes();
+
+        // CSV als Download bereitstellen
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=tiere_export.csv")
+                .header(HttpHeaders.CONTENT_TYPE, "text/csv")
+                .body(csvBytes);
     }
+
+
 
     @PostMapping("/delete")
     public ResponseEntity<String> deleteTier(@RequestBody String body) {

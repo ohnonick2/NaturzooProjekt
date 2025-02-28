@@ -53,7 +53,7 @@ public class NaturzooProjektApplication {
     private FutterPlanRepository futterplanRepository;
 
     @Autowired
-    private FutterPlanTierRepositority futterPlanTierRepositority;
+    private FutterPlanTierRepository futterPlanTierRepositority;
 
     @Autowired
     private AdresseRepository adresseRepository;

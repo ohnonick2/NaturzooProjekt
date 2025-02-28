@@ -27,7 +27,7 @@ public class FoodService {
     private Tierartrepository tierartrepository;
 
     @Autowired
-    private FutterPlanTierRepositority futterPlanTierRepositority;
+    private FutterPlanTierRepository futterPlanTierRepositority;
 
     @Autowired
     private FutterZeitRepository futterZeitRepository;

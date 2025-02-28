@@ -1,9 +1,14 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>Tier hinzufügen | Rheiner Zoo</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+    <!-- Icons und Sidebar über Thymeleaf laden -->
+    <div th:insert="~{vorlagen/icon :: icon}"></div>
+    <div th:insert="~{vorlagen/sidebar :: sidebar}"></div>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <style>
@@ -15,140 +20,110 @@
             background-color: #f4f6f9;
             overflow-x: hidden;
         }
-
         .main-content {
+            margin-left: 250px;
             max-width: 600px;
-            margin: 40px auto;
+            margin-top: 40px;
             background: white;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: margin-left 0.3s ease;
         }
-
+        .main-content.collapsed {
+            margin-left: 70px;
+        }
         .header {
             background-color: #1f4e3e;
             color: white;
             padding: 15px;
             text-align: center;
             border-radius: 8px;
-            margin-bottom: 20px;
         }
-
         .form-control {
             margin-bottom: 15px;
         }
-
-        .abgegeben-label {
-            font-weight: bold;
-            color: #28a745;
-        }
-
-        .abgabe-datum {
-            font-style: italic;
-            color: #6c757d;
-        }
-
         .btn-primary {
             background-color: #218838;
             border: none;
         }
-
         .btn-primary:hover {
             background-color: #18672a;
-        }
-
-        .btn-secondary {
-            background-color: #6c757d;
-        }
-
-        .btn-secondary:hover {
-            background-color: #565e64;
         }
     </style>
 </head>
 
 <body>
 
-<div class="main-content">
+<div class="main-content" id="main-content">
     <div class="header">
         <h2><i class="fas fa-plus"></i> Neues Tier hinzufügen</h2>
     </div>
 
     <form id="addTierForm">
-        <!-- Name -->
-        <label for="name" class="form-label">Name</label>
+        <label for="name" class="form-label"><i class="fas fa-paw"></i> Name</label>
         <input type="text" id="name" name="name" class="form-control" required>
 
-        <!-- Geburtsdatum -->
-        <label for="geburtsdatum" class="form-label">Geburtsdatum</label>
+        <label for="geburtsdatum" class="form-label"><i class="fas fa-calendar-alt"></i> Geburtsdatum</label>
         <input type="date" id="geburtsdatum" name="geburtsdatum" class="form-control" required>
 
-        <!-- Sterbedatum (optional) -->
-        <label for="sterbedatum" class="form-label">Sterbedatum (optional)</label>
-        <input type="date" id="sterbedatum" name="sterbedatum" class="form-control">
-
-        <!-- Geschlecht -->
-        <label for="geschlecht" class="form-label">Geschlecht</label>
+        <label for="geschlecht" class="form-label"><i class="fas fa-venus-mars"></i> Geschlecht</label>
         <select id="geschlecht" name="geschlecht" class="form-select" required>
             <option value="MAENNLICH">Männlich</option>
             <option value="WEIBLICH">Weiblich</option>
         </select>
 
-        <!-- Tierart -->
-        <label for="tierArt" class="form-label">Tierart</label>
-        <select id="tierArt" name="tierArt" class="form-select" required>
-            <option th:each="tierArt : ${tierArten}"
-                    th:value="${tierArt.id}"
-                    th:text="${tierArt.name}">
-            </option>
+        <!-- Tierart Auswahl -->
+        <label for="tierArt" class="form-label"><i class="fas fa-dog"></i> Tierart</label>
+        <div class="d-flex">
+            <select id="tierArt" name="tierArt" class="form-select" required>
+                <option value="">Bitte eine Tierart auswählen...</option>
+                <option th:each="tierArt : ${tierArten}" th:value="${tierArt.id}" th:text="${tierArt.name}"></option>
+                <option value="neu">+ Neue Tierart hinzufügen</option>
+            </select>
+        </div>
+
+        <!-- Eingabefeld für neue Tierart -->
+        <div id="newTierArtContainer" style="display: none;" class="mt-2">
+            <input type="text" id="newTierArt" class="form-control" placeholder="Neue Tierart eingeben...">
+        </div>
+
+        <label for="revier" class="form-label"><i class="fas fa-map-marker-alt"></i> Revier</label>
+        <select id="revier" name="revier" class="form-select" required>
+            <option value="">Bitte ein Revier auswählen...</option>
+            <option th:each="revier : ${reviere}" th:value="${revier.id}" th:text="${revier.name}"></option>
         </select>
 
-        <!-- Checkbox für "Abgegeben" -->
-        <div class="form-check mt-3">
-            <input type="checkbox" class="form-check-input" id="isAbgegeben" name="isAbgegeben" onchange="toggleAbgabeDatum()">
-            <label class="form-check-label" for="isAbgegeben">Als abgegeben markieren</label>
-        </div>
-
-        <!-- Abgabedatum (optional) -->
-        <div class="mt-2" id="abgabeDatumContainer" style="display:none;">
-            <label for="abgabeDatum" class="form-label">Abgabedatum (optional)</label>
-            <input type="date" id="abgabeDatum" name="abgabeDatum" class="form-control">
-        </div>
-
-        <!-- Buttons -->
-        <div class="mt-4 d-flex justify-content-between">
-            <a href="/tier" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Abbrechen
-            </a>
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-save"></i> Tier hinzufügen
-            </button>
-        </div>
-
-        <!-- Feedback-Nachricht -->
-        <div id="feedbackMessage" class="mt-3"></div>
+        <button type="submit" class="btn btn-primary mt-3">
+            <i class="fas fa-save"></i> Tier hinzufügen
+        </button>
     </form>
+
+    <div id="feedbackMessage" class="mt-3"></div>
 </div>
 
 <script>
-    function toggleAbgabeDatum() {
-        const isChecked = document.getElementById('isAbgegeben').checked;
-        document.getElementById('abgabeDatumContainer').style.display = isChecked ? 'block' : 'none';
-    }
+    document.getElementById('tierArt').addEventListener('change', function() {
+        document.getElementById('newTierArtContainer').style.display = (this.value === 'neu') ? 'block' : 'none';
+    });
 
     document.getElementById('addTierForm').addEventListener('submit', async function(event) {
-        event.preventDefault(); // Standard-Submit verhindern
+        event.preventDefault();
+
+        let tierArtValue = document.getElementById('tierArt').value;
+        let newTierArtName = document.getElementById('newTierArt').value.trim();
+
+        // Falls "Neue Tierart" ausgewählt wurde, wird der Name übernommen
+        if (tierArtValue === "neu" && newTierArtName !== "") {
+            tierArtValue = newTierArtName;
+        }
 
         const formData = {
             name: document.getElementById('name').value,
             geburtsdatum: document.getElementById('geburtsdatum').value,
-            sterbedatum: document.getElementById('sterbedatum').value || null,
             geschlecht: document.getElementById('geschlecht').value,
-            tierArt: document.getElementById('tierArt').value,
-            isAbgegeben: document.getElementById('isAbgegeben').checked,
-            abgabeDatum: document.getElementById('isAbgegeben').checked
-                ? document.getElementById('abgabeDatum').value || new Date().toISOString().split('T')[0]
-                : null
+            tierArt: tierArtValue,
+            revier: document.getElementById('revier').value
         };
 
         try {
@@ -162,12 +137,18 @@
                 document.getElementById('feedbackMessage').innerHTML = `<div class="alert alert-success">Tier erfolgreich hinzugefügt!</div>`;
                 setTimeout(() => window.location.href = "/tier", 1000);
             } else {
-                throw new Error('Fehler beim Speichern.');
+                const errorText = await response.text();
+                throw new Error(errorText || 'Fehler beim Speichern.');
             }
         } catch (error) {
             document.getElementById('feedbackMessage').innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
         }
     });
+
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('collapsed');
+        document.getElementById('main-content').classList.toggle('collapsed');
+    }
 </script>
 
 </body>

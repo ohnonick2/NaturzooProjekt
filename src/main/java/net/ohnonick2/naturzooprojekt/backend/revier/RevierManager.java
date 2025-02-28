@@ -34,6 +34,38 @@ public class RevierManager {
     @Autowired
     private Tierrespository tierRepository;
 
+
+    @PostMapping("/add")
+    public ResponseEntity<String> addRevier(@RequestBody String body) {
+        if (body == null || body.isEmpty() || !body.startsWith("{") || !body.endsWith("}")) {
+            return ResponseEntity.badRequest().body("Ungültige JSON-Daten.");
+        }
+
+        JsonObject jsonObject;
+        try {
+            jsonObject = JsonParser.parseString(body).getAsJsonObject();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Fehler beim Parsen der JSON-Daten: " + e.getMessage());
+        }
+
+        // Prüfen, ob alle erforderlichen Felder existieren
+        if (!jsonObject.has("name")) {
+            return ResponseEntity.badRequest().body("Fehlende Felder im JSON.");
+        }
+
+        String name = jsonObject.get("name").getAsString();
+        Revier revier = new Revier(name);
+
+        if (revierRepository.findRevierByName(name) != null) {
+            return ResponseEntity.badRequest().body("Revier existiert bereits!");
+        }
+
+        revierRepository.save(revier);
+
+        return ResponseEntity.ok("Revier erfolgreich hinzugefügt!");
+
+    }
+
     // Revier bearbeiten
     @PostMapping("/edit")
     public ResponseEntity<String> updateRevier(@RequestBody String body) {
@@ -51,6 +83,22 @@ public class RevierManager {
             return ResponseEntity.badRequest().body("Revier nicht gefunden!");
         }
     }
+
+    @PostMapping("/delete")
+    public ResponseEntity<String> deleteRevier(@RequestBody String body) {
+        JsonObject jsonObject = JsonParser.parseString(body).getAsJsonObject();
+        Long id = jsonObject.get("id").getAsLong();
+
+        Optional<Revier> revierOptional = revierRepository.findById(id);
+        if (revierOptional.isPresent()) {
+            Revier revier = revierOptional.get();
+            revierRepository.delete(revier);
+            return ResponseEntity.ok("Revier erfolgreich gelöscht!");
+        } else {
+            return ResponseEntity.badRequest().body("Revier nicht gefunden!");
+        }
+    }
+
 
     // Pfleger zum Revier hinzufügen
     @PostMapping("/addPfleger")

@@ -34,70 +34,95 @@ public class LieferantManager {
         try {
             JsonObject json = JsonParser.parseString(body).getAsJsonObject();
             if (json == null) {
-                return ResponseEntity.badRequest().body("Invalid JSON");
+                return ResponseEntity.badRequest().body("Ungültiges JSON-Format.");
             }
 
-            // Prüfen, ob notwendige Felder vorhanden sind
-            if (!json.has("name") || !json.has("telefon") || !json.has("ansprechpartner")) {
-                return ResponseEntity.badRequest().body("Fehlende Attribute: Name, Telefon oder Ansprechpartner.");
+            System.out.println(json);
+
+            // Prüfen, ob alle erforderlichen Felder vorhanden sind
+            if (!json.has("name") || !json.has("telefon")) {
+                return ResponseEntity.badRequest().body("Fehlende Attribute: Name oder Telefon.");
             }
 
-            Adresse adresse;
-            if (json.has("adresseId")) {
-                long adresseId = json.get("adresseId").getAsLong();
-                adresse = adresseRepository.findById(adresseId).orElse(null);
-                if (adresse == null) {
-                    return ResponseEntity.badRequest().body("Adresse mit ID " + adresseId + " nicht gefunden.");
+            String name = json.get("name").getAsString();
+            String telefon = json.get("telefon").getAsString();
+            String ansprechpartner = json.has("ansprechpartner") ? json.get("ansprechpartner").getAsString() : null;
+
+            // Überprüfung, ob der Lieferant bereits existiert
+            if (lieferantRepository.existsLieferantByName(name)) {
+                return ResponseEntity.badRequest().body("Ein Lieferant mit diesem Namen existiert bereits.");
+            }
+
+            Adresse adresse = null;
+
+            // **Falls Adresse als ID angegeben wurde**
+            if (json.has("adresse") && json.get("adresse").isJsonObject()) {
+                JsonObject adresseJson = json.getAsJsonObject("adresse");
+
+                if (adresseJson.has("id")) {
+                    try {
+                        long adresseId = adresseJson.get("id").getAsLong();
+                        adresse = adresseRepository.findById(adresseId).orElse(null);
+                        if (adresse == null) {
+                            return ResponseEntity.badRequest().body("Adresse mit ID " + adresseId + " nicht gefunden.");
+                        }
+                    } catch (Exception e) {
+                        return ResponseEntity.badRequest().body("Ungültige Adresse-ID.");
+                    }
                 }
-            } else if (json.has("adresse")) {
-                JsonObject adresseJson = json.get("adresse").getAsJsonObject();
-                if (!adresseJson.has("strasse") || !adresseJson.has("hausnummer") || !adresseJson.has("plz") || !adresseJson.has("ortname")) {
+                // **Falls Adresse als neues Objekt übergeben wurde**
+                else if (adresseJson.has("strasse") && adresseJson.has("hausnummer") && adresseJson.has("plz") && adresseJson.has("ortname")) {
+                    int plz;
+                    try {
+                        plz = Integer.parseInt(adresseJson.get("plz").getAsString().trim());
+                    } catch (NumberFormatException e) {
+                        return ResponseEntity.badRequest().body("PLZ muss eine gültige Zahl sein.");
+                    }
+
+                    String ortname = adresseJson.get("ortname").getAsString();
+                    Ort ort = ortrepository.findByOrtname(ortname);
+                    if (ort == null) {
+                        ort = new Ort(plz, ortname);
+                        ortrepository.save(ort);
+                    }
+
+                    // Adresse abrufen oder neu erstellen
+                    adresse = adresseRepository.findByStrasseAndHausnummerAndOrt(
+                            adresseJson.get("strasse").getAsString(),
+                            adresseJson.get("hausnummer").getAsString(),
+                            ort
+                    );
+
+                    if (adresse == null) {
+                        adresse = new Adresse(
+                                adresseJson.get("strasse").getAsString(),
+                                adresseJson.get("hausnummer").getAsString(),
+                                ort
+                        );
+                        adresseRepository.save(adresse);
+                    }
+                } else {
                     return ResponseEntity.badRequest().body("Fehlende Adressinformationen.");
-                }
-
-                // Fehler abfangen: PLZ muss eine gültige Zahl sein
-                int plz;
-                try {
-                    plz = Integer.parseInt(adresseJson.get("plz").getAsString());
-                } catch (NumberFormatException e) {
-                    return ResponseEntity.badRequest().body("PLZ muss eine gültige Zahl sein.");
-                }
-
-                String ortname = adresseJson.get("ortname").getAsString();
-                Ort ort = ortrepository.findByPlz(plz);
-                if (ort == null) {
-                    ort = new Ort(plz, ortname);
-                    ortrepository.save(ort);
-                }
-
-                adresse = adresseRepository.findByStrasseAndHausnummerAndOrt(
-                        adresseJson.get("strasse").getAsString(),
-                        adresseJson.get("hausnummer").getAsString(),
-                        ort
-                );
-                if (adresse == null) {
-                    adresse = new Adresse(adresseJson.get("strasse").getAsString(),
-                            adresseJson.get("hausnummer").getAsString(), ort);
-                    adresseRepository.save(adresse);
                 }
             } else {
                 return ResponseEntity.badRequest().body("Es muss eine bestehende oder neue Adresse angegeben werden.");
             }
 
-            // Lieferant speichern
-            Lieferant lieferant = new Lieferant(
-                    json.get("name").getAsString(),
-                    adresse,
-                    json.get("telefon").getAsString(),
-                    json.get("ansprechpartner").getAsString()
-            );
+            // Neuen Lieferanten speichern
+            Lieferant lieferant = new Lieferant(name, adresse, telefon, ansprechpartner);
             lieferantRepository.save(lieferant);
 
-            return ResponseEntity.ok("Lieferant erfolgreich hinzugefügt!");
+            return ResponseEntity.ok("Lieferant erfolgreich hinzugefügt.");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Fehler: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Fehler beim Speichern des Lieferanten: " + e.getMessage());
         }
     }
+
+
+
+
+
+
 
     /**
      * Bearbeitet einen vorhandenen Lieferanten.

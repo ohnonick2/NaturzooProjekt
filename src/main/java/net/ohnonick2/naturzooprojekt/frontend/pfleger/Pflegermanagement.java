@@ -76,7 +76,7 @@ public class Pflegermanagement {
         model.addAttribute("loggedInUserRoles", userRolesMap.getOrDefault(loggedInUser.getId(), List.of()));
         List<Ort> orte = ortrepository.findAll();
         model.addAttribute("orte", orte);
-
+        model.addAttribute("pflegerListe" , pflegerList);
         // Return the Thymeleaf template path
         return "autharea/pflegemanagement/plegemanagement";
     }
@@ -121,11 +121,15 @@ public class Pflegermanagement {
         private final boolean isSuperadmin;
         private final boolean isAdmin;
 
+        private String roleNames;
+
         public UserWithRoles(Pfleger pfleger, List<Rolle> roles) {
             this.pfleger = pfleger;
             this.roles = roles;
             this.isAdmin = roles.stream().anyMatch(role -> "Admin".equalsIgnoreCase(role.getName()));
             this.isSuperadmin = roles.stream().anyMatch(role -> "SuperAdmin".equalsIgnoreCase(role.getName()));
+
+            this.roleNames = roles.stream().map(Rolle::getName).collect(Collectors.joining(", "));
         }
 
         public Pfleger getPfleger() {
@@ -144,6 +148,9 @@ public class Pflegermanagement {
             return isAdmin;
         }
 
+        public String getRoleNames() {
+            return roleNames;
+        }
     }
 
 

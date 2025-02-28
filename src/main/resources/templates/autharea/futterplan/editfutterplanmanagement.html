@@ -4,86 +4,107 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Futterplan bearbeiten</title>
-
-  <div th:insert="~{vorlagen/icon :: icon}"></div>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js"></script>
 
   <style>
-    body { font-family: Arial, sans-serif; background-image: url('/images/background.png'); background-color: #f4f6f9; }
+    body {
+      font-family: Arial, sans-serif;
+      background-image: url('/images/background.png');
+      margin: 0;
+      padding: 0;
+      background-color: #f4f6f9;
+      overflow-x: hidden;
+    }
     .main-content { margin-left: 250px; padding: 20px; }
     .card { border: none; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); padding: 20px; border-radius: 10px; background: white; }
     .header { background-color: #1f4e3e; color: white; padding: 15px; text-align: center; border-radius: 8px; }
     .btn-primary { background-color: #4a7c56; border-color: #4a7c56; }
+    .btn-primary:hover { background-color: #3a6343; }
+    .list-group-item { display: flex; justify-content: space-between; align-items: center; }
+    .remove-btn { color: red; cursor: pointer; font-size: 1.3em; }
+    .remove-btn:hover { color: darkred; }
+    .input-group-text { background-color: #4a7c56; color: white; }
+    .main-content.collapsed {
+      margin-left: 70px;
+    }
+
+    .main-content {
+      margin-left: 250px;
+      padding: 20px;
+      transition: margin-left 0.3s ease;
+    }
   </style>
 </head>
 
 <body>
-
-<!-- Sidebar -->
 <div th:insert="~{vorlagen/sidebar :: sidebar}"></div>
-
-<!-- Main Content -->
-<div class="main-content">
+<div class="main-content" id="main-content">
   <div class="header">
     <h2>Futterplan bearbeiten</h2>
   </div>
 
   <div class="card">
-    <form id="editFutterplanForm" th:action="@{/futterplan/edit/{id}(id=${futterplan.id})}" method="post">
-      <!-- Name des Futterplans -->
-      <div class="mb-3">
+    <form id="editFutterplanForm">
+      <input type="hidden" id="futterplan-id" th:value="${futterplan.id}">
+
+      <!-- 📝 Name des Futterplans -->
+      <div class="mb-4">
         <label for="name" class="form-label">Neuer Name</label>
-        <input type="text" class="form-control" id="name" th:field="${futterplan.name}" required>
+        <input type="text" class="form-control" id="name" th:value="${futterplan.name}" required>
       </div>
 
-      <!-- 🍽️ Futter bearbeiten -->
-      <div class="mb-3">
-        <label class="form-label">Futter auswählen</label>
+      <!-- 🍽️ Futter verwalten -->
+      <div class="mb-4">
+        <label class="form-label">Futter & Menge auswählen</label>
         <div class="input-group">
+          <span class="input-group-text"><i class="fas fa-carrot"></i></span>
           <select class="form-select" id="futter-dropdown">
             <option th:each="futter : ${verfügbareFutterList}" th:value="${futter.id}" th:text="${futter.name}"></option>
           </select>
           <input type="number" class="form-control" id="futter-menge" min="1" placeholder="Menge (kg)">
           <button type="button" class="btn btn-primary" onclick="addFutter()">
-            <i class="fas fa-plus"></i> Hinzufügen
+            <i class="fas fa-plus"></i>
           </button>
         </div>
-        <ul id="futter-list" class="list-group mt-2">
-          <li th:each="entry : ${futterMengenMap}" class="list-group-item" th:data-futter-id="${entry.key}" th:data-menge="${entry.value}">
-            <span th:text="${entry.value} + ' kg - ' + (${futterNamenMap[entry.key] != null ? futterNamenMap[entry.key] : 'Unbekannt'})"></span>
-            <span class="remove-btn" onclick="removeFutter(this)">&times;</span>
-          </li>
-        </ul>
-      </div>
-
-      <!-- 🕑 Uhrzeiten bearbeiten -->
-      <div class="mb-3">
-        <label class="form-label">Uhrzeiten hinzufügen (HH:mm)</label>
-        <div class="input-group">
-          <input type="time" class="form-control" id="global-time">
-          <button type="button" class="btn btn-primary" onclick="addGlobalTime()">
-            <i class="fas fa-plus"></i> Hinzufügen
-          </button>
-        </div>
-        <ul id="global-time-list" class="list-group mt-2">
-          <li th:each="zeit : ${futterzeitenList}" class="list-group-item" th:data-time="${zeit}">
-            <span th:text="${zeit}"></span>
-            <span class="remove-btn" onclick="removeTime(this)">&times;</span>
+        <ul id="futter-list" class="list-group mt-3">
+          <li th:each="futter : ${ausgewählteFutter}" class="list-group-item"
+              th:data-futter-id="${futter.futter.id}" th:data-menge="${futter.menge}">
+            <span th:text="${futter.futter.name} + ' - ' + ${futter.menge} + ' kg'"></span>
+            <span class="remove-btn" onclick="removeItem(this)"><i class="fas fa-trash-alt"></i></span>
           </li>
         </ul>
       </div>
 
       <!-- 📆 Wochentage bearbeiten -->
-      <div class="mb-3">
+      <div class="mb-4">
         <label class="form-label">Wochentage auswählen</label>
         <div class="d-flex flex-wrap">
           <div th:each="wochentag : ${wochentagList}" class="form-check me-3">
-            <input class="form-check-input wochentag-checkbox" type="checkbox" th:value="${wochentag.id}"
-                   th:checked="${futterplan.wochentage != null && futterplan.wochentage.contains(wochentag.name)}">
+            <input class="form-check-input wochentag-checkbox" type="checkbox"
+                   th:value="${wochentag.id}" th:checked="${ausgewählteWochentage.contains(wochentag.id)}">
             <label class="form-check-label" th:text="${wochentag.name}"></label>
           </div>
         </div>
+      </div>
+
+      <!-- 🕑 Uhrzeiten verwalten -->
+      <div class="mb-4">
+        <label class="form-label">Uhrzeiten hinzufügen</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="fas fa-clock"></i></span>
+          <input type="time" class="form-control" id="global-time">
+          <button type="button" class="btn btn-primary" onclick="addGlobalTime()">
+            <i class="fas fa-plus"></i>
+          </button>
+        </div>
+        <ul id="uhrzeit-list" class="list-group mt-3">
+          <li th:each="zeit : ${futterzeitenList}" class="list-group-item"
+              th:data-time="${zeit}">
+            <span th:text="${zeit}"></span>
+            <span class="remove-btn" onclick="removeItem(this)"><i class="fas fa-trash-alt"></i></span>
+          </li>
+        </ul>
       </div>
 
       <div class="d-flex justify-content-between">
@@ -95,19 +116,6 @@
 </div>
 
 <script>
-  function addGlobalTime() {
-    const input = document.getElementById("global-time");
-    const list = document.getElementById("global-time-list");
-    const timeValue = input.value.trim();
-
-    if (!timeValue || Array.from(list.children).some(li => li.dataset.time === timeValue)) {
-      alert("Diese Uhrzeit wurde bereits hinzugefügt oder ist ungültig.");
-      return;
-    }
-    addListItem(list, timeValue);
-    input.value = "";
-  }
-
   function addFutter() {
     const select = document.getElementById('futter-dropdown');
     const list = document.getElementById('futter-list');
@@ -132,20 +140,99 @@
     li.dataset.futterId = futterId;
     li.dataset.menge = menge;
     li.innerHTML = `<span>${futterName} - ${menge} kg</span>
-                        <span class="remove-btn" onclick="removeFutter(this)">&times;</span>`;
+                    <span class="remove-btn" onclick="removeItem(this)"><i class="fas fa-trash-alt"></i></span>`;
 
     list.appendChild(li);
     mengeInput.value = "";
   }
 
-  function removeFutter(element) {
+  function addGlobalTime() {
+    const input = document.getElementById("global-time");
+    const list = document.getElementById("uhrzeit-list");
+    const timeValue = input.value.trim();
+
+    if (!timeValue || Array.from(list.children).some(li => li.dataset.time === timeValue)) {
+      alert("Diese Uhrzeit wurde bereits hinzugefügt oder ist ungültig.");
+      return;
+    }
+
+    const li = document.createElement("li");
+    li.classList.add("list-group-item");
+    li.dataset.time = timeValue;
+    li.innerHTML = `<span>${timeValue}</span>
+                    <span class="remove-btn" onclick="removeItem(this)"><i class="fas fa-trash-alt"></i></span>`;
+
+    list.appendChild(li);
+    input.value = "";
+  }
+
+  function removeItem(element) {
     element.parentElement.remove();
   }
 
-  function updateFutterplan() {
-    const form = document.getElementById("editFutterplanForm");
-    form.submit();
+  async function updateFutterplan() {
+    const futterplanId = document.getElementById("futterplan-id").value;
+    const name = document.getElementById("name").value;
+
+    // Wochentage sammeln
+    const wochentage = Array.from(document.querySelectorAll(".wochentag-checkbox:checked"))
+            .map(cb => parseInt(cb.value));
+
+    // Uhrzeiten sammeln
+    const uhrzeiten = Array.from(document.querySelectorAll("#uhrzeit-list .list-group-item"))
+            .map(li => li.dataset.time);
+
+    // Futter mit Menge sammeln
+    const futterList = Array.from(document.querySelectorAll("#futter-list .list-group-item"))
+            .map(li => ({
+              futterId: parseInt(li.dataset.futterId),
+              menge: parseInt(li.dataset.menge)
+            }));
+
+    // 🛑 Fehlerbehandlung: Überprüfen, ob alle Felder ausgefüllt wurden
+    if (!name) {
+      alert("Bitte einen Namen für den Futterplan eingeben.");
+      return;
+    }
+
+    if (wochentage.length === 0) {
+      alert("Bitte mindestens einen Wochentag auswählen.");
+      return;
+    }
+
+    if (futterList.length === 0) {
+      alert("Bitte mindestens ein Futter hinzufügen.");
+      return;
+    }
+
+    // 📦 JSON-Daten für das Backend vorbereiten
+    const updatedFutterplan = {
+      id: parseInt(futterplanId),
+      name,
+      wochentage,
+      uhrzeiten,
+      futterList
+    };
+
+    try {
+      const response = await fetch("/api/futterplan/edit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedFutterplan)
+      });
+
+      if (response.ok) {
+        alert("Futterplan erfolgreich aktualisiert!");
+        window.location.href = "/futterplan"; // 🔄 Weiterleitung nach Erfolg
+      } else {
+        const errorMessage = await response.text();
+        alert("Fehler beim Speichern: " + errorMessage);
+      }
+    } catch (error) {
+      alert("Fehler beim Senden der Daten: " + error);
+    }
   }
+
 </script>
 
 </body>
