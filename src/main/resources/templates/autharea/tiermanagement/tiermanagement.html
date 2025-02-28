@@ -4,7 +4,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<<<<<<< HEAD
   <title>Tierverwaltung | Rheiner Zoo</title>
+=======
+  <title>Tiermanagement | Rheiner Zoo</title>
+  <div th:insert="~{vorlagen/icon :: icon}"></div>
+>>>>>>> origin/master
 
   <div th:insert="~{vorlagen/icon :: icon}"></div>
 
@@ -15,11 +20,26 @@
   <style>
     body {
       font-family: Arial, sans-serif;
+      background-image: url('/images/background.png');
       background-color: #f4f6f9;
+<<<<<<< HEAD
+=======
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+>>>>>>> origin/master
     }
     .main-content {
       margin-left: 250px;
       padding: 20px;
+<<<<<<< HEAD
+=======
+      transition: margin-left 0.3s ease;
+    }
+
+    .main-content.collapsed {
+      margin-left: 70px;
+>>>>>>> origin/master
     }
     .card {
       border: none;
@@ -37,6 +57,7 @@
 <!-- Sidebar -->
 <div th:insert="~{vorlagen/sidebar :: sidebar}"></div>
 
+<<<<<<< HEAD
 <!-- Main Content -->
 <div class="main-content">
   <div th:replace="~{vorlagen/header :: header(pageTitle='Tierverwaltung - Rheiner Zoo')}"></div>
@@ -101,6 +122,71 @@
       </tr>
       </tbody>
     </table>
+=======
+<!-- Hauptinhalt -->
+<div class="main-content" id="main-content">
+  <div class="header">
+    <h2>Tiermanagement</h2>
+  </div>
+
+  <div class="card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4>Verwalten Sie die Tiere im Rheiner Zoo</h4>
+      <button class="btn btn-success" onclick="addTier()" sec:authorize="hasAuthority('TIER_WRITE') or hasAuthority('*')">
+        <i class="fas fa-plus"></i> Tier hinzufügen
+      </button>
+    </div>
+
+    <div class="search-container mb-3">
+      <input type="text" id="searchInput" placeholder="Tier suchen (z. B. Name, Art, Revier)" onkeyup="filterTable()">
+    </div>
+
+    <div th:if="${tierList.size() > 0}">
+      <table class="table table-striped" id="tierTable">
+        <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Geburtsdatum</th>
+          <th>Tierart</th>
+          <th>Revier</th>
+          <th>Aktionen</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="tier : ${tierList}">
+          <td th:text="${tier.tierId}"></td>
+          <td th:text="${tier.tierName}"></td>
+          <td th:text="${tier.geburtsdatum}"></td>
+          <td th:text="${tier.tierArtName}"></td>
+          <td th:text="${tier.revierName}"></td>
+          <td>
+            <!-- Bearbeiten-Button: Nur sichtbar für Benutzer mit TIER_WRITE -->
+            <button class="btn btn-primary btn-action"
+                    th:onclick="'editTier(' + ${tier.tierId} + ')'"
+                    sec:authorize="hasAuthority('TIER_WRITE') or hasAuthority('*')">
+              <i class="fas fa-edit"></i> Bearbeiten
+            </button>
+
+            <!-- Löschen-Button: Nur sichtbar für Benutzer mit TIER_WRITE -->
+            <button class="btn btn-danger btn-action"
+                    onclick="confirmDeleteTier(this)"
+                    th:attr="data-tier-id=${tier.tierId}"
+                    sec:authorize="hasAuthority('TIER_WRITE') or hasAuthority('*')">
+              <i class="fas fa-trash"></i> Löschen
+            </button>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div th:if="${tierList.size() == 0}" class="alert alert-warning">
+      Es sind keine Tiere vorhanden. Bitte fügen Sie ein Tier hinzu.
+    </div>
+
+    <div id="pagination" class="d-flex justify-content-center mt-3"></div>
+>>>>>>> origin/master
   </div>
 
   <!-- Modal: Tier hinzufügen -->
@@ -217,6 +303,15 @@
       console.error("❌ addRevier nicht gefunden!");
     }
   });
+
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('collapsed');
+    document.getElementById('main-content').classList.toggle('collapsed');
+  }
+
+</script>
+>>>>>>> origin/master
 
 
 </script>
