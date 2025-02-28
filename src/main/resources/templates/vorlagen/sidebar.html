@@ -161,7 +161,10 @@
     <a sec:authorize="hasAuthority('NOTIFICATION_MANAGE') or hasAuthority('*')" href="/notifications">
       <i class="fas fa-bell"></i> <span>Benachrichtigungen</span>
     </a>
-
+    <div class="logout-container">
+      <a href="/settings">
+        <i class="fas fa-user"></i> <span>Settings</span>
+      </a>
     <!-- Logout + Countdown -->
     <div class="logout-section">
       <a id="logoutButton" href="/logout">
@@ -170,7 +173,7 @@
       <span id="countdown" class="session-warning">20:00</span>
     </div>
   </div>
-
+</div>
   <!-- Script -->
   <script>
     let sessionTimeout = 1200; // 20 Minuten (1200 Sekunden)

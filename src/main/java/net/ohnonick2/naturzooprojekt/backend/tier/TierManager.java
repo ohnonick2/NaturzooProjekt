@@ -11,10 +11,15 @@ import net.ohnonick2.naturzooprojekt.db.tier.TierArt;
 import net.ohnonick2.naturzooprojekt.repository.*;
 import net.ohnonick2.naturzooprojekt.utils.TierGeschlecht;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Random;
 
 @RestController
@@ -141,7 +146,41 @@ public class TierManager {
 
 
 
+    @GetMapping("/export")
+    public ResponseEntity<byte[]> exportTiere() {
+        List<Tier> tiere = tierrespository.findAll();
 
+        if (tiere.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+        }
+
+        StringWriter writer = new StringWriter();
+        PrintWriter csvWriter = new PrintWriter(writer);
+
+        // CSV-Header
+        csvWriter.println("ID,Name,Geburtsdatum,Sterbedatum,Abgegeben,Abgabedatum");
+
+        // Daten in CSV schreiben
+        for (Tier tier : tiere) {
+            csvWriter.println(
+                    tier.getId() + "," +
+                            tier.getName() + "," +
+                            tier.getGeburtsdatum() + "," +
+                            (tier.getSterbedatum() != null ? tier.getSterbedatum() : "") + "," +
+                            (tier.isAbgegeben() ? "Ja" : "Nein") + "," +
+                            (tier.getAbgabeDatum() != null ? tier.getAbgabeDatum() : "")
+            );
+        }
+
+        csvWriter.flush();
+        byte[] csvBytes = writer.toString().getBytes();
+
+        // CSV als Download bereitstellen
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=tiere_export.csv")
+                .header(HttpHeaders.CONTENT_TYPE, "text/csv")
+                .body(csvBytes);
+    }
 
 
 

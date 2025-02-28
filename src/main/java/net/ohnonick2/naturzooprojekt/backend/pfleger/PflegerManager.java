@@ -153,11 +153,13 @@ public class PflegerManager {
         try {
             int ortPlz = targetUser.get("ort").getAsInt();
             ort = ortrepository.findByPlz(ortPlz);
+
         } catch (NumberFormatException e) {
             String ortName = targetUser.get("ort").getAsString();
             ort = ortrepository.findByOrtname(ortName);
         }
         if (ort == null) return ResponseEntity.badRequest().body("Ort nicht gefunden");
+
 
         pfleger.setOrt(ort);
         pflegerrepository.save(pfleger);

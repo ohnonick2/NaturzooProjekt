@@ -43,7 +43,7 @@ public class Index {
     @Autowired
     private FutterPlanWochentagRepository futterPlanWochentagRepository;
 
-    @GetMapping("/")
+    @GetMapping("/index")
     public String showFoodPlan(Model model) {
         List<FutterPlan> futterplaene = futterPlanRepository.findAll();
         List<Wochentag> wochentage = wochenTagRepository.findAll();

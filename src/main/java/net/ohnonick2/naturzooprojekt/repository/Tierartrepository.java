@@ -11,4 +11,6 @@ public interface Tierartrepository extends JpaRepository<TierArt, Long> {
     TierArt findByName(String name);
     List<TierArt> findAll();
     Optional<TierArt> findById(Long id);
+
+
 }
