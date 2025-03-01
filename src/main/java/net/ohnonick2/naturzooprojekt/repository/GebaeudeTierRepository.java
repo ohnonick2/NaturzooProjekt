@@ -12,4 +12,5 @@ public interface GebaeudeTierRepository extends JpaRepository<GebaeudeTier, Long
     List<GebaeudeTier> findByGebaeude(Gebaeude gebaeude);
 
 
+
 }

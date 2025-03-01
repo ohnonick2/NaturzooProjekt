@@ -1,9 +1,7 @@
 package net.ohnonick2.naturzooprojekt.frontend.tiermanagement;
 
-import net.ohnonick2.naturzooprojekt.db.revier.RevierTier;
 import net.ohnonick2.naturzooprojekt.db.tier.Tier;
 import net.ohnonick2.naturzooprojekt.repository.RevierRepository;
-import net.ohnonick2.naturzooprojekt.repository.RevierTierRepository;
 
 import net.ohnonick2.naturzooprojekt.repository.Tierartrepository;
 import net.ohnonick2.naturzooprojekt.repository.Tierrespository;
@@ -14,10 +12,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Controller
 public class Tiermanagement {
@@ -26,22 +21,20 @@ public class Tiermanagement {
     private Tierrespository tierrespository;
     @Autowired
     private Tierartrepository tierartrepository;
-    @Autowired
-    private RevierTierRepository revierTierRespository;
+
     @Autowired
     private RevierRepository revierRepository;
 
 
     @GetMapping("/tier")
     public String tierManagement(Model model) {
-        List<RevierTier> revierTierList = revierTierRespository.findAll();
+
         List<Tier> tierList = tierrespository.findAll();
 
+        model.addAttribute("tiere", tierList);
 
-        model.addAttribute("revierTierList", revierTierList);
-        model.addAttribute("reviere", revierRepository.findAll());
-        model.addAttribute("tierart", tierartrepository.findAll());
-
+        model.addAttribute("genders", List.of(TierGeschlecht.values()));
+        model.addAttribute("tierArten", tierartrepository.findAll());
 
 
 

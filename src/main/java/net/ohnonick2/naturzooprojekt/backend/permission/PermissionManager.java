@@ -251,6 +251,38 @@ public class PermissionManager {
     }
 
 
+    @PostMapping("/delete")
+    public ResponseEntity<String> deleteRolle(@RequestBody String body) {
+        System.out.println(body);
+
+        JsonObject json = JsonParser.parseString(body).getAsJsonObject();
+        if (json == null) {
+            return ResponseEntity.badRequest().body("Invalid JSON");
+        }
+
+        if (!json.has("roleid")) {
+            return ResponseEntity.badRequest().body("Invalid JSON");
+        }
+
+        Rolle rolle = rolleRepository.findRolleById(json.get("roleid").getAsLong());
+        if (rolle == null) {
+            return ResponseEntity.badRequest().body("Rollle not found");
+        }
+
+        List<RolleUser> rolleUserList = rolleUserRepository.findByRolleId(rolle.getId());
+        if (rolleUserList.size() > 0) {
+            return ResponseEntity.badRequest().body("Diese Rollen hat noch Pfleger zugewiesen.");
+        }
+
+        List<PermissionRolle> permissionRolleList = permissionRolleRepository.findByRolle(rolle);
+        for (PermissionRolle pr : permissionRolleList) {
+            permissionRolleRepository.delete(pr);
+        }
+
+        rolleRepository.delete(rolle);
+
+        return ResponseEntity.ok().body("Role deleted");
+    }
 
 
 

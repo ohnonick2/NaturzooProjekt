@@ -9,15 +9,101 @@
     <div th:insert="~{vorlagen/icon :: icon}"></div>
 
     <style>
-        /* 🌿 Allgemeines Styling */
+        /* 🎨 Verbesserte Styling für Fütterungs-Buttons */
+        .available {
+            background: linear-gradient(135deg, #28a745, #218838);
+            color: white;
+            font-weight: bold;
+            padding: 12px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            text-decoration: none;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+            border: 2px solid transparent;
+            font-size: 16px;
+        }
+
+        .available:hover {
+            background: linear-gradient(135deg, #218838, #1a682c);
+            transform: scale(1.05);
+            border-color: #1a682c;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 🟢 Icon im Button */
+        .available i {
+            font-size: 18px;
+        }
+
+        /* 🛠 Verbesserte Lesbarkeit des Textes */
+        .available span {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        /* 📌 Verbesserter Login/Logout-Button */
+        .login-btn {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            color: #1f4e3e;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 15px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease-in-out;
+            border: 2px solid #1f4e3e;
+        }
+
+        .login-btn:hover {
+            background: linear-gradient(135deg, #e9ecef, #dee2e6);
+            color: #1f4e3e;
+            transform: scale(1.05);
+            border-color: #155a2c;
+        }
+        /* 📊 Optimierung der Tabellengröße */
+        .futterplan-table {
+            width: 100%;
+            table-layout: fixed; /* Gleichmäßige Spaltenbreite */
+            border-collapse: collapse;
+        }
+
+        /* 🟢 Spalten gleichmäßig verteilen */
+        .futterplan-table th, .futterplan-table td {
+            padding: 14px; /* Mehr Platz innerhalb der Zellen */
+            text-align: center;
+            font-size: 16px;
+            word-wrap: break-word; /* Falls lange Wörter vorhanden sind */
+        }
+
+        /* 🟢 Höhe der Zellen anpassen */
+        .futterplan-table td {
+            min-height: 50px; /* Größere Zellenhöhe für bessere Ausnutzung */
+            vertical-align: middle; /* Inhalte vertikal zentrieren */
+        }
+
+        /* 🟢 Verbesserte Darstellung auf kleinen Bildschirmen */
+        @media (max-width: 1024px) {
+            .futterplan-table th, .futterplan-table td {
+                font-size: 14px; /* Kleinere Schrift auf kleineren Screens */
+                padding: 10px;
+            }
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
             background-color: #f4f6f9;
             margin: 0;
             padding: 0;
             overflow-x: hidden;
         }
 
+        /* 📌 Container Styling */
         .container {
             background: white;
             padding: 30px;
@@ -27,18 +113,53 @@
             margin: 40px auto;
         }
 
-        h1 {
+        /* 🏆 Überschrift verbessert */
+        .header-row {
             text-align: center;
-            color: #27632a;
-            font-size: 32px;
+            background-color: #1f4e3e;
+            padding: 15px;
+            border-radius: 8px;
+            color: white;
             font-weight: bold;
-            margin-bottom: 20px;
+            font-size: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .header-row h1 {
+            font-size: 30px;
+            font-weight: bold;
+            margin: 0;
+            color: #ffffff;
+            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 🟢 Login-Button verbessert */
+        .login-btn {
+            background-color: white;
+            color: #1f4e3e;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 15px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: 0.3s ease-in-out;
+            border: 2px solid #1f4e3e;
+            margin-left: 20px;
+        }
+
+        .login-btn:hover {
+            background-color: #d4edda;
+            color: #1f4e3e;
+            border: 2px solid #155a2c;
         }
 
         /* 📅 Wochenüberschrift */
         .week-header {
             text-align: center;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
             color: #27632a;
             margin-bottom: 15px;
@@ -48,23 +169,25 @@
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
         }
 
-        /* 📊 Tabelle Styling */
-        .table-container {
-            margin-top: 15px;
-            overflow-x: auto;
-        }
-
-        .futterplan-table {
-            width: 100%;
-            border-collapse: collapse;
+        /* 📌 Footer */
+        .footer {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 14px;
+            padding: 12px;
+            background-color: #1f4e3e;
+            color: white;
             border-radius: 10px;
+            font-weight: bold;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
         }
 
+        /* 📊 Tabelle Styling */
         .futterplan-table th {
             background-color: #1f4e3e;
             color: white;
             padding: 12px;
-            font-size: 15px;
+            font-size: 16px;
             text-transform: uppercase;
         }
 
@@ -72,7 +195,7 @@
             border: 1px solid #ddd;
             padding: 12px;
             text-align: center;
-            font-size: 15px;
+            font-size: 16px;
         }
 
         .futterplan-table tr:hover {
@@ -80,90 +203,22 @@
             transition: 0.3s ease-in-out;
         }
 
-        /* 🎨 Neue Gestaltung für die Fütterungs-Buttons */
-        .available {
-            background-color: #28a745;
-            color: white;
-            font-weight: bold;
-            padding: 10px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            width: 100%;
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
-            transition: 0.3s ease-in-out;
-            cursor: pointer;
-            text-decoration: none;
-        }
-
-        .available:hover {
-            background-color: #218838;
-            transform: scale(1.05);
-        }
-
-        .available i {
-            font-size: 18px;
-        }
-
-        /* 👤 Login/Logout Button */
-        .header-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            background-color: #1f4e3e;
-            padding: 15px;
-            border-radius: 8px;
-            color: white;
-            font-weight: bold;
-        }
-
-        .login-btn {
-            background-color: white;
-            color: #1f4e3e;
-            padding: 8px 14px;
-            border-radius: 6px;
-            font-weight: bold;
-            font-size: 14px;
-            cursor: pointer;
-            text-decoration: none;
-            transition: 0.3s ease-in-out;
-        }
-
-        .login-btn:hover {
-            background-color: #d4edda;
-            color: #1f4e3e;
-        }
-
-        /* 📌 Footer */
-        .footer {
-            text-align: center;
-            margin-top: 25px;
-            font-size: 13px;
-            padding: 8px;
-            background-color: #1f4e3e;
-            color: white;
-            border-radius: 10px;
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        /* Responsivität */
+        /* 📱 Responsivität */
         @media (max-width: 768px) {
             .container {
                 padding: 20px;
-            }
-
-            h1 {
-                font-size: 26px;
             }
 
             .header-row {
                 flex-direction: column;
                 text-align: center;
             }
+
+            .header-row h1 {
+                font-size: 26px;
+            }
         }
+
     </style>
 </head>
 
@@ -221,9 +276,6 @@
     </div>
 
     <!-- 📌 Footer -->
-    <div class="footer">
-        © 2025 Rheiner Zoo | 🦜 Tierische Erlebnisse für Groß & Klein 🦓
-    </div>
 </div>
 
 </body>

@@ -187,18 +187,23 @@
       </tr>
       </thead>
       <tbody>
-      <tr th:if="${#lists.isEmpty(relevanteFutterPlaene)}">
+      <tr th:if="${#lists.isEmpty(futterplaene)}">
         <td colspan="3" class="text-center">🚨 Heute sind keine Fütterungen geplant.</td>
       </tr>
-      <tr th:each="futterplan : ${relevanteFutterPlaene}">
+      <tr th:each="futterplan : ${futterplaene}">
         <td th:text="${futterplan.name}"></td>
         <td>
           <ul>
-            <li th:each="entry : ${futterplan.futterMitMenge}"
-                th:text="${entry.key.name + ' (' + entry.value + 'kg)'}"></li>
+
+            <div th:each="futter : ${futterplan.futter}">
+              <li th:text="${futter.name}"></li>
+            </div>
+
           </ul>
         </td>
-        <td th:text="${#strings.arrayJoin(futterplan.futterZeiten, ', ')}"></td>
+        <div th:each="uhrzeit : ${futterplan.getFutterzeiten()}">
+          <td th:text="${uhrzeit.uhrzeit}"></td>
+        </div>
       </tr>
       </tbody>
     </table>

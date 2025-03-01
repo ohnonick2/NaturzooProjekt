@@ -2,8 +2,8 @@ package net.ohnonick2.naturzooprojekt.frontend.futterplan;
 
 import net.ohnonick2.naturzooprojekt.db.futter.*;
 import net.ohnonick2.naturzooprojekt.db.revier.Revier;
-import net.ohnonick2.naturzooprojekt.db.revier.RevierTier;
 import net.ohnonick2.naturzooprojekt.db.tier.Tier;
+import net.ohnonick2.naturzooprojekt.db.user.Pfleger;
 import net.ohnonick2.naturzooprojekt.db.wochentag.Wochentag;
 import net.ohnonick2.naturzooprojekt.repository.*;
 import org.slf4j.Logger;
@@ -48,7 +48,7 @@ public class Futterplanmanagement {
     @Autowired
     private FutterPlanTierRepository futterPlanTierRepositority;
     @Autowired
-    private RevierTierRepository revierTierRepository;
+    private FutterplanPflegerRepository futterplanPflegerRepository;
 
 
     /**
@@ -86,8 +86,16 @@ public class Futterplanmanagement {
                     .collect(Collectors.joining(", "));
             if (futterzeiten.isEmpty()) futterzeiten = "-";
 
+            // Pfleger abrufen
+            List<FutterPlanTier> futterPlanTiers = futterPlanTierRepositority.findByFutterplan(futterPlan);
+            List<Pfleger> pflegerList = futterplanPflegerRepository.findByFutterPlanId(futterPlan.getId()).stream()
+                    .map(FutterplanPfleger::getPfleger)
+                    .collect(Collectors.toList());
+
+
+
             // DTO zur Liste hinzufügen
-            futterplanDTOs.add(new FutterplanDTO(futterPlan.getId(), futterPlan.getName(), futter, wochentage, menge, futterzeiten));
+            futterplanDTOs.add(new FutterplanDTO(futterPlan.getId(), futterPlan.getName(), futter, wochentage, menge, futterzeiten).setPflegerList(pflegerList));
         }
         model.addAttribute("futterplan", new FutterPlan());
         model.addAttribute("wochentagList", wochenTagRepository.findAll());
@@ -151,33 +159,6 @@ public class Futterplanmanagement {
 
 
 
-        revierTierRepository.findAll().forEach(revierTier -> {
-            if (futterPlanTiers.stream().anyMatch(futterPlanTier -> futterPlanTier.getTier().getId() == revierTier.getTierId().getId())) {
-                Revier revier = revierRepository.findById(revierTier.getRevierId().getId()).orElse(null);
-                if (revier != null) {
-                    revierList.add(revier);
-                }
-            }
-        });
-
-
-
-
-        for (FutterPlanTier futterPlanTier : futterPlanTiers) {
-            Tier tier = tierrespository.findById(futterPlanTier.getTier().getId());
-            if (tier != null) {
-                tierList.add(tier);
-
-                RevierTier revierTier = revierTierRepository.findByTierId(tier);
-                if (revierTier != null) {
-                    Revier revier = revierRepository.findById(revierTier.getRevierId().getId()).orElse(null);
-                    if (revier != null) {
-                        revierList.add(revier);
-                    }
-                }
-            }
-        }
-
         model.addAttribute("futterPlan", futterPlan);
         model.addAttribute("futterplanFutters", futterplanFutters);
         model.addAttribute("futterPlanWochentags", futterPlanWochentags);
@@ -211,13 +192,14 @@ public class Futterplanmanagement {
     /**
      * DTO-Klasse für Thymeleaf
      */
-    public static class FutterplanDTO {
+    public class FutterplanDTO {
         private Long id;
         private String name;
         private String futter;
         private String wochentage;
         private String futterZeiten;
         private String menge;
+        private List<Pfleger> pflegerList;
 
         public FutterplanDTO(Long id, String name, String futter, String wochentage, String menge, String futterZeiten) {
             this.id = id;
@@ -245,5 +227,13 @@ public class Futterplanmanagement {
 
         public String getFutterZeiten() { return futterZeiten; }
         public void setFutterZeiten(String futterZeiten) { this.futterZeiten = futterZeiten; }
+
+        public List<Pfleger> getPflegerList() { return pflegerList; }
+        public FutterplanDTO setPflegerList(List<Pfleger> pflegerList) {
+
+            this.pflegerList = pflegerList;
+            return this;
+        }
+
     }
 }

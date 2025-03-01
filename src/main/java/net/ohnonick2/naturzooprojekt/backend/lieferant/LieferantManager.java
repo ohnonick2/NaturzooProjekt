@@ -118,7 +118,22 @@ public class LieferantManager {
         }
     }
 
+    @PostMapping("/delete")
+    public ResponseEntity<String> deleteLieferant(@RequestBody String body) {
+        JsonObject json = JsonParser.parseString(body).getAsJsonObject();
+        if (json == null || !json.has("id")) {
+            return ResponseEntity.badRequest().body("Ungültige oder fehlende JSON-Daten.");
+        }
 
+        long lieferantId = json.get("id").getAsLong();
+        Lieferant lieferant = lieferantRepository.findLieferantById(lieferantId);
+        if (lieferant == null) {
+            return ResponseEntity.badRequest().body("Lieferant nicht gefunden.");
+        }
+
+        lieferantRepository.delete(lieferant);
+        return ResponseEntity.ok("Lieferant erfolgreich gelöscht.");
+    }
 
 
 

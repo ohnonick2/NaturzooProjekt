@@ -38,7 +38,7 @@ dependencies {
 
     //gson for json
 
-    compileOnly("org.springframework.boot:spring-boot-devtools")
+    //compileOnly("org.springframework.boot:spring-boot-devtools")
 
 }
 
