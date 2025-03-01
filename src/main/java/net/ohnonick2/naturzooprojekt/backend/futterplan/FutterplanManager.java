@@ -6,12 +6,11 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.ohnonick2.naturzooprojekt.db.futter.*;
 import net.ohnonick2.naturzooprojekt.db.revier.Revier;
-import net.ohnonick2.naturzooprojekt.db.revier.RevierTier;
 import net.ohnonick2.naturzooprojekt.db.tier.Tier;
+import net.ohnonick2.naturzooprojekt.db.user.Pfleger;
 import net.ohnonick2.naturzooprojekt.db.wochentag.Wochentag;
 import net.ohnonick2.naturzooprojekt.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,10 +44,13 @@ public class FutterplanManager {
     private Tierrespository tierrespository;
     @Autowired
     private FutterPlanTierRepository futterPlanTierRepositority;
-    @Autowired
-    private RevierTierRepository revierTierRepository;
+
     @Autowired
     private RevierRepository revierRepository;
+    @Autowired
+    private Pflegerrepository pflegerrepository;
+    @Autowired
+    private FutterplanPflegerRepository futterplanPflegerRepository;
 
     @PostMapping(value = "/add")
     public ResponseEntity<String> addFutterplan(@RequestBody String body) {
@@ -139,12 +141,6 @@ public class FutterplanManager {
             Revier revier = revierRepository.findById(revierId).orElse(null);
             if (revier == null) {
                 return ResponseEntity.badRequest().body("Revier mit ID " + revierId + " nicht gefunden.");
-            }
-
-            List<RevierTier> revierTierList = revierTierRepository.findAllByRevierId(revier);
-
-            for (RevierTier revierTier : revierTierList) {
-                futterPlanTierRepositority.save(new FutterPlanTier(futterPlan, revierTier.getTierId()));
             }
         }
 
@@ -393,6 +389,10 @@ public class FutterplanManager {
 
         return ResponseEntity.ok("Feeding added successfully.");
     }
+
+
+
+
 
 
 }

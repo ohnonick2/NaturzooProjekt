@@ -5,6 +5,8 @@ import com.google.gson.JsonParser;
 import net.ohnonick2.naturzooprojekt.db.aktivitaet.Aktivitaet;
 import net.ohnonick2.naturzooprojekt.db.notification.NotificationReadId;
 import net.ohnonick2.naturzooprojekt.db.notification.NotificationReadPfleger;
+import net.ohnonick2.naturzooprojekt.db.permission.PermissionRolle;
+import net.ohnonick2.naturzooprojekt.db.permission.RolleUser;
 import net.ohnonick2.naturzooprojekt.repository.AktivitaetRepository;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -67,7 +69,7 @@ public class AuditAspect {
             return;
         }
 
-        if (entity instanceof NotificationReadId || entity instanceof NotificationReadPfleger) {
+        if (entity instanceof NotificationReadId || entity instanceof NotificationReadPfleger || entity instanceof PermissionRolle || entity instanceof RolleUser) {
             return;
         }
         if (getUserID() == 0) {

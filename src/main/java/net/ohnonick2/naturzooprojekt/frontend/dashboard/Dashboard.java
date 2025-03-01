@@ -3,13 +3,15 @@ package net.ohnonick2.naturzooprojekt.frontend.dashboard;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.ohnonick2.naturzooprojekt.db.futter.*;
+import net.ohnonick2.naturzooprojekt.db.gebaeude.GebaeudeTier;
 import net.ohnonick2.naturzooprojekt.db.notification.Notification;
+import net.ohnonick2.naturzooprojekt.db.revier.RevierGebaeude;
 import net.ohnonick2.naturzooprojekt.db.revier.RevierPfleger;
-import net.ohnonick2.naturzooprojekt.db.revier.RevierTier;
 import net.ohnonick2.naturzooprojekt.db.user.Pfleger;
 import net.ohnonick2.naturzooprojekt.db.wochentag.Wochentag;
 import net.ohnonick2.naturzooprojekt.repository.*;
 import net.ohnonick2.naturzooprojekt.service.CustomUserDetailsService;
+import net.ohnonick2.naturzooprojekt.service.FutterplanService;
 import net.ohnonick2.naturzooprojekt.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,7 +22,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,8 +35,7 @@ public class Dashboard {
     @Autowired
     private Pflegerrepository pflegerrepository;
 
-    @Autowired
-    private RevierTierRepository revierTierRepository;
+
 
     @Autowired
     private FutterPlanRepository futterPlanRepository;
@@ -54,7 +54,13 @@ public class Dashboard {
 
     @Autowired
     private NotificationService notificationService;
+    @Autowired
+    private RevierGebaeudeRepository revierGebaeudeRepository;
+    @Autowired
+    private GebaeudeTierRepository gebaeudeTierRepository;
 
+    @Autowired
+    private FutterplanService futterplanService;
 
 
     @GetMapping("/dashboard")
@@ -75,72 +81,40 @@ public class Dashboard {
         model.addAttribute("revierText", formatRevierList(revierPfleger));
 
         int anzahlTiere = 0;
-        for (RevierPfleger rp : revierPfleger) {
-            List<RevierTier> revierTiere = revierTierRepository.findAllByRevierId(rp.getRevier());
-            anzahlTiere += revierTiere.size();
+        List<RevierGebaeude> revierGebaeudes = new ArrayList<>();
+        for (RevierPfleger revierPfleger1 : revierPfleger) {
+
+            List<RevierGebaeude> revierGebaeude = revierGebaeudeRepository.findAllByRevier(revierPfleger1.getRevier());
+            revierGebaeudes.addAll(revierGebaeude);
+
+
         }
 
-        List<FutterplanPfleger> futterplanPfleger = futterplanPflegerRepository.findByPflegerId(pfleger.getId());
-        List<FutterPlan> zugewieseneFutterplaene = futterplanPfleger.stream()
-                .map(FutterplanPfleger::getFutterPlan)
-                .collect(Collectors.toList());
+        List<GebaeudeTier> gebaeudeTiere = new ArrayList<>();
+        System.out.println(revierGebaeudes.size());
 
-        HashMap<Long, HashMap<Futter, Integer>> futterMitMengeMap = new HashMap<>();
+        for (RevierGebaeude revierGebaeude : revierGebaeudes) {
 
-        for (FutterPlan futterPlan : zugewieseneFutterplaene) {
-            HashMap<Futter, Integer> futterMitMenge = new HashMap<>();
-            List<FutterplanFutter> futterplanFutters = futterplanFutterRepository.findByFutterplanId(futterPlan.getId());
-
-            for (FutterplanFutter futterplanFutter : futterplanFutters) {
-                futterMitMenge.put(futterplanFutter.getFutter(), futterplanFutter.getMenge());
-            }
-            futterMitMengeMap.put(futterPlan.getId(), futterMitMenge);
+            List<GebaeudeTier> gebaeudeTier = gebaeudeTierRepository.findByGebaeude(revierGebaeude.getGebaeude());
+            gebaeudeTiere.addAll(gebaeudeTier);
         }
 
-        HashMap<Long, List<String>> futterPlanFutterZeit = new HashMap<>();
-        for (FutterPlan futterPlan : zugewieseneFutterplaene) {
-            List<String> futterZeitList = futterPlanFutterZeitRepository.findByFutterplanId(futterPlan.getId())
-                    .stream()
-                    .map(futterPlanFutterZeit1 -> futterPlanFutterZeit1.getFutterZeit().getUhrzeit())
-                    .collect(Collectors.toList());
+        System.out.println(gebaeudeTiere.size());
+        anzahlTiere += gebaeudeTiere.size();
 
-            futterPlanFutterZeit.put(futterPlan.getId(), futterZeitList);
-        }
 
-        HashMap<Long, List<Wochentag>> futterPlanWochentag = new HashMap<>();
-        for (FutterPlan futterPlan : zugewieseneFutterplaene) {
-            List<Wochentag> wochentagList = futterPlanWochentagRepository.findByFutterplan(futterPlan).stream()
-                    .map(FutterPlanWochentag::getWochentag)
-                    .collect(Collectors.toList());
-            futterPlanWochentag.put(futterPlan.getId(), wochentagList);
-        }
-        List<FutterplanDTO> futterplanDTOs = zugewieseneFutterplaene.stream().map(futterPlan ->
-                new FutterplanDTO(
-                        futterPlan.getId(),
-                        futterPlan.getName(),
-                        futterMitMengeMap.getOrDefault(futterPlan.getId(), new HashMap<>()),
-                        futterPlanWochentag.getOrDefault(futterPlan.getId(), new ArrayList<>()).stream().map(Wochentag::getName).collect(Collectors.toList()),
-                        futterPlanFutterZeit.getOrDefault(futterPlan.getId(), new ArrayList<>())
-                )
-        ).collect(Collectors.toList());
+        List<FutterplanService.FutterplanDTO> futterplaene = futterplanService.getFutterplaene(pfleger);
 
-        model.addAttribute("futterplaene", futterplanDTOs);
-
-        List<Notification> notifications = notificationService.getNotificationsForPfleger(pfleger.getId());
-
-        model.addAttribute("notifications", notifications);
-
-        model.addAttribute("id" , jsonObject.get("id").getAsLong());
+        model.addAttribute("futterplaene", futterplaene);
 
 
 
 
 
 
-
-
+        model.addAttribute("id" , pfleger.getId());
         model.addAttribute("anzahlTiere", anzahlTiere);
-        model.addAttribute("revierPfleger", revierPflegerRepository);
+
 
         return "autharea/dashboard/dashboard";
     }

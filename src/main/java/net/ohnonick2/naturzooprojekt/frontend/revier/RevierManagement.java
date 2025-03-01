@@ -1,21 +1,25 @@
 package net.ohnonick2.naturzooprojekt.frontend.revier;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import net.ohnonick2.naturzooprojekt.db.revier.Revier;
 import net.ohnonick2.naturzooprojekt.db.revier.RevierPfleger;
-import net.ohnonick2.naturzooprojekt.db.revier.RevierTier;
 import net.ohnonick2.naturzooprojekt.db.tier.Tier;
 import net.ohnonick2.naturzooprojekt.db.user.Pfleger;
 import net.ohnonick2.naturzooprojekt.repository.*;
+import net.ohnonick2.naturzooprojekt.service.RevierService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authorization.method.AuthorizeReturnObject;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Controller
 public class RevierManagement {
@@ -25,8 +29,7 @@ public class RevierManagement {
     @Autowired
     private RevierRepository revierRepository;
 
-    @Autowired
-    private RevierTierRepository revierTierRepository;
+
 
     @Autowired
     private RevierPflegerRepository revierPflegerRepository;
@@ -37,12 +40,28 @@ public class RevierManagement {
     private Tierrespository tierrespository;
 
 
-    @GetMapping("/revier")
-    public String revier(Model model){
-        model.addAttribute("revierList", revierRepository.findAll());
+    @Autowired
+    private RevierService revierService;
 
+    @GetMapping("/revier")
+    public String revier(Model model) {
+
+
+
+        String username = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+        JsonObject jsonObject = JsonParser.parseString(username).getAsJsonObject();
+        long id = jsonObject.get("id").getAsLong();
+
+
+        List<Pfleger> verfuegbarePfleger = pflegerrepository.findAll();
+
+
+
+
+        model.addAttribute("revierList", revierService.getRevierDTO() );
         return "autharea/revier/revierverwaltung";
     }
+
 
     @GetMapping("/editRevier/{id}")
     public String editRevier(@PathVariable Long id, Model model) {
@@ -63,15 +82,6 @@ public class RevierManagement {
             model.addAttribute("verfuegbarePfleger", allPfleger);
 
             // Tiere im Revier laden
-            List<RevierTier> revierTiere = revierTierRepository.findAll();
-            model.addAttribute("revierTiere", revierTiere);
-
-            // Alle verfügbaren Tiere laden (die noch nicht im Revier sind)
-            List<Tier> alleTiere = tierrespository.findAll();
-            alleTiere.removeIf(tier -> revierTiere.stream()
-                    .anyMatch(rt -> rt.getTierId().getId() == tier.getId()));
-
-            model.addAttribute("verfuegbareTiere", alleTiere);
 
             model.addAttribute("revier", revier);
         } else {

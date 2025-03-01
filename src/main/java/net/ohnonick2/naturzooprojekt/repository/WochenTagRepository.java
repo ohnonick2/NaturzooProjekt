@@ -6,4 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface WochenTagRepository extends JpaRepository<Wochentag, Long> {
 
     Wochentag findWochentagById(Long id);
+    Wochentag findWochentagByName(String name);
 }

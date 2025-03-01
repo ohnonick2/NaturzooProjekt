@@ -1,171 +1,362 @@
 <!DOCTYPE html>
-<html lang="de">
-
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lieferantenverwaltung</title>
+  <title>Lieferantenverwaltung | Rheiner Zoo</title>
+
   <div th:insert="~{vorlagen/icon :: icon}"></div>
 
-  <!-- Styles und andere Ressourcen im Head -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-image: url('/images/background.png');
-      margin: 0;
-      padding: 0;
       background-color: #f4f6f9;
-      overflow-x: hidden;
     }
-
     .main-content {
       margin-left: 250px;
       padding: 20px;
-      transition: margin-left 0.3s ease;
     }
-
-    .main-content.collapsed {
-      margin-left: 70px;
-    }
-
     .card {
       border: none;
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-      margin-bottom: 20px;
+      padding: 20px;
     }
-
-    .header {
-      background-color: #1f4e3e;
-      color: white;
-      padding: 15px;
-      text-align: center;
-      border-radius: 8px;
-    }
-
-    .header-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-
-    .btn-success {
-      background-color: #218838;
+    .btn-primary, .btn-danger {
       color: white;
     }
-
-    table tbody td {
-      word-break: break-word;
+    .dropdown-menu {
+      min-width: 150px;
+    }
+    .hidden {
+      display: none;
     }
   </style>
 </head>
 
 <body>
+
 <!-- Sidebar -->
 <div th:insert="~{vorlagen/sidebar :: sidebar}"></div>
 
 <!-- Main Content -->
-<div class="main-content" id="main-content">
-  <!-- Header -->
-  <div class="header">
-    <h2>Lieferantenverwaltung</h2>
+<div class="main-content">
+  <div th:replace="~{vorlagen/header :: header(pageTitle='Lieferantenverwaltung - Rheiner Zoo')}"></div>
+
+  <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addLieferantModal">
+    <i class="fas fa-plus"></i> Lieferant hinzufügen
+  </button>
+
+  <!-- Suchfeld -->
+  <div class="mt-3">
+    <input type="text" id="searchInput" class="form-control" placeholder="Lieferant suchen..." onkeyup="filterTable()">
   </div>
 
-  <!-- Lieferant List Section -->
-  <div class="card p-4">
-    <div class="header-row">
-      <h4>Verwalten Sie die Lieferanten des Rheiner Zoos</h4>
-      <button class="btn btn-success" onclick="addLieferant()">
-        <i class="fas fa-plus"></i> Lieferant hinzufügen
-      </button>
-    </div>
-
-    <!-- Lieferant List -->
-    <div th:if="${lieferantList.size() > 0}">
-      <table class="table table-striped">
-        <thead>
-        <tr>
-          <th>ID</th>
-          <th>Name</th>
-          <th>Adresse</th>
-          <th>Telefonnummer</th>
-          <th>Ansprechpartner</th>
-          <th>Aktionen</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="lieferant : ${lieferantList}">
-          <td th:text="${lieferant.id}"></td>
-          <td th:text="${lieferant.name}"></td>
-          <td th:text="${lieferant.adresse?.ort.plz} + ' ' + ${lieferant.adresse?.ort.ortname}"></td>
-          <td th:text="${lieferant.telefonnummer}"></td>
-          <td th:text="${lieferant.ansprechpartner}"></td>
-          <td>
-            <button class="btn btn-primary" th:onclick="'editLieferant(' + ${lieferant.id} + ')'">
-              <i class="fas fa-edit"></i> Bearbeiten
+  <!-- Tabelle -->
+  <div class="card mt-3">
+    <h4>Lieferantenübersicht</h4>
+    <table class="table table-bordered">
+      <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Adresse</th>
+        <th>Telefonnummer</th>
+        <th>Ansprechpartner</th>
+        <th>Aktionen</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="lieferant : ${lieferantList}">
+        <td th:text="${lieferant.id}"></td>
+        <td th:text="${lieferant.name}"></td>
+        <td th:text="${lieferant.adresse?.strasse} + ' ' + ${lieferant.adresse?.hausnummer} + ', ' + ${lieferant.adresse?.ort.plz} + ' ' + ${lieferant.adresse?.ort.ortname}"></td>
+        <td th:text="${lieferant.telefonnummer}"></td>
+        <td th:text="${lieferant.ansprechpartner}"></td>
+        <td>
+          <div class="btn-group">
+            <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+              Aktionen
             </button>
-            <button class="btn btn-danger" th:onclick="'deleteLieferant(' + ${lieferant.id} + ')'">
-              <i class="fas fa-trash"></i> Löschen
-            </button>
-          </td>
-        </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- No Lieferanten Message -->
-    <div th:if="${lieferantList.size() == 0}" class="alert alert-warning" role="alert">
-      Es sind keine Lieferanten vorhanden. Bitte fügen Sie einen Lieferanten hinzu.
-    </div>
+            <ul class="dropdown-menu">
+              <li>
+                <a class="dropdown-item edit-btn"
+                   href="#"
+                   th:attr="data-id=${lieferant.id},
+                            data-name=${lieferant.name},
+                            data-telefon=${lieferant.telefonnummer},
+                            data-ansprechpartner=${lieferant.ansprechpartner}">
+                  <i class="fas fa-edit"></i> Bearbeiten
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item delete-btn text-danger"
+                   href="#"
+                   th:attr="data-id=${lieferant.id}">
+                  <i class="fas fa-trash"></i> Löschen
+                </a>
+              </li>
+            </ul>
+          </div>
+        </td>
+      </tr>
+      </tbody>
+    </table>
   </div>
 </div>
 
-<!-- Footer -->
-<footer th:insert="~{vorlagen/footer :: footer}"></footer>
+<!-- MODAL: Lieferant hinzufügen -->
+<div class="modal fade" id="addLieferantModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Neuer Lieferant</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="addLieferantForm">
+          <label>Name</label>
+          <input type="text" id="addName" class="form-control" required>
 
+          <label>Adresse</label>
+          <select id="addAdresse" class="form-select" onchange="toggleNeueAdresse()">
+            <option value="">Wähle eine Adresse</option>
+            <option th:each="adresse : ${adressen}" th:value="${adresse.id}"
+                    th:text="${adresse.strasse} + ' ' + ${adresse.hausnummer} + ', ' + ${adresse.ort.plz} + ' ' + ${adresse.ort.ortname}"></option>
+            <option value="neu">Neue Adresse hinzufügen</option>
+          </select>
+
+          <div id="neueAdresseContainer" class="hidden">
+            <label>Neue Adresse</label>
+            <input type="text" id="newStrasse" class="form-control" placeholder="Straße">
+            <input type="text" id="newHausnummer" class="form-control" placeholder="Hausnummer">
+
+            <label>Ort</label>
+            <select id="addOrt" class="form-select" onchange="toggleNeuerOrt()">
+              <option value="">Wähle einen Ort</option>
+              <option th:each="ort : ${orte}" th:value="${ort.plz}"
+                      th:text="${ort.plz} + ' ' + ${ort.ortname}"></option>
+              <option value="neu">Neuen Ort hinzufügen</option>
+            </select>
+
+            <div id="neuerOrtContainer" class="hidden">
+              <input type="text" id="newPlz" class="form-control" placeholder="PLZ">
+              <input type="text" id="newOrt" class="form-control" placeholder="Ort">
+            </div>
+          </div>
+
+          <label>Telefonnummer</label>
+          <input type="text" id="addTelefon" class="form-control" required>
+
+          <label>Ansprechpartner</label>
+          <input type="text" id="addAnsprechpartner" class="form-control" required>
+
+          <button type="submit" class="btn btn-success w-100 mt-3">Hinzufügen</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- MODAL: Lieferant bearbeiten -->
+<div class="modal fade" id="editLieferantModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Lieferant bearbeiten</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editLieferantForm">
+          <input type="hidden" id="editId">
+
+          <label>Name</label>
+          <input type="text" id="editName" class="form-control" required>
+
+          <label>Adresse</label>
+          <select id="editAdresse" class="form-select" onchange="toggleEditNeueAdresse()">
+            <option value="">Wähle eine Adresse</option>
+            <option th:each="adresse : ${adressen}" th:value="${adresse.id}"
+                    th:text="${adresse.strasse} + ' ' + ${adresse.hausnummer} + ', ' + ${adresse.ort.plz} + ' ' + ${adresse.ort.ortname}"></option>
+            <option value="neu">Neue Adresse hinzufügen</option>
+          </select>
+
+          <div id="editNeueAdresseContainer" class="hidden">
+            <label>Neue Adresse</label>
+            <input type="text" id="editStrasse" class="form-control" placeholder="Straße">
+            <input type="text" id="editHausnummer" class="form-control" placeholder="Hausnummer">
+            <label>Ort</label>
+            <input type="text" id="editPlz" class="form-control" placeholder="PLZ">
+            <input type="text" id="editOrt" class="form-control" placeholder="Ort">
+          </div>
+
+          <label>Telefonnummer</label>
+          <input type="text" id="editTelefon" class="form-control" required>
+
+          <label>Ansprechpartner</label>
+          <input type="text" id="editAnsprechpartner" class="form-control" required>
+
+          <button type="submit" class="btn btn-primary w-100 mt-3">Speichern</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 <script>
-  function addLieferant() {
-    window.location.href = '/addLieferant';
+  function toggleNeueAdresse() {
+    const adresseDropdown = document.getElementById('addAdresse');
+    const neueAdresseContainer = document.getElementById('neueAdresseContainer');
+    neueAdresseContainer.style.display = adresseDropdown.value === 'neu' ? 'block' : 'none';
   }
 
-  function editLieferant(id) {
-    window.location.href = '/editLieferant/' + id;
+  function toggleNeuerOrt() {
+    const ortDropdown = document.getElementById('addOrt');
+    const neuerOrtContainer = document.getElementById('neuerOrtContainer');
+    neuerOrtContainer.style.display = ortDropdown.value === 'neu' ? 'block' : 'none';
+  }
+  function toggleEditNeueAdresse() {
+    const editAdresseDropdown = document.getElementById('editAdresse');
+    const editNeueAdresseContainer = document.getElementById('editNeueAdresseContainer');
+    editNeueAdresseContainer.style.display = editAdresseDropdown.value === 'neu' ? 'block' : 'none';
   }
 
-  function deleteLieferant(id) {
-    if (confirm('Möchten Sie den Lieferanten mit ID ' + id + ' wirklich löschen?')) {
-      fetch('/api/lieferant/delete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ id: id })
-      })
-              .then(response => {
-                if (response.ok) {
-                  alert('Lieferant erfolgreich gelöscht!');
+  document.addEventListener("DOMContentLoaded", function () {
+
+    // 📌 **Lieferant hinzufügen**
+    document.getElementById("addLieferantForm").addEventListener("submit", async function (event) {
+      event.preventDefault();
+
+      let adresseId = document.getElementById("addAdresse").value;
+      let ortId = document.getElementById("addOrt").value;
+      let adresse = null;
+
+      // Falls neue Adresse angegeben wird
+      if (adresseId === "neu") {
+        adresse = {
+          strasse: document.getElementById("newStrasse").value,
+          hausnummer: document.getElementById("newHausnummer").value,
+          plz: document.getElementById("newPlz").value,
+          ortname: document.getElementById("newOrt").value
+        };
+      } else {
+        adresse = { id: adresseId };
+      }
+
+      const lieferantData = {
+        name: document.getElementById("addName").value,
+        telefon: document.getElementById("addTelefon").value,
+        ansprechpartner: document.getElementById("addAnsprechpartner").value,
+        adresse: adresse
+      };
+
+      try {
+        const response = await axios.post("/api/lieferant/add", lieferantData);
+        alert("✅ " + response.data);
+        location.reload();
+      } catch (error) {
+        alert("❌ Fehler beim Hinzufügen: " + error.response.data);
+      }
+    });
+
+    // 📌 **Lieferant bearbeiten**
+    document.getElementById("editLieferantForm").addEventListener("submit", async function (event) {
+      event.preventDefault();
+
+      let adresseId = document.getElementById("editAdresse").value;
+      let adresse = null;
+
+      // Falls neue Adresse angegeben wird
+      if (adresseId === "neu") {
+        adresse = {
+          strasse: document.getElementById("editStrasse").value,
+          hausnummer: document.getElementById("editHausnummer").value,
+          plz: document.getElementById("editPlz").value,
+          ortname: document.getElementById("editOrt").value
+        };
+      } else {
+        adresse = { id: adresseId };
+      }
+
+      const lieferantData = {
+        id: document.getElementById("editId").value,
+        name: document.getElementById("editName").value,
+        telefon: document.getElementById("editTelefon").value,
+        ansprechpartner: document.getElementById("editAnsprechpartner").value,
+        adresse: adresse
+      };
+
+      try {
+        const response = await axios.post("/api/lieferant/edit", lieferantData);
+        alert("✅ " + response.data);
+        location.reload();
+      } catch (error) {
+        alert("❌ Fehler beim Bearbeiten: " + error.response.data);
+      }
+    });
+
+    // 📌 **Lieferant löschen**
+    document.addEventListener("click", function (event) {
+      if (event.target.closest(".delete-btn")) {
+        const id = event.target.closest(".delete-btn").getAttribute("data-id");
+
+        if (!confirm("⚠️ Möchtest du diesen Lieferanten wirklich löschen?")) return;
+
+        axios.post("/api/lieferant/delete", { id: id })
+                .then(response => {
+                  alert("✅ " + response.data);
                   location.reload();
-                } else {
-                  response.text().then(text => {
-                    alert('Fehler beim Löschen: ' + text);
-                  });
-                }
-              })
-              .catch(error => {
-                console.error('Fehler:', error);
-                alert('Es ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.');
-              });
-    }
-  }
+                })
+                .catch(error => {
+                  if (error.response && error.response.data) {
+                    alert("❌ Fehler beim Löschen: " + JSON.stringify(error.response.data));
+                  } else {
+                    alert("❌ Unbekannter Fehler: " + error.message);
+                  }
+                });
+      }
+    });
 
-  function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('collapsed');
-    document.getElementById('main-content').classList.toggle('collapsed');
-  }
+
+    // 📌 **Bearbeiten-Modalfenster öffnen & Daten füllen**
+    document.addEventListener("click", function (event) {
+      if (event.target.closest(".edit-btn")) {
+        const button = event.target.closest(".edit-btn");
+
+        document.getElementById("editId").value = button.dataset.id;
+        document.getElementById("editName").value = button.dataset.name;
+        document.getElementById("editTelefon").value = button.dataset.telefon;
+        document.getElementById("editAnsprechpartner").value = button.dataset.ansprechpartner;
+
+        const adresseId = button.dataset.adresseId;
+        if (adresseId) {
+          document.getElementById("editAdresse").value = adresseId;
+          toggleEditNeueAdresse();
+        }
+
+        document.getElementById("editStrasse").value = button.dataset.strasse || "";
+        document.getElementById("editHausnummer").value = button.dataset.hausnummer || "";
+        document.getElementById("editPlz").value = button.dataset.plz || "";
+        document.getElementById("editOrt").value = button.dataset.ort || "";
+
+        new bootstrap.Modal(document.getElementById("editLieferantModal")).show();
+      }
+    });
+
+
+    function toggleEditNeueAdresse() {
+      const editAdresseDropdown = document.getElementById("editAdresse");
+      const editNeueAdresseContainer = document.getElementById("editNeueAdresseContainer");
+      editNeueAdresseContainer.style.display = editAdresseDropdown.value === "neu" ? "block" : "none";
+    }
+  });
+
+
 
 </script>
-</body>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
 </html>

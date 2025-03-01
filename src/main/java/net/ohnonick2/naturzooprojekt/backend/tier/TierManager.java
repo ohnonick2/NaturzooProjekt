@@ -2,10 +2,7 @@ package net.ohnonick2.naturzooprojekt.backend.tier;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import jakarta.annotation.Nullable;
-import net.ohnonick2.naturzooprojekt.db.futter.FutterPlanTier;
 import net.ohnonick2.naturzooprojekt.db.revier.Revier;
-import net.ohnonick2.naturzooprojekt.db.revier.RevierTier;
 import net.ohnonick2.naturzooprojekt.db.tier.Tier;
 import net.ohnonick2.naturzooprojekt.db.tier.TierArt;
 import net.ohnonick2.naturzooprojekt.repository.*;
@@ -20,7 +17,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Random;
 
 @RestController
 @RequestMapping(value = "/api/tier")
@@ -41,8 +37,6 @@ public class TierManager {
     @Autowired
     private RevierRepository revierRepository;
 
-    @Autowired
-    private RevierTierRepository revierTierRespository;
 
     @PostMapping("/add")
     public ResponseEntity<String> addTier(@RequestBody String body) {
@@ -59,7 +53,7 @@ public class TierManager {
 
         // Prüfen, ob alle erforderlichen Felder existieren
         if (!jsonObject.has("name") || !jsonObject.has("geburtsdatum") || !jsonObject.has("geschlecht")
-                || !jsonObject.has("tierArt") || !jsonObject.has("revier")) {
+                || !jsonObject.has("tierArt")) {
             return ResponseEntity.badRequest().body("Fehlende Felder im JSON.");
         }
 
@@ -102,21 +96,6 @@ public class TierManager {
             tierArt = save;
         }
 
-        // 🔹 Revier-ID extrahieren
-        Long revierId = null;
-        if (jsonObject.has("revier") && !jsonObject.get("revier").isJsonNull()) {
-            revierId = jsonObject.get("revier").getAsLong();
-        }
-        if (revierId == null) {
-            return ResponseEntity.badRequest().body("Revier nicht angegeben.");
-        }
-
-        // 🔹 Revier aus der Datenbank abrufen
-        Revier revier = revierRepository.findById(revierId).orElse(null);
-        if (revier == null) {
-            return ResponseEntity.badRequest().body("Revier nicht gefunden.");
-        }
-
         // 🔹 Neues Tier erstellen
         Tier tier = new Tier(name, geburtsdatum, sterbedatum, null, geschlecht, tierArt);
 
@@ -139,7 +118,7 @@ public class TierManager {
         tierrespository.save(tier);
 
         // 🔹 Verbindung zwischen Revier und Tier speichern
-        revierTierRespository.save(new RevierTier(revier, tier));
+
 
         return ResponseEntity.ok("Tier erfolgreich hinzugefügt.");
     }

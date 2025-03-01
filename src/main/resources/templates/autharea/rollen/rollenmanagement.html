@@ -1,177 +1,750 @@
 <!DOCTYPE html>
-<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<html lang="de" xmlns:th="http://www.thymeleaf.org" th:inline="text">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rollen-Verwaltung</title>
-  <div th:insert="~{vorlagen/icon :: icon}"></div>
-
+  <title>Rollenverwaltung – Rheiner Zoo</title>
+  <!-- Bootstrap & Font Awesome -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-image: url('/images/background.png');
+      background-color: #f4f6f9;
       margin: 0;
       padding: 0;
-      background-color: #f4f6f9;
-      overflow-x: hidden;
     }
-
     .main-content {
-      margin-left: 250px;
+      margin-left: 250px; /* Platzhalter für Sidebar */
       padding: 20px;
-      transition: margin-left 0.3s ease;
     }
-
-    .main-content.collapsed {
-      margin-left: 70px;
-    }
-
     .card {
       border: none;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
       margin-bottom: 20px;
-      padding: 20px;
     }
-
     .header {
       background-color: #1f4e3e;
-      color: white;
-      padding: 15px;
-      text-align: center;
-      border-radius: 8px;
-    }
-
-    table tbody td {
-      word-break: break-word;
-    }
-
-    .btn-success {
-      background-color: #218838;
-      color: white;
-    }
-
-    .search-container input {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ddd;
+      color: #fff;
       border-radius: 5px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .header h2 {
+      margin: 0;
+    }
+    .action-buttons {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    /* Tabs */
+    .nav-tabs .nav-link {
+      color: #333;
+    }
+    .nav-tabs .nav-link.active {
+      background-color: #1f4e3e;
+      color: #fff;
+    }
+    .small-label {
+      font-size: 0.9rem;
+      font-weight: bold;
     }
   </style>
 </head>
-
 <body>
-<!-- Sidebar -->
+
+<!-- Sidebar (falls du eine Sidebar-Fragmentdatei hast) -->
 <div th:insert="~{vorlagen/sidebar :: sidebar}"></div>
 
-<!-- Main Content -->
-<div class="main-content" id="main-content">
-  <div class="header">
-    <h2>Rollen-Verwaltung</h2>
-  </div>
+<div class="main-content">
+  <div th:replace="~{vorlagen/header :: header(pageTitle='Rollenverwaltung - Rheiner Zoo')}"></div>
 
-  <div class="card p-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h4>Verwalten Sie die Rollen</h4>
-      <button class="btn btn-success" th:onclick="'addRolle()'">
-        <i class="fas fa-plus"></i> Rolle hinzufügen
+  <div class="card p-3">
+    <!-- Kurze Übersicht aller Rollen -->
+    <div class="action-buttons">
+      <h4>Übersicht</h4>
+
+      <!-- Falls man WRITE-Berechtigung hat -->
+      <button class="btn btn-success" th:if="${hasWritePermission}"
+              onclick="openModal('add')">
+        <i class="fas fa-plus"></i> Neue Rolle
       </button>
     </div>
 
-    <div class="search-container mb-3">
-      <input type="text" id="searchInput" placeholder="Suchen Sie nach Name..." onkeyup="filterTable()">
+    <!-- Suchfeld -->
+    <div class="mb-3">
+      <input type="text" class="form-control" id="searchInput"
+             placeholder="Suche nach Rollenname..."
+             onkeyup="filterTable()">
     </div>
 
-    <table class="table table-striped" id="rollenTable">
+    <table class="table table-hover" id="rollenTable">
       <thead>
       <tr>
-        <th>Name</th>
-        <th>Gewicht</th>
-        <th>Aktionen</th>
+        <th>Name
+          <i class="fas fa-info-circle ms-1"
+             data-bs-toggle="tooltip"
+             data-bs-placement="top"
+             title="Name der Rolle">
+          </i>
+        </th>
+        <th>Gewicht
+          <i class="fas fa-info-circle ms-1"
+             data-bs-toggle="tooltip"
+             data-bs-placement="top"
+             title="Je höher das Gewicht, desto mehr Rechte">
+          </i>
+        </th>
+        <th>Aktionen
+          <i class="fas fa-info-circle ms-1"
+             data-bs-toggle="tooltip"
+             data-bs-placement="top"
+             title="Hier können Sie die Rolle bearbeiten oder löschen">
+          </i>
+        </th>
       </tr>
       </thead>
       <tbody>
-      <tr th:each="rolle : ${rollen}">
-        <td th:text="${rolle.name}"></td>
-        <td th:text="${rolle.weight}"></td>
+      <!-- Schleife über alle Rollen (Kurzinfo) -->
+      <tr th:each="r, iStat : ${rollen}">
+        <td th:text="${r.name}">Rolename</td>
+        <td th:text="${r.weight}">123</td>
         <td>
-          <!-- Bearbeiten nur, wenn Benutzer WRITE-Rechte hat, Gewicht kleiner ist und nicht die eigene Rolle -->
-          <button class="btn btn-primary btn-sm"
-                  th:onclick="'editRolle(' + ${rolle.id} + ')'">
-            <i class="fas fa-edit"></i> Bearbeiten
-          </button>
-
-          <!-- Löschen mit denselben Einschränkungen wie für Bearbeiten -->
-          <button class="btn btn-danger btn-sm"
-                  th:onclick="'deleteRolle(' + ${rolle.id} + ')'">
-            <i class="fas fa-trash"></i> Löschen
-          </button>
+          <!-- Dropdown-Schaltfläche: "Aktionen" -->
+          <div class="btn-group">
+            <button class="btn btn-primary btn-sm dropdown-toggle" type="button"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+              Aktionen
+            </button>
+            <ul class="dropdown-menu">
+              <li>
+                <a class="dropdown-item"
+                   href="#"
+                   th:if="${hasWritePermission}"
+                   th:data-id="${r.id}"
+                   th:data-name="${r.name}"
+                   th:data-weight="${r.weight}"
+                   th:data-index="${iStat.index}"
+                   onclick="openModal('edit', this)">
+                  <i class="fas fa-edit"></i> Bearbeiten
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item text-danger" href="#"
+                   th:if="${hasWritePermission}"
+                   th:data-id="${r.id}"
+                   onclick="deleteRolle(this)">
+                  <i class="fas fa-trash-alt"></i> Löschen
+                </a>
+              </li>
+            </ul>
+          </div>
         </td>
       </tr>
       </tbody>
     </table>
+  </div>
+</div>
 
-    <div id="noRollenMessage" class="alert alert-warning d-none" role="alert">
-      Es sind keine Rollen vorhanden. Bitte fügen Sie eine Rolle hinzu.
+<!-- UNSICHTBARER BEREICH: Alle RolleInfos, pro Rolle, hinterlegt in Data-Attributen -->
+<div style="display: none;">
+  <div th:each="info, idx : ${rollenInfos}">
+    <!-- ID => identisch mit dem iStat-Index in obiger Schleife,
+         damit fillDetailTabs(index) korrekt funktioniert -->
+    <div th:attr="data-roleInfo-index=${idx.index}">
+
+      <div
+              data-roleinfo-index="[[${idx.index}]]"
+              data-role-id="[[${info.rolle.id}]]"
+              data-role-weight="[[${info.rolle.weight}]]">
+      </div>
+
+      <!-- Zugewiesene Permissions -->
+      <div class="permissionRolleList"
+           th:each="pr : ${info.permissionRolleList}"
+           th:attr="data-permission-id=${pr.permission.id},
+                    data-permission-name=${pr.permission.permission},
+                    data-permission-desc=${pr.permission.description}">
+      </div>
+
+      <!-- Verfügbare Permissions -->
+      <div class="availablePermissions"
+           th:each="ap : ${info.availablePermissions}"
+           th:attr="data-permission-id=${ap.id},
+                    data-permission-name=${ap.permission},
+                    data-permission-desc=${ap.description}">
+      </div>
+
+      <!-- Zugewiesene Pfleger -->
+      <div class="rolleUserList"
+           th:each="ru : ${info.rolleUserList}"
+           th:attr="data-user-id=${ru.user.id},
+                    data-user-benutzername=${ru.user.benutzername},
+                    data-user-vorname=${ru.user.vorname},
+                    data-user-nachname=${ru.user.nachname}">
+      </div>
+
+      <!-- Verfügbare Pfleger -->
+      <div class="availableUsers"
+           th:each="au : ${info.availableUsers}"
+           th:attr="data-user-id=${au.id},
+                    data-user-benutzername=${au.benutzername},
+                    data-user-vorname=${au.vorname},
+                    data-user-nachname=${au.nachname}">
+      </div>
     </div>
   </div>
 </div>
 
+<!-- Modal für Hinzufügen/Bearbeiten -->
+<div class="modal fade" id="rolleModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+
+      <!-- Kopfzeile -->
+      <div class="modal-header">
+        <h5 class="modal-title" id="rolleModalTitle">Rolle verwalten</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <!-- Inhalt mit Tabs -->
+      <div class="modal-body">
+        <ul class="nav nav-tabs" id="rolleTabs">
+          <li class="nav-item">
+            <a class="nav-link active" id="allgemein-tab" data-bs-toggle="tab" href="#allgemeinTab">Allgemein</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="berechtigungen-tab" data-bs-toggle="tab" href="#berechtigungenTab">Berechtigungen</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="pflegekraefte-tab" data-bs-toggle="tab" href="#pflegekraefteTab">Pflegekräfte</a>
+          </li>
+        </ul>
+
+        <div class="tab-content mt-3">
+          <!-- Allgemein -->
+          <div class="tab-pane fade show active" id="allgemeinTab">
+            <form id="rolleForm">
+              <input type="hidden" id="rolleId">
+              <div class="mb-3">
+                <label for="rolleName" class="small-label">Rollenname</label>
+                <input type="text" id="rolleName" class="form-control" required>
+              </div>
+              <div class="mb-3">
+                <label for="rolleWeight" class="small-label">
+                  Gewicht
+                  <i class="fas fa-info-circle" title="Je höher das Gewicht, desto umfassender die Rechte."></i>
+                </label>
+                <input type="number" id="rolleWeight" class="form-control" required>
+              </div>
+            </form>
+          </div>
+
+          <!-- Berechtigungen -->
+          <div class="tab-pane fade" id="berechtigungenTab">
+            <h6 class="mb-2">Berechtigungen dieser Rolle</h6>
+            <table class="table table-sm" id="assignedPermissionsTable">
+              <thead>
+              <tr>
+                <th>Permission</th>
+                <th>Beschreibung</th>
+                <th>Aktion</th>
+              </tr>
+              </thead>
+              <tbody id="assignedPermissionsBody">
+              <!-- JS befüllt hier -->
+              </tbody>
+            </table>
+
+            <h6 class="mt-4 mb-2">Alle verfügbaren Berechtigungen</h6>
+            <table class="table table-sm" id="allPermissionsTable">
+              <thead>
+              <tr>
+                <th>Permission</th>
+                <th>Beschreibung</th>
+                <th>Aktion</th>
+              </tr>
+              </thead>
+              <tbody id="allPermissionsBody">
+              <!-- JS befüllt hier -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pflegekräfte -->
+          <div class="tab-pane fade" id="pflegekraefteTab">
+            <h6 class="mb-2">Zugewiesene Pflegekräfte</h6>
+            <table class="table table-sm" id="assignedCaretakersTable">
+              <thead>
+              <tr>
+                <th>Benutzername</th>
+                <th>Vorname</th>
+                <th>Nachname</th>
+                <th>Aktion</th>
+              </tr>
+              </thead>
+              <tbody id="assignedCaretakersBody">
+              <!-- JS befüllt hier -->
+              </tbody>
+            </table>
+
+            <h6 class="mt-4 mb-2">Alle verfügbaren Pflegekräfte</h6>
+            <table class="table table-sm" id="allCaretakersTable">
+              <thead>
+              <tr>
+                <th>Benutzername</th>
+                <th>Vorname</th>
+                <th>Nachname</th>
+                <th>Aktion</th>
+              </tr>
+              </thead>
+              <tbody id="allCaretakersBody">
+              <!-- JS befüllt hier -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal-Footer -->
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
+        <button type="submit" class="btn btn-primary" form="rolleForm" onclick="saveRolle()">Speichern</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap-Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  async function deleteRolle(rolleId) {
-    if (!confirm('Möchten Sie die Rolle mit ID ' + rolleId + ' wirklich löschen?')) {
-      return;
-    }
+  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  tooltipTriggerList.forEach(function (el) {
+    new bootstrap.Tooltip(el);
+  });
 
-    // Button deaktivieren (optional)
-    const deleteButton = document.querySelector(`[data-id="${rolleId}"]`);
-    if (deleteButton) deleteButton.disabled = true;
-
-    try {
-      const response = await fetch(`/api/permissions/delete/rolle`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roleid: rolleId })
-      });
-
-      if (response.ok) {
-        alert('Rolle erfolgreich gelöscht!');
-        location.reload();
-      } else {
-        const errorText = await response.text();
-        alert('Fehler beim Löschen: ' + errorText);
-      }
-    } catch (error) {
-      console.error('Fehler:', error);
-      alert('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
-    } finally {
-      if (deleteButton) deleteButton.disabled = false;
-    }
-  }
-
-
-  function editRolle(rolleId) {
-    window.location.href = '/editRolle/' + rolleId;
-  }
-
-  function addRolle() {
-    window.location.href = '/addRolle';
-  }
 
   function filterTable() {
-    const input = document.getElementById('searchInput').value.toLowerCase();
-    const rows = document.querySelectorAll('#rollenTable tbody tr');
+    const searchValue = document.getElementById("searchInput").value.toLowerCase();
+    const rows = document.querySelectorAll("#rollenTable tbody tr");
+
     rows.forEach(row => {
-      const cells = row.querySelectorAll('td');
-      const matches = Array.from(cells).some(cell => cell.innerText.toLowerCase().includes(input));
-      row.style.display = matches ? '' : 'none';
+      const nameCell = row.getElementsByTagName("td")[0];
+      const nameText = nameCell ? nameCell.textContent.toLowerCase() : "";
+      row.style.display = nameText.includes(searchValue) ? "" : "none";
     });
   }
 
-  function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('collapsed');
-    document.getElementById('main-content').classList.toggle('collapsed');
+  function openModal(mode, button) {
+    const modalTitle = document.getElementById("rolleModalTitle");
+    const rolleIdField = document.getElementById("rolleId");
+    const rolleNameField = document.getElementById("rolleName");
+    const rolleWeightField = document.getElementById("rolleWeight");
+
+    // Tab "Allgemein" zuerst aktivieren
+    const generalTab = new bootstrap.Tab(document.getElementById('allgemein-tab'));
+    generalTab.show();
+
+    if (mode === "add") {
+      modalTitle.textContent = "Neue Rolle hinzufügen";
+      rolleIdField.value = "";
+      rolleNameField.value = "";
+      rolleWeightField.value = "";
+      clearTables();
+    } else {
+      modalTitle.textContent = "Rolle bearbeiten";
+      const rid = button.getAttribute("data-id");
+      const rname = button.getAttribute("data-name");
+      const rweight = button.getAttribute("data-weight");
+      const index = button.getAttribute("data-index");
+
+      rolleIdField.value = rid;
+      rolleNameField.value = rname;
+      rolleWeightField.value = rweight;
+
+      // Detail-Daten füllen
+      fillDetailTabs(index);
+    }
+
+    new bootstrap.Modal(document.getElementById("rolleModal")).show();
+  }
+
+  function clearTables() {
+    document.getElementById("assignedPermissionsBody").innerHTML = "";
+    document.getElementById("allPermissionsBody").innerHTML = "";
+    document.getElementById("assignedCaretakersBody").innerHTML = "";
+    document.getElementById("allCaretakersBody").innerHTML = "";
+  }
+
+  function fillDetailTabs(index) {
+    clearTables();
+
+    // Finde das DIV [data-roleInfo-index="..."]
+    const infoDiv = document.querySelector('[data-roleInfo-index="' + index + '"]');
+    if (!infoDiv) {
+      console.error("Keine RolleInfo für Index=", index);
+      return;
+    }
+
+    // 1) Zugewiesene Permissions
+    let permissionRows = "";
+    const assigned = infoDiv.querySelectorAll(".permissionRolleList");
+    assigned.forEach(div => {
+      const pid = div.getAttribute("data-permission-id");
+      const pname = div.getAttribute("data-permission-name");
+      const pdesc = div.getAttribute("data-permission-desc");
+      permissionRows += `
+        <tr>
+          <td>${pname}</td>
+          <td>${pdesc}</td>
+          <td>
+            <button class="btn btn-danger btn-sm" data-id="${pid}" onclick="removePermission(this)">
+              <i class="fas fa-minus-circle"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+    });
+    document.getElementById("assignedPermissionsBody").innerHTML = permissionRows;
+
+    // 2) Verfügbare Permissions
+    let availablePermRows = "";
+    const available = infoDiv.querySelectorAll(".availablePermissions");
+    available.forEach(div => {
+      const pid = div.getAttribute("data-permission-id");
+      const pname = div.getAttribute("data-permission-name");
+      const pdesc = div.getAttribute("data-permission-desc");
+      availablePermRows += `
+        <tr>
+          <td>${pname}</td>
+          <td>${pdesc}</td>
+          <td>
+            <button class="btn btn-primary btn-sm" data-id="${pid}" onclick="addPermission(this)">
+              <i class="fas fa-plus-circle"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+    });
+    document.getElementById("allPermissionsBody").innerHTML = availablePermRows;
+
+    // 3) Zugewiesene Pflegekräfte
+    let assignedCaretakers = "";
+    const caretakers = infoDiv.querySelectorAll(".rolleUserList");
+    caretakers.forEach(div => {
+      const uid = div.getAttribute("data-user-id");
+      const uname = div.getAttribute("data-user-benutzername");
+      const uvn = div.getAttribute("data-user-vorname");
+      const unn = div.getAttribute("data-user-nachname");
+      assignedCaretakers += `
+        <tr>
+          <td>${uname}</td>
+          <td>${uvn}</td>
+          <td>${unn}</td>
+          <td>
+            <button class="btn btn-danger btn-sm" data-id="${uid}" onclick="removeCaretaker(this)">
+              <i class="fas fa-user-minus"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+    });
+    document.getElementById("assignedCaretakersBody").innerHTML = assignedCaretakers;
+
+    // 4) Verfügbare Pflegekräfte
+    let availableCaretakers = "";
+    const avUsers = infoDiv.querySelectorAll(".availableUsers");
+    avUsers.forEach(div => {
+      const uid = div.getAttribute("data-user-id");
+      const uname = div.getAttribute("data-user-benutzername");
+      const uvn = div.getAttribute("data-user-vorname");
+      const unn = div.getAttribute("data-user-nachname");
+      availableCaretakers += `
+        <tr>
+          <td>${uname}</td>
+          <td>${uvn}</td>
+          <td>${unn}</td>
+          <td>
+            <button class="btn btn-primary btn-sm" data-id="${uid}" onclick="addCaretaker(this)">
+              <i class="fas fa-user-plus"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+    });
+    document.getElementById("allCaretakersBody").innerHTML = availableCaretakers;
+  }
+
+  async function saveRolle() {
+    event.preventDefault();
+    const id = document.getElementById("rolleId").value;
+    const name = document.getElementById("rolleName").value.trim();
+    const weightStr = document.getElementById("rolleWeight").value.trim();
+    if (!name || !weightStr) {
+      alert("Bitte alle Felder ausfüllen!");
+      return;
+    }
+
+    const weight = parseInt(weightStr, 10);
+    let endpoint, payload;
+    if (id) {
+      // Existierende Rolle aktualisieren
+      endpoint = "/api/permissions/edit/rolle";
+      payload = { roleid: id, rolename: name, weight: weight };
+    } else {
+      // Neue Rolle anlegen
+      endpoint = "/api/permissions/add/rolle";
+      payload = { rolename: name, weight: weight };
+    }
+
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (response.ok) {
+        alert("Erfolgreich gespeichert!");
+
+      } else {
+        const errorText = await response.text();
+        alert("Fehler: " + errorText);
+      }
+    } catch (err) {
+      alert("Fehler: " + err);
+    }
+  }
+
+
+  async function deleteRolle(button) {
+    const rolleId = button.getAttribute("data-id");
+    if (!confirm("Möchten Sie diese Rolle wirklich löschen?")) {
+      return;
+    }
+    try {
+      const response = await fetch("/api/permissions/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roleid: rolleId })
+      });
+      if (response.ok) {
+        alert("Rolle erfolgreich gelöscht!");
+        location.reload();
+      } else {
+        const errorText = await response.text();
+        alert("Fehler: " + errorText);
+      }
+    } catch (err) {
+      alert("Fehler beim Löschen: " + err);
+    }
+  }
+
+  async function addPermission(button) {
+    const permissionId = button.getAttribute("data-id");
+    const rolleId = document.getElementById("rolleId").value;
+    if (!rolleId) {
+      alert("Bitte zuerst die Rolle speichern, bevor Permissions hinzugefügt werden können.");
+      return;
+    }
+    try {
+      const response = await fetch("/api/permissions/addPermission", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roleid: rolleId, permissionid: permissionId })
+      });
+      const text = await response.text();
+      if (response.ok) {
+        alert("Berechtigung hinzugefügt!");
+
+        // 1) Zeile aus der "Alle Permissions" Tabelle entfernen
+        const row = button.closest("tr");
+        if (!row) return;
+        row.remove(); // entfernt sie aus dem DOM
+
+        // 2) Neue Zeile für die "Zugewiesene Permissions" bauen
+        const assignedTableBody = document.getElementById("assignedPermissionsBody");
+        // Werte aus den Zellen auslesen
+        const permissionName = row.querySelector("td:nth-child(1)").textContent;
+        const permissionDesc = row.querySelector("td:nth-child(2)").textContent;
+
+        // 3) Neue <tr> anlegen mit Button zum Entfernen
+        const newRow = document.createElement("tr");
+        newRow.innerHTML = `
+        <td>${permissionName}</td>
+        <td>${permissionDesc}</td>
+        <td>
+          <button class="btn btn-danger btn-sm"
+                  data-id="${permissionId}"
+                  onclick="removePermission(this)">
+            <i class="fas fa-minus-circle"></i>
+          </button>
+        </td>
+      `;
+        // 4) Neue Zeile anhängen
+        assignedTableBody.appendChild(newRow);
+
+      } else {
+        alert("Fehler: " + text);
+      }
+    } catch (err) {
+      alert("Fehler: " + err);
+    }
+  }
+
+
+  async function removePermission(button) {
+    const permissionId = button.getAttribute("data-id");
+    const rolleId = document.getElementById("rolleId").value;
+    if (!rolleId) {
+      alert("Keine Rollen-ID erkannt – bitte erneut versuchen.");
+      return;
+    }
+    try {
+      const response = await fetch("/api/permissions/removePermission", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roleid: rolleId, permissionid: permissionId })
+      });
+      const text = await response.text();
+      if (response.ok) {
+        alert("Berechtigung entfernt!");
+
+        // 1) Zeile aus der "Zugewiesene Permissions" Tabelle entfernen
+        const row = button.closest("tr");
+        if (!row) return;
+        row.remove();
+
+        // 2) Neue Zeile für die "Alle Permissions" bauen
+        const allPermTableBody = document.getElementById("allPermissionsBody");
+        const permissionName = row.querySelector("td:nth-child(1)").textContent;
+        const permissionDesc = row.querySelector("td:nth-child(2)").textContent;
+
+        const newRow = document.createElement("tr");
+        newRow.innerHTML = `
+        <td>${permissionName}</td>
+        <td>${permissionDesc}</td>
+        <td>
+          <button class="btn btn-primary btn-sm"
+                  data-id="${permissionId}"
+                  onclick="addPermission(this)">
+            <i class="fas fa-plus-circle"></i>
+          </button>
+        </td>
+      `;
+        allPermTableBody.appendChild(newRow);
+
+      } else {
+        alert("Fehler: " + text);
+      }
+    } catch (err) {
+      alert("Fehler: " + err);
+    }
+  }
+
+
+  async function addCaretaker(button) {
+    const userId = button.getAttribute("data-id");
+    const rolleId = document.getElementById("rolleId").value;
+    if (!rolleId) {
+      alert("Bitte zuerst die Rolle speichern, bevor Pflegekräfte zugewiesen werden können.");
+      return;
+    }
+    try {
+      const response = await fetch("/api/permissions/caretakers/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userid: userId, rolleid: rolleId })
+      });
+      const text = await response.text();
+      if (response.ok) {
+        alert("Pflegekraft hinzugefügt!");
+
+        // 1) Aus "Alle Pflegekräfte" entfernen
+        const row = button.closest("tr");
+        if (!row) return;
+        row.remove();
+
+        // 2) In "Zugewiesene Pflegekräfte" hinzufügen
+        const assignedCaretakersBody = document.getElementById("assignedCaretakersBody");
+        const uname = row.querySelector("td:nth-child(1)").textContent;
+        const uvn = row.querySelector("td:nth-child(2)").textContent;
+        const unn = row.querySelector("td:nth-child(3)").textContent;
+
+        const newRow = document.createElement("tr");
+        newRow.innerHTML = `
+        <td>${uname}</td>
+        <td>${uvn}</td>
+        <td>${unn}</td>
+        <td>
+          <button class="btn btn-danger btn-sm"
+                  data-id="${userId}"
+                  onclick="removeCaretaker(this)">
+            <i class="fas fa-user-minus"></i>
+          </button>
+        </td>
+      `;
+        assignedCaretakersBody.appendChild(newRow);
+
+      } else {
+        alert("Fehler: " + text);
+      }
+    } catch (err) {
+      alert("Fehler: " + err);
+    }
+  }
+
+
+  async function removeCaretaker(button) {
+    const userId = button.getAttribute("data-id");
+    const rolleId = document.getElementById("rolleId").value;
+    if (!rolleId) {
+      alert("Keine Rollen-ID erkannt – bitte erneut versuchen.");
+      return;
+    }
+    try {
+      const response = await fetch("/api/permissions/caretakers/remove", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userid: userId, rolleid: rolleId })
+      });
+      const text = await response.text();
+      if (response.ok) {
+        alert("Pflegekraft entfernt!");
+
+        // 1) Aus "Zugewiesene Pflegekräfte" entfernen
+        const row = button.closest("tr");
+        if (!row) return;
+        row.remove();
+
+        // 2) In "Alle Pflegekräfte" hinzufügen
+        const allCaretakersBody = document.getElementById("allCaretakersBody");
+        const uname = row.querySelector("td:nth-child(1)").textContent;
+        const uvn = row.querySelector("td:nth-child(2)").textContent;
+        const unn = row.querySelector("td:nth-child(3)").textContent;
+
+        const newRow = document.createElement("tr");
+        newRow.innerHTML = `
+        <td>${uname}</td>
+        <td>${uvn}</td>
+        <td>${unn}</td>
+        <td>
+          <button class="btn btn-primary btn-sm"
+                  data-id="${userId}"
+                  onclick="addCaretaker(this)">
+            <i class="fas fa-user-plus"></i>
+          </button>
+        </td>
+      `;
+        allCaretakersBody.appendChild(newRow);
+
+      } else {
+        alert("Fehler: " + text);
+      }
+    } catch (err) {
+      alert("Fehler: " + err);
+    }
   }
 
 </script>
